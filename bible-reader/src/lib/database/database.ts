@@ -1,0 +1,24 @@
+import Dexie, { Table } from 'dexie';
+import type { Bookmark, Highlight, Note, Prayer, ReadingProgress } from '../../../types';
+
+export class BibleReaderDatabase extends Dexie {
+  notes!: Table<Note, string>;
+  highlights!: Table<Highlight, string>;
+  bookmarks!: Table<Bookmark, string>;
+  prayers!: Table<Prayer, string>;
+  readingProgress!: Table<ReadingProgress, string>;
+
+  constructor() {
+    super('BibleReaderDatabase');
+
+    this.version(1).stores({
+      notes: 'id, sourceReference, title, createdAt, updatedAt',
+      highlights: 'id, noteId, createdAt',
+      bookmarks: 'id, sourceReference, createdAt',
+      prayers: 'id, title, createdAt, updatedAt',
+      readingProgress: 'id, sourceReference, updatedAt',
+    });
+  }
+}
+
+export const db = new BibleReaderDatabase();
