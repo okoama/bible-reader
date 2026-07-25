@@ -4,7 +4,12 @@ import type { BibleBook } from '../../types';
 
 const bibleService = new BibleService();
 
-export default function Sidebar() {
+type SidebarProps = {
+  selectedBook: BibleBook | null;
+  onSelectBook: (book: BibleBook) => void;
+};
+
+export default function Sidebar({ selectedBook, onSelectBook }: SidebarProps) {
   const [books, setBooks] = useState<BibleBook[]>([]);
 
   useEffect(() => {
@@ -24,11 +29,22 @@ export default function Sidebar() {
 
       <div className="space-y-2">
         <div className="rounded border px-3 py-2">Bible</div>
-        {books.map((book) => (
-          <div key={book.id} className="rounded border px-3 py-2 text-sm">
-            {book.name}
-          </div>
-        ))}
+        {books.map((book) => {
+          const isSelected = selectedBook?.id === book.id;
+
+          return (
+            <button
+              key={book.id}
+              type="button"
+              onClick={() => onSelectBook(book)}
+              className={`w-full rounded border px-3 py-2 text-left text-sm ${
+                isSelected ? 'border-blue-500 bg-blue-50' : ''
+              }`}
+            >
+              {book.name}
+            </button>
+          );
+        })}
         <div className="rounded border px-3 py-2">Catechism</div>
         <div className="rounded border px-3 py-2">Summa Theologiae</div>
         <div className="rounded border px-3 py-2">Confessions</div>
