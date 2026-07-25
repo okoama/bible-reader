@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
+    "dexie": "^4.4.4",
     "tailwindcss": "^4.3.3"
   }
 }
