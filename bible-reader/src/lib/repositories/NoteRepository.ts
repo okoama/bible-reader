@@ -4,28 +4,24 @@ import { db } from '../database/database';
 export class NoteRepository {
   private readonly database = db;
 
-  async getAll(): Promise<Note[]> {
-    void this.database;
-    throw new Error('Not implemented');
+  async findAll(): Promise<Note[]> {
+    return this.database.notes.toArray();
   }
 
-  async getById(id: string): Promise<Note | undefined> {
-    void id;
-    throw new Error('Not implemented');
+  async findById(id: string): Promise<Note | undefined> {
+    return this.database.notes.get(id);
   }
 
   async create(note: Note): Promise<string> {
-    void note;
-    throw new Error('Not implemented');
+    await this.database.notes.put(note);
+    return note.id;
   }
 
   async update(note: Note): Promise<void> {
-    void note;
-    throw new Error('Not implemented');
+    await this.database.notes.put(note);
   }
 
   async delete(id: string): Promise<void> {
-    void id;
-    throw new Error('Not implemented');
+    await this.database.notes.delete(id);
   }
 }
