@@ -1,4 +1,4 @@
-import type { Prayer } from '../../../types';
+import type { Prayer } from '../../types';
 import { db } from '../database/database';
 
 export class PrayerRepository {

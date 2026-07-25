@@ -1,5 +1,6 @@
 import Dexie, { type Table } from 'dexie';
-import type { Bookmark, Highlight, Note, Prayer, ReadingProgress } from '../../../types';
+import { DATABASE_NAME, DATABASE_VERSION } from '../constants';
+import type { Bookmark, Highlight, Note, Prayer, ReadingProgress } from '../../types';
 
 export class BibleReaderDatabase extends Dexie {
   notes!: Table<Note, string>;
@@ -9,9 +10,9 @@ export class BibleReaderDatabase extends Dexie {
   readingProgress!: Table<ReadingProgress, string>;
 
   constructor() {
-    super('BibleReaderDatabase');
+    super(DATABASE_NAME);
 
-    this.version(1).stores({
+    this.version(DATABASE_VERSION).stores({
       notes: 'id, sourceReference, title, createdAt, updatedAt',
       highlights: 'id, noteId, createdAt',
       bookmarks: 'id, sourceReference, createdAt',

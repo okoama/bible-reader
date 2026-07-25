@@ -1,4 +1,4 @@
-import type { ReadingProgress } from '../../../types';
+import type { ReadingProgress } from '../../types';
 import { db } from '../database/database';
 
 export class ReadingProgressRepository {

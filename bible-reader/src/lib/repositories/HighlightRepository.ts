@@ -1,4 +1,4 @@
-import type { Highlight } from '../../../types';
+import type { Highlight } from '../../types';
 import { db } from '../database/database';
 
 export class HighlightRepository {

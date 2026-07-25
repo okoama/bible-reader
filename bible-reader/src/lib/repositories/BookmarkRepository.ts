@@ -1,4 +1,4 @@
-import type { Bookmark } from '../../../types';
+import type { Bookmark } from '../../types';
 import { db } from '../database/database';
 
 export class BookmarkRepository {
