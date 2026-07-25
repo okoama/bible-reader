@@ -1,4 +1,4 @@
-import Dexie, { Table } from 'dexie';
+import Dexie, { type Table } from 'dexie';
 import type { Bookmark, Highlight, Note, Prayer, ReadingProgress } from '../../../types';
 
 export class BibleReaderDatabase extends Dexie {
