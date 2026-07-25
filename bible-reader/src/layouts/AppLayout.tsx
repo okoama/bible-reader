@@ -8,14 +8,24 @@ import type { BibleBook } from '../types';
 
 export default function AppLayout() {
   const [selectedBook, setSelectedBook] = useState<BibleBook | null>(null);
+  const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
+
+  const handleSelectBook = (book: BibleBook) => {
+    setSelectedBook(book);
+    setSelectedChapter(null);
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
 
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar selectedBook={selectedBook} onSelectBook={setSelectedBook} />
-        <Reader selectedBook={selectedBook} />
+        <Sidebar selectedBook={selectedBook} onSelectBook={handleSelectBook} />
+        <Reader
+          selectedBook={selectedBook}
+          selectedChapter={selectedChapter}
+          onSelectChapter={setSelectedChapter}
+        />
         <RightPanel />
       </div>
 
