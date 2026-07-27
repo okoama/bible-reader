@@ -35,6 +35,17 @@ export class NoteRepository {
       .toArray();
   }
 
+  async findAllTags(): Promise<string[]> {
+    const notes = await this.database.notes.toArray();
+    const tags = new Set<string>();
+    for (const note of notes) {
+      for (const tag of note.tags) {
+        tags.add(tag);
+      }
+    }
+    return [...tags].sort();
+  }
+
   async delete(id: string): Promise<void> {
     await this.database.notes.delete(id);
   }

@@ -139,6 +139,15 @@ export default function RightPanel({
                     {note.content && (
                       <p className="mt-1 text-xs opacity-80">{note.content}</p>
                     )}
+                    {note.tags.length > 0 && (
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {note.tags.map((tag) => (
+                          <span key={tag} className="rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

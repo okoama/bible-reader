@@ -48,7 +48,7 @@ export default function NoteSearch({ notes, onNavigate }: NoteSearchProps) {
             {note.tags.length > 0 && (
               <div className="mt-1 flex flex-wrap gap-1">
                 {note.tags.map((tag) => (
-                  <span key={tag} className="rounded bg-gray-100 px-1.5 py-0.5 text-xs opacity-70">
+                  <span key={tag} className="rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">
                     {tag}
                   </span>
                 ))}
