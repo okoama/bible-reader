@@ -1,6 +1,7 @@
 export interface Highlight {
   id: string;
-  noteId?: string;
-  content: string;
+  sourceReference: string;
+  color: string;
+  selectedText: string;
   createdAt: string;
 }
