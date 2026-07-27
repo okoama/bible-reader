@@ -27,6 +27,10 @@ export class HighlightRepository {
     return highlight.id;
   }
 
+  async update(highlight: Highlight): Promise<void> {
+    await this.database.highlights.put(highlight);
+  }
+
   async delete(id: string): Promise<void> {
     await this.database.highlights.delete(id);
   }

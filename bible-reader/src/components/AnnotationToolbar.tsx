@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import type { SelectedVerse, TextSelection } from '../features/annotations/hooks/useTextSelection';
+import { HIGHLIGHT_COLORS } from '../lib/constants';
 
 type AnnotationToolbarProps = {
   selection: TextSelection;
-  onHighlight: (text: string, verses: SelectedVerse[]) => void;
+  onHighlight: (text: string, verses: SelectedVerse[], color: string) => void;
   onNote: (text: string, verses: SelectedVerse[]) => void;
   onBookmark: (verses: SelectedVerse[]) => void;
 };
@@ -22,6 +23,7 @@ export default function AnnotationToolbar({
     left: 0,
     top: 0,
   });
+  const [showColors, setShowColors] = useState(false);
 
   useEffect(() => {
     if (!ref.current) {
@@ -45,7 +47,7 @@ export default function AnnotationToolbar({
     }
 
     setPosition({ left, top });
-  }, [selection]);
+  }, [selection, showColors]);
 
   return (
     <div
@@ -54,27 +56,57 @@ export default function AnnotationToolbar({
       style={{ position: 'fixed', left: position.left, top: position.top }}
       className="z-50 flex items-center gap-1 rounded-lg border bg-white px-2 py-1 shadow-md"
     >
-      <button
-        type="button"
-        onClick={() => onHighlight(selection.text, selection.verses)}
-        className="rounded px-2 py-1 text-sm hover:bg-yellow-100"
-      >
-        Highlight
-      </button>
-      <button
-        type="button"
-        onClick={() => onNote(selection.text, selection.verses)}
-        className="rounded px-2 py-1 text-sm hover:bg-blue-100"
-      >
-        Note
-      </button>
-      <button
-        type="button"
-        onClick={() => onBookmark(selection.verses)}
-        className="rounded px-2 py-1 text-sm hover:bg-gray-100"
-      >
-        Bookmark
-      </button>
+      {showColors ? (
+        <>
+          <div className="flex items-center gap-1">
+            {HIGHLIGHT_COLORS.map((c) => (
+              <button
+                key={c.value}
+                type="button"
+                title={c.name}
+                onClick={() => {
+                  onHighlight(selection.text, selection.verses, c.value);
+                  setShowColors(false);
+                }}
+                className="h-5 w-5 rounded-full border border-gray-300 hover:scale-125"
+                style={{ backgroundColor: c.value }}
+              />
+            ))}
+          </div>
+          <div className="mx-1 h-4 w-px bg-gray-200" />
+          <button
+            type="button"
+            onClick={() => setShowColors(false)}
+            className="rounded px-2 py-1 text-xs hover:bg-gray-100"
+          >
+            Cancel
+          </button>
+        </>
+      ) : (
+        <>
+          <button
+            type="button"
+            onClick={() => setShowColors(true)}
+            className="rounded px-2 py-1 text-sm hover:bg-yellow-100"
+          >
+            Highlight
+          </button>
+          <button
+            type="button"
+            onClick={() => onNote(selection.text, selection.verses)}
+            className="rounded px-2 py-1 text-sm hover:bg-blue-100"
+          >
+            Note
+          </button>
+          <button
+            type="button"
+            onClick={() => onBookmark(selection.verses)}
+            className="rounded px-2 py-1 text-sm hover:bg-gray-100"
+          >
+            Bookmark
+          </button>
+        </>
+      )}
     </div>
   );
 }

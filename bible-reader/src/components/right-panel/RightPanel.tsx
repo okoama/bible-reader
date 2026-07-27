@@ -4,6 +4,7 @@ import { useHighlights } from '../../lib/hooks/useHighlights';
 import { useBookmarks } from '../../lib/hooks/useBookmarks';
 import { HighlightRepository } from '../../lib/repositories/HighlightRepository';
 import { BookmarkRepository } from '../../lib/repositories/BookmarkRepository';
+import { HIGHLIGHT_COLORS } from '../../lib/constants';
 import { formatDate } from '../../lib/utils/date';
 import ConfirmDialog from '../ConfirmDialog';
 import NoteSearch from '../sidebar/NoteSearch';
@@ -36,6 +37,8 @@ type RightPanelProps = {
   onNoteDeleted: () => void;
   onNavigateToBookmark: (sourceReference: string) => void;
   onNavigateToNote: (sourceReference: string) => void;
+  selectedNoteId: string | null;
+  onSelectNote: (noteId: string | null) => void;
 };
 
 function coversVerse(sourceReference: string, verseNumber: number): boolean {
@@ -56,6 +59,8 @@ export default function RightPanel({
   onNoteDeleted,
   onNavigateToBookmark,
   onNavigateToNote,
+  selectedNoteId,
+  onSelectNote,
 }: RightPanelProps) {
   const [panelWidth, setPanelWidth] = useState(getStoredWidth);
   const [deletingHighlight, setDeletingHighlight] = useState<Highlight | null>(null);
@@ -124,6 +129,11 @@ export default function RightPanel({
     onNoteDeleted();
   }
 
+  async function handleChangeHighlightColor(highlight: Highlight, color: string) {
+    await highlightRepository.update({ ...highlight, color });
+    onNoteDeleted();
+  }
+
   async function handleConfirmDeleteBookmark() {
     if (!deletingBookmark) return;
     await bookmarkRepository.delete(deletingBookmark.id);
@@ -186,6 +196,20 @@ export default function RightPanel({
                       Delete
                     </button>
                   </div>
+                  <div className="mt-2 flex items-center gap-1">
+                    {HIGHLIGHT_COLORS.map((c) => (
+                      <button
+                        key={c.value}
+                        type="button"
+                        title={c.name}
+                        onClick={() => handleChangeHighlightColor(h, c.value)}
+                        className={`h-3.5 w-3.5 rounded-full border hover:scale-125 ${
+                          h.color === c.value ? 'border-gray-800 ring-1 ring-gray-400' : 'border-gray-300'
+                        }`}
+                        style={{ backgroundColor: c.value }}
+                      />
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
@@ -201,7 +225,7 @@ export default function RightPanel({
           onToggle={() => toggleSection('notes')}
           count={notes.length}
         >
-          <NoteSearch notes={notes} books={books} onNavigate={onNavigateToNote} />
+          <NoteSearch notes={notes} books={books} onNavigate={onNavigateToNote} onSelectNote={onSelectNote} selectedNoteId={selectedNoteId} />
         </Section>
 
         <Section

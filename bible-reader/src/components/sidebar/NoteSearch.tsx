@@ -9,6 +9,8 @@ type NoteSearchProps = {
   notes: Note[];
   books: BibleBook[];
   onNavigate: (sourceReference: string) => void;
+  onSelectNote?: (noteId: string) => void;
+  selectedNoteId?: string | null;
 };
 
 function extractBookId(sourceReference: string): string {
@@ -48,7 +50,7 @@ function matchesDateFilter(note: Note, filter: DateFilter): boolean {
   }
 }
 
-export default function NoteSearch({ notes, books, onNavigate }: NoteSearchProps) {
+export default function NoteSearch({ notes, books, onNavigate, onSelectNote, selectedNoteId }: NoteSearchProps) {
   const [query, setQuery] = useState('');
   const [filterBook, setFilterBook] = useState('');
   const [filterTag, setFilterTag] = useState('');
@@ -226,8 +228,13 @@ export default function NoteSearch({ notes, books, onNavigate }: NoteSearchProps
           <button
             key={note.id}
             type="button"
-            onClick={() => onNavigate(note.sourceReference)}
-            className="w-full rounded border px-3 py-2 text-left text-sm hover:bg-gray-50"
+            onClick={() => {
+              onNavigate(note.sourceReference);
+              onSelectNote?.(note.id);
+            }}
+            className={`w-full rounded border px-3 py-2 text-left text-sm hover:bg-gray-50 ${
+              selectedNoteId === note.id ? 'border-blue-500 bg-blue-50' : ''
+            }`}
           >
             <p className="font-medium">{note.title || 'Untitled'}</p>
             <p className="mt-1 text-xs opacity-60">{formatDate(note.createdAt)}</p>

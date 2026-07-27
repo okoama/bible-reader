@@ -69,6 +69,9 @@ type ReaderProps = {
   onPendingNavigationClear: () => void;
   activeView: ActiveView;
   prayerRefreshKey: number;
+  selectedNoteId: string | null;
+  onSelectNote: (noteId: string | null) => void;
+  onDeleteSelectedNote: () => void;
 };
 
 export default function Reader({
@@ -82,6 +85,9 @@ export default function Reader({
   onPendingNavigationClear,
   activeView,
   prayerRefreshKey,
+  selectedNoteId,
+  onSelectNote,
+  onDeleteSelectedNote,
 }: ReaderProps) {
   const [chapters, setChapters] = useState<BibleChapter[]>([]);
   const [verses, setVerses] = useState<BibleVerse[]>([]);
@@ -119,6 +125,7 @@ export default function Reader({
   function handleNoteIndicatorClick(note: Note) {
     setEditingNote(note);
     setModalSourceRef(note.sourceReference);
+    onSelectNote(note.id);
   }
 
   function handleVerseClick(verseNumber: number) {
@@ -127,7 +134,7 @@ export default function Reader({
     }
   }
 
-  const handleHighlight = async (text: string, selectedVerses: SelectedVerse[]) => {
+  const handleHighlight = async (text: string, selectedVerses: SelectedVerse[], color: string) => {
     const first = selectedVerses[0];
     const last = selectedVerses[selectedVerses.length - 1];
     const sourceReference = `${first.bookId}:${first.chapterNumber}:${first.verseNumber}-${last.verseNumber}`;
@@ -135,7 +142,7 @@ export default function Reader({
     await highlightRepository.create({
       id: createId('hl'),
       sourceReference,
-      color: '#fef08a',
+      color,
       selectedText: text,
       createdAt: new Date().toISOString(),
     });
@@ -258,6 +265,70 @@ export default function Reader({
       onPendingNavigationClear();
     }
   }, [pendingNavigation, verses, onPendingNavigationClear]);
+
+  useEffect(() => {
+    const isInputFocused = () => {
+      const el = document.activeElement;
+      return el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement;
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isInputFocused()) return;
+
+      const ctrl = e.ctrlKey || e.metaKey;
+
+      if (e.key === 'Escape') {
+        if (modalSourceRef) {
+          handleNoteCancel();
+        } else if (bookmarkModalSourceRef) {
+          handleBookmarkCancel();
+        } else if (selection) {
+          clearSelection();
+        }
+        return;
+      }
+
+      if (ctrl && e.key === 'b') {
+        e.preventDefault();
+        if (selection) {
+          handleBookmark(selection.verses);
+        } else if (selectedBook && selectedChapter && selectedVerse) {
+          handleBookmark([{
+            bookId: selectedBook.id,
+            chapterNumber: selectedChapter,
+            verseNumber: selectedVerse.verseNumber,
+          }]);
+        }
+        return;
+      }
+
+      if (ctrl && e.shiftKey && e.key === 'N') {
+        e.preventDefault();
+        if (selection) {
+          handleNote(selection.text, selection.verses);
+        } else if (selectedBook && selectedChapter && selectedVerse) {
+          const sourceReference = `${selectedBook.id}:${selectedChapter}:${selectedVerse.verseNumber}`;
+          setEditingNote(null);
+          setModalSourceRef(sourceReference);
+        }
+        return;
+      }
+
+      if (e.key === 'Delete' && selectedNoteId) {
+        e.preventDefault();
+        onDeleteSelectedNote();
+        return;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [
+    selection, modalSourceRef, bookmarkModalSourceRef, selectedNoteId,
+    selectedBook, selectedChapter, selectedVerse,
+    handleBookmark, handleNote, handleNoteCancel, handleBookmarkCancel,
+    clearSelection, onDeleteSelectedNote, onSelectNote,
+  ]);
 
   return (
     <main ref={mainRef} className="flex-1 overflow-y-auto p-6">

@@ -7,11 +7,13 @@ import StatusBar from '../components/status-bar/StatusBar';
 import { BibleService } from '../features/bible/services/BibleService';
 import { useReadingProgress } from '../lib/hooks/useReadingProgress';
 import { useNotes } from '../lib/hooks/useNotes';
+import { NoteRepository } from '../lib/repositories/NoteRepository';
 import type { BibleBook, VerseRef } from '../types';
 
 export type ActiveView = 'bible' | 'prayer-journal';
 
 const bibleService = new BibleService();
+const noteRepository = new NoteRepository();
 
 export default function AppLayout() {
   const [books, setBooks] = useState<BibleBook[]>([]);
@@ -21,6 +23,7 @@ export default function AppLayout() {
   const [selectedVerse, setSelectedVerse] = useState<VerseRef | null>(null);
   const [pendingNavigation, setPendingNavigation] = useState<VerseRef | null>(null);
   const [activeView, setActiveView] = useState<ActiveView>('bible');
+  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const { lastPosition, loaded, savePosition } = useReadingProgress();
   const notes = useNotes(notesRefreshKey);
 
@@ -113,6 +116,17 @@ export default function AppLayout() {
     setPendingNavigation(null);
   };
 
+  const handleSelectNote = (noteId: string | null) => {
+    setSelectedNoteId(noteId);
+  };
+
+  const handleDeleteSelectedNote = async () => {
+    if (!selectedNoteId) return;
+    await noteRepository.delete(selectedNoteId);
+    setSelectedNoteId(null);
+    setNotesRefreshKey((k) => k + 1);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -135,6 +149,9 @@ export default function AppLayout() {
           onPendingNavigationClear={handlePendingNavigationClear}
           activeView={activeView}
           prayerRefreshKey={notesRefreshKey}
+          selectedNoteId={selectedNoteId}
+          onSelectNote={handleSelectNote}
+          onDeleteSelectedNote={handleDeleteSelectedNote}
         />
         {activeView === 'bible' && (
           <RightPanel
@@ -147,6 +164,8 @@ export default function AppLayout() {
             onNoteDeleted={handleNoteDeleted}
             onNavigateToBookmark={handleNavigateToBookmark}
             onNavigateToNote={handleNavigateToBookmark}
+            selectedNoteId={selectedNoteId}
+            onSelectNote={handleSelectNote}
           />
         )}
       </div>
