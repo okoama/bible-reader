@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BibleService } from '../../features/bible/services/BibleService';
-import type { BibleBook, BibleChapter } from '../../types';
+import type { BibleBook, BibleChapter, BibleVerse } from '../../types';
 
 const bibleService = new BibleService();
 
@@ -16,6 +16,7 @@ export default function Reader({
   onSelectChapter,
 }: ReaderProps) {
   const [chapters, setChapters] = useState<BibleChapter[]>([]);
+  const [verses, setVerses] = useState<BibleVerse[]>([]);
 
   useEffect(() => {
     let isActive = true;
@@ -24,6 +25,7 @@ export default function Reader({
       if (!selectedBook) {
         if (isActive) {
           setChapters([]);
+          setVerses([]);
         }
         return;
       }
@@ -32,6 +34,7 @@ export default function Reader({
 
       if (isActive) {
         setChapters(loadedChapters);
+        setVerses([]);
       }
     };
 
@@ -42,6 +45,34 @@ export default function Reader({
     };
   }, [selectedBook]);
 
+  useEffect(() => {
+    let isActive = true;
+
+    const loadVerses = async () => {
+      if (!selectedBook || !selectedChapter) {
+        if (isActive) {
+          setVerses([]);
+        }
+        return;
+      }
+
+      const loadedVerses = await bibleService.loadVerses(
+        selectedBook.id,
+        selectedChapter,
+      );
+
+      if (isActive) {
+        setVerses(loadedVerses);
+      }
+    };
+
+    void loadVerses();
+
+    return () => {
+      isActive = false;
+    };
+  }, [selectedBook, selectedChapter]);
+
   return (
     <main className="flex-1 overflow-y-auto p-6">
       <div className="mx-auto max-w-3xl rounded border p-6">
@@ -49,35 +80,47 @@ export default function Reader({
           <div>
             <h2 className="text-2xl font-semibold">{selectedBook.name}</h2>
             <p className="mt-2 opacity-80">
-              {selectedBook.testament} · Order {selectedBook.order}
+              {selectedBook.testament}
             </p>
 
             <div className="mt-6">
               <h3 className="mb-3 font-semibold">Chapters</h3>
               <div className="flex flex-wrap gap-2">
                 {chapters.map((chapter) => {
-                  const isSelected = selectedChapter === chapter.number;
+                  const chapterNumber = chapter.chapterNumber;
+                  const isSelected = selectedChapter === chapterNumber;
 
                   return (
                     <button
-                      key={chapter.number}
+                      key={chapterNumber}
                       type="button"
-                      onClick={() => onSelectChapter(chapter.number)}
+                      onClick={() => onSelectChapter(chapterNumber)}
                       className={`rounded border px-3 py-2 ${
                         isSelected ? 'border-blue-500 bg-blue-50' : ''
                       }`}
                     >
-                      {chapter.number}
+                      {chapterNumber}
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            {selectedChapter ? (
-              <p className="mt-4">Selected chapter: {selectedChapter}</p>
+            {selectedChapter && verses.length > 0 ? (
+              <div className="mt-6 space-y-2">
+                {verses.map((verse) => (
+                  <p key={verse.verseNumber} className="leading-relaxed">
+                    <span className="mr-1 text-xs font-semibold align-super text-blue-600">
+                      {verse.verseNumber}
+                    </span>
+                    {verse.text}
+                  </p>
+                ))}
+              </div>
+            ) : selectedChapter ? (
+              <p className="mt-4 opacity-80">Loading…</p>
             ) : (
-              <p className="mt-4 opacity-80">Select a chapter to view it here.</p>
+              <p className="mt-4 opacity-80">Select a chapter to read.</p>
             )}
           </div>
         ) : (

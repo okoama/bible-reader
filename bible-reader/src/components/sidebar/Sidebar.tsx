@@ -1,26 +1,12 @@
-import { useEffect, useState } from 'react';
-import { BibleService } from '../../features/bible/services/BibleService';
 import type { BibleBook } from '../../types';
 
-const bibleService = new BibleService();
-
 type SidebarProps = {
+  books: BibleBook[];
   selectedBook: BibleBook | null;
   onSelectBook: (book: BibleBook) => void;
 };
 
-export default function Sidebar({ selectedBook, onSelectBook }: SidebarProps) {
-  const [books, setBooks] = useState<BibleBook[]>([]);
-
-  useEffect(() => {
-    const loadBooks = async () => {
-      const loadedBooks = await bibleService.loadBooks();
-      setBooks(loadedBooks);
-    };
-
-    void loadBooks();
-  }, []);
-
+export default function Sidebar({ books, selectedBook, onSelectBook }: SidebarProps) {
   return (
     <aside className="w-64 shrink-0 overflow-y-auto border-r p-4">
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide opacity-70">

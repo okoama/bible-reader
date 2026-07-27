@@ -4,28 +4,24 @@ import { db } from '../database/database';
 export class ReadingProgressRepository {
   private readonly database = db;
 
-  async getAll(): Promise<ReadingProgress[]> {
-    void this.database;
-    throw new Error('Not implemented');
+  async findAll(): Promise<ReadingProgress[]> {
+    return this.database.readingProgress.toArray();
   }
 
-  async getById(id: string): Promise<ReadingProgress | undefined> {
-    void id;
-    throw new Error('Not implemented');
+  async findById(id: string): Promise<ReadingProgress | undefined> {
+    return this.database.readingProgress.get(id);
   }
 
-  async create(progress: ReadingProgress): Promise<string> {
-    void progress;
-    throw new Error('Not implemented');
+  async findLastPosition(workId: string): Promise<ReadingProgress | undefined> {
+    return this.database.readingProgress.get(`last:${workId}`);
   }
 
-  async update(progress: ReadingProgress): Promise<void> {
-    void progress;
-    throw new Error('Not implemented');
+  async save(progress: ReadingProgress): Promise<string> {
+    await this.database.readingProgress.put(progress);
+    return progress.id;
   }
 
   async delete(id: string): Promise<void> {
-    void id;
-    throw new Error('Not implemented');
+    await this.database.readingProgress.delete(id);
   }
 }
