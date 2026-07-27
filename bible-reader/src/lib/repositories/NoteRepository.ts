@@ -21,6 +21,13 @@ export class NoteRepository {
     await this.database.notes.put(note);
   }
 
+  async findByPassage(sourceReference: string): Promise<Note[]> {
+    return this.database.notes
+      .where('sourceReference')
+      .equals(sourceReference)
+      .toArray();
+  }
+
   async delete(id: string): Promise<void> {
     await this.database.notes.delete(id);
   }
