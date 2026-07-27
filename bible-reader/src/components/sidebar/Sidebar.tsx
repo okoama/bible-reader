@@ -1,13 +1,10 @@
-import type { BibleBook, Note } from '../../types';
+import type { BibleBook } from '../../types';
 import type { ActiveView } from '../../layouts/AppLayout';
-import NoteSearch from './NoteSearch';
 
 type SidebarProps = {
   books: BibleBook[];
   selectedBook: BibleBook | null;
   onSelectBook: (book: BibleBook) => void;
-  notes: Note[];
-  onNavigateToNote: (sourceReference: string) => void;
   activeView: ActiveView;
   onSelectView: (view: ActiveView) => void;
 };
@@ -16,19 +13,12 @@ export default function Sidebar({
   books,
   selectedBook,
   onSelectBook,
-  notes,
-  onNavigateToNote,
   activeView,
   onSelectView,
 }: SidebarProps) {
   return (
     <aside className="w-64 shrink-0 overflow-y-auto border-r p-4">
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide opacity-70">
-        Notes
-      </h2>
-      <NoteSearch notes={notes} books={books} onNavigate={onNavigateToNote} />
-
-      <h2 className="mt-6 mb-3 text-sm font-semibold uppercase tracking-wide opacity-70">
         Library
       </h2>
 

@@ -122,8 +122,6 @@ export default function AppLayout() {
           books={books}
           selectedBook={selectedBook}
           onSelectBook={handleSelectBook}
-          notes={notes}
-          onNavigateToNote={handleNavigateToBookmark}
           activeView={activeView}
           onSelectView={handleSelectView}
         />
@@ -143,9 +141,12 @@ export default function AppLayout() {
             selectedVerse={selectedVerse}
             selectedBook={selectedBook}
             selectedChapter={selectedChapter}
+            notes={notes}
+            books={books}
             refreshKey={notesRefreshKey}
             onNoteDeleted={handleNoteDeleted}
             onNavigateToBookmark={handleNavigateToBookmark}
+            onNavigateToNote={handleNavigateToBookmark}
           />
         )}
       </div>
