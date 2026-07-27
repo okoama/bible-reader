@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BibleService } from '../../features/bible/services/BibleService';
 import { useTextSelection } from '../../features/annotations/hooks/useTextSelection';
+import type { SelectedVerse } from '../../features/annotations/hooks/useTextSelection';
 import type { BibleBook, BibleChapter, BibleVerse } from '../../types';
+import AnnotationToolbar from '../AnnotationToolbar';
 
 const bibleService = new BibleService();
 
@@ -18,8 +20,23 @@ export default function Reader({
 }: ReaderProps) {
   const [chapters, setChapters] = useState<BibleChapter[]>([]);
   const [verses, setVerses] = useState<BibleVerse[]>([]);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { selection: _selection } = useTextSelection(containerRef);
+  const [containerElement, setContainerElement] = useState<HTMLDivElement | null>(null);
+  const { selection, clearSelection } = useTextSelection(containerElement);
+
+  const handleHighlight = (text: string, verses: SelectedVerse[]) => {
+    console.log('Highlight:', text, verses);
+    clearSelection();
+  };
+
+  const handleNote = (text: string, verses: SelectedVerse[]) => {
+    console.log('Note:', text, verses);
+    clearSelection();
+  };
+
+  const handleBookmark = (verses: SelectedVerse[]) => {
+    console.log('Bookmark:', verses);
+    clearSelection();
+  };
 
   useEffect(() => {
     let isActive = true;
@@ -110,7 +127,7 @@ export default function Reader({
             </div>
 
             {selectedChapter && verses.length > 0 ? (
-              <div ref={containerRef} className="mt-6 space-y-2">
+              <div ref={setContainerElement} className="mt-6 space-y-2">
                 {verses.map((verse) => (
                   <p
                     key={verse.verseNumber}
@@ -141,6 +158,15 @@ export default function Reader({
           </div>
         )}
       </div>
+
+      {selection && (
+        <AnnotationToolbar
+          selection={selection}
+          onHighlight={handleHighlight}
+          onNote={handleNote}
+          onBookmark={handleBookmark}
+        />
+      )}
     </main>
   );
 }

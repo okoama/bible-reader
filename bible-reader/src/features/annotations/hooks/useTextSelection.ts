@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 
-interface SelectedVerse {
+export interface SelectedVerse {
   bookId: string;
   chapterNumber: number;
   verseNumber: number;
 }
 
-interface TextSelection {
+export interface TextSelection {
   text: string;
   rect: DOMRect;
   verses: SelectedVerse[];
@@ -89,7 +89,7 @@ function computeUnionRect(verseEls: Element[]): DOMRect {
 }
 
 export function useTextSelection(
-  containerRef: React.RefObject<HTMLDivElement | null>,
+  containerElement: HTMLDivElement | null,
 ): {
   selection: TextSelection | null;
   clearSelection: () => void;
@@ -102,8 +102,7 @@ export function useTextSelection(
   }, []);
 
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) {
+    if (!containerElement) {
       return;
     }
 
@@ -122,7 +121,7 @@ export function useTextSelection(
 
       const range = sel.getRangeAt(0);
       const verseEls = verses.map((v) =>
-        container.querySelector(`[data-book="${v.bookId}"][data-chapter="${v.chapterNumber}"][data-verse="${v.verseNumber}"]`),
+        containerElement.querySelector(`[data-book="${v.bookId}"][data-chapter="${v.chapterNumber}"][data-verse="${v.verseNumber}"]`),
       ).filter((el): el is Element => el !== null);
 
       const rect = verseEls.length > 0
@@ -136,11 +135,11 @@ export function useTextSelection(
       });
     };
 
-    container.addEventListener('mouseup', handleMouseUp);
+    containerElement.addEventListener('mouseup', handleMouseUp);
     return () => {
-      container.removeEventListener('mouseup', handleMouseUp);
+      containerElement.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [containerRef, clearSelection]);
+  }, [containerElement, clearSelection]);
 
   return { selection, clearSelection };
 }
