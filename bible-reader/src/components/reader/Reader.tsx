@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { BibleService } from '../../features/bible/services/BibleService';
 import { useTextSelection } from '../../features/annotations/hooks/useTextSelection';
 import type { SelectedVerse } from '../../features/annotations/hooks/useTextSelection';
-import type { BibleBook, BibleChapter, BibleVerse, Highlight, Note } from '../../types';
+import type { BibleBook, BibleChapter, BibleVerse, Highlight, Note, VerseRef } from '../../types';
 import { HighlightRepository } from '../../lib/repositories/HighlightRepository';
 import { useHighlights } from '../../lib/hooks/useHighlights';
 import { useChapterNotes } from '../../lib/hooks/useChapterNotes';
@@ -58,14 +58,18 @@ function renderVerseText(text: string, verseHighlights: Highlight[]): React.Reac
 type ReaderProps = {
   selectedBook: BibleBook | null;
   selectedChapter: number | null;
+  selectedVerse: VerseRef | null;
   onSelectChapter: (chapterNumber: number) => void;
+  onSelectVerse: (verse: VerseRef) => void;
   onNoteSaved?: () => void;
 };
 
 export default function Reader({
   selectedBook,
   selectedChapter,
+  selectedVerse,
   onSelectChapter,
+  onSelectVerse,
   onNoteSaved,
 }: ReaderProps) {
   const [chapters, setChapters] = useState<BibleChapter[]>([]);
@@ -91,6 +95,12 @@ export default function Reader({
   function handleNoteIndicatorClick(note: Note) {
     setEditingNote(note);
     setModalSourceRef(note.sourceReference);
+  }
+
+  function handleVerseClick(verseNumber: number) {
+    if (selectedBook && selectedChapter) {
+      onSelectVerse({ bookId: selectedBook.id, chapterNumber: selectedChapter, verseNumber });
+    }
   }
 
   const handleHighlight = async (text: string, selectedVerses: SelectedVerse[]) => {
@@ -233,10 +243,15 @@ export default function Reader({
                   return (
                     <p
                       key={verse.verseNumber}
-                      className="leading-relaxed"
+                      className={`cursor-pointer leading-relaxed rounded px-1 -mx-1 ${
+                        selectedVerse?.verseNumber === verse.verseNumber
+                          ? 'bg-blue-50'
+                          : 'hover:bg-gray-50'
+                      }`}
                       data-book={selectedBook.id}
                       data-chapter={selectedChapter}
                       data-verse={verse.verseNumber}
+                      onClick={() => handleVerseClick(verse.verseNumber)}
                     >
                       <span className="mr-1 text-xs font-semibold align-super text-blue-600">
                         {verse.verseNumber}

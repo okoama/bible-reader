@@ -7,7 +7,7 @@ import StatusBar from '../components/status-bar/StatusBar';
 import { BibleService } from '../features/bible/services/BibleService';
 import { useReadingProgress } from '../lib/hooks/useReadingProgress';
 import { useNotes } from '../lib/hooks/useNotes';
-import type { BibleBook } from '../types';
+import type { BibleBook, VerseRef } from '../types';
 
 const bibleService = new BibleService();
 
@@ -16,6 +16,7 @@ export default function AppLayout() {
   const [selectedBook, setSelectedBook] = useState<BibleBook | null>(null);
   const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
   const [notesRefreshKey, setNotesRefreshKey] = useState(0);
+  const [selectedVerse, setSelectedVerse] = useState<VerseRef | null>(null);
   const { lastPosition, loaded, savePosition } = useReadingProgress();
   const notes = useNotes(notesRefreshKey);
 
@@ -51,13 +52,19 @@ export default function AppLayout() {
   const handleSelectBook = (book: BibleBook) => {
     setSelectedBook(book);
     setSelectedChapter(null);
+    setSelectedVerse(null);
   };
 
   const handleSelectChapter = (chapter: number) => {
     setSelectedChapter(chapter);
+    setSelectedVerse(null);
     if (selectedBook) {
       void savePosition(selectedBook.id, chapter);
     }
+  };
+
+  const handleSelectVerse = (verse: VerseRef) => {
+    setSelectedVerse(verse);
   };
 
   const handleNoteSaved = () => {
@@ -79,9 +86,14 @@ export default function AppLayout() {
           selectedBook={selectedBook}
           selectedChapter={selectedChapter}
           onSelectChapter={handleSelectChapter}
+          onSelectVerse={handleSelectVerse}
           onNoteSaved={handleNoteSaved}
         />
-        <RightPanel notes={notes} />
+        <RightPanel
+          selectedVerse={selectedVerse}
+          selectedBook={selectedBook}
+          selectedChapter={selectedChapter}
+        />
       </div>
 
       <StatusBar />

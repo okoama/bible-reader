@@ -4,28 +4,23 @@ import { db } from '../database/database';
 export class BookmarkRepository {
   private readonly database = db;
 
-  async getAll(): Promise<Bookmark[]> {
-    void this.database;
-    throw new Error('Not implemented');
+  async findAll(): Promise<Bookmark[]> {
+    return this.database.bookmarks.toArray();
   }
 
-  async getById(id: string): Promise<Bookmark | undefined> {
-    void id;
-    throw new Error('Not implemented');
+  async findByBook(bookId: string): Promise<Bookmark[]> {
+    return this.database.bookmarks
+      .where('sourceReference')
+      .startsWith(`${bookId}:`)
+      .toArray();
   }
 
   async create(bookmark: Bookmark): Promise<string> {
-    void bookmark;
-    throw new Error('Not implemented');
-  }
-
-  async update(bookmark: Bookmark): Promise<void> {
-    void bookmark;
-    throw new Error('Not implemented');
+    await this.database.bookmarks.put(bookmark);
+    return bookmark.id;
   }
 
   async delete(id: string): Promise<void> {
-    void id;
-    throw new Error('Not implemented');
+    await this.database.bookmarks.delete(id);
   }
 }
