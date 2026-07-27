@@ -28,6 +28,13 @@ export class NoteRepository {
       .toArray();
   }
 
+  async findByBook(bookId: string): Promise<Note[]> {
+    return this.database.notes
+      .where('sourceReference')
+      .startsWith(`${bookId}:`)
+      .toArray();
+  }
+
   async delete(id: string): Promise<void> {
     await this.database.notes.delete(id);
   }

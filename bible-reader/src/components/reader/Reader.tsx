@@ -5,6 +5,7 @@ import type { SelectedVerse } from '../../features/annotations/hooks/useTextSele
 import type { BibleBook, BibleChapter, BibleVerse, Highlight, Note } from '../../types';
 import { HighlightRepository } from '../../lib/repositories/HighlightRepository';
 import { useHighlights } from '../../lib/hooks/useHighlights';
+import { useChapterNotes } from '../../lib/hooks/useChapterNotes';
 import { createId } from '../../lib/utils/id';
 import AnnotationToolbar from '../AnnotationToolbar';
 import NoteEditor from '../../features/notes/components/NoteEditor';
@@ -75,6 +76,17 @@ export default function Reader({
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const { selection, clearSelection } = useTextSelection(containerElement);
   const highlights = useHighlights(selectedBook?.id ?? null, selectedChapter, refreshKey);
+  const chapterNotes = useChapterNotes(selectedBook?.id ?? null, selectedChapter, refreshKey);
+
+  function verseHasNote(verseNumber: number): boolean {
+    return chapterNotes.some((n) => {
+      const match = n.sourceReference.match(/^[^:]+:\d+:(\d+)(?:-(\d+))?$/);
+      if (!match) return false;
+      const start = Number.parseInt(match[1], 10);
+      const end = match[2] ? Number.parseInt(match[2], 10) : start;
+      return verseNumber >= start && verseNumber <= end;
+    });
+  }
 
   const handleHighlight = async (text: string, selectedVerses: SelectedVerse[]) => {
     const first = selectedVerses[0];
@@ -224,6 +236,9 @@ export default function Reader({
                       <span className="mr-1 text-xs font-semibold align-super text-blue-600">
                         {verse.verseNumber}
                       </span>
+                      {verseHasNote(verse.verseNumber) && (
+                        <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-amber-500 align-super" />
+                      )}
                       {renderVerseText(verse.text, verseHighlights)}
                     </p>
                   );
