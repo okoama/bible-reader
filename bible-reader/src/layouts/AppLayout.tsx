@@ -9,6 +9,8 @@ import { useReadingProgress } from '../lib/hooks/useReadingProgress';
 import { useNotes } from '../lib/hooks/useNotes';
 import type { BibleBook, VerseRef } from '../types';
 
+export type ActiveView = 'bible' | 'prayer-journal';
+
 const bibleService = new BibleService();
 
 export default function AppLayout() {
@@ -18,6 +20,7 @@ export default function AppLayout() {
   const [notesRefreshKey, setNotesRefreshKey] = useState(0);
   const [selectedVerse, setSelectedVerse] = useState<VerseRef | null>(null);
   const [pendingNavigation, setPendingNavigation] = useState<VerseRef | null>(null);
+  const [activeView, setActiveView] = useState<ActiveView>('bible');
   const { lastPosition, loaded, savePosition } = useReadingProgress();
   const notes = useNotes(notesRefreshKey);
 
@@ -51,9 +54,19 @@ export default function AppLayout() {
   }, [loaded, lastPosition, books, selectedBook]);
 
   const handleSelectBook = (book: BibleBook) => {
+    setActiveView('bible');
     setSelectedBook(book);
     setSelectedChapter(null);
     setSelectedVerse(null);
+  };
+
+  const handleSelectView = (view: ActiveView) => {
+    setActiveView(view);
+    if (view === 'prayer-journal') {
+      setSelectedBook(null);
+      setSelectedChapter(null);
+      setSelectedVerse(null);
+    }
   };
 
   const handleSelectChapter = (chapter: number) => {
@@ -110,6 +123,9 @@ export default function AppLayout() {
           selectedBook={selectedBook}
           onSelectBook={handleSelectBook}
           notes={notes}
+          onNavigateToNote={handleNavigateToBookmark}
+          activeView={activeView}
+          onSelectView={handleSelectView}
         />
         <Reader
           selectedBook={selectedBook}
@@ -119,15 +135,19 @@ export default function AppLayout() {
           onNoteSaved={handleNoteSaved}
           pendingNavigation={pendingNavigation}
           onPendingNavigationClear={handlePendingNavigationClear}
+          activeView={activeView}
+          prayerRefreshKey={notesRefreshKey}
         />
-        <RightPanel
-          selectedVerse={selectedVerse}
-          selectedBook={selectedBook}
-          selectedChapter={selectedChapter}
-          refreshKey={notesRefreshKey}
-          onNoteDeleted={handleNoteDeleted}
-          onNavigateToBookmark={handleNavigateToBookmark}
-        />
+        {activeView === 'bible' && (
+          <RightPanel
+            selectedVerse={selectedVerse}
+            selectedBook={selectedBook}
+            selectedChapter={selectedChapter}
+            refreshKey={notesRefreshKey}
+            onNoteDeleted={handleNoteDeleted}
+            onNavigateToBookmark={handleNavigateToBookmark}
+          />
+        )}
       </div>
 
       <StatusBar />

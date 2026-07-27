@@ -3,6 +3,7 @@ import { BibleService } from '../../features/bible/services/BibleService';
 import { useTextSelection } from '../../features/annotations/hooks/useTextSelection';
 import type { SelectedVerse } from '../../features/annotations/hooks/useTextSelection';
 import type { BibleBook, BibleChapter, BibleVerse, Highlight, Note, VerseRef } from '../../types';
+import type { ActiveView } from '../../layouts/AppLayout';
 import { HighlightRepository } from '../../lib/repositories/HighlightRepository';
 import { BookmarkEditor } from '../../features/bookmarks';
 import { useHighlights } from '../../lib/hooks/useHighlights';
@@ -10,6 +11,7 @@ import { useChapterNotes } from '../../lib/hooks/useChapterNotes';
 import { createId } from '../../lib/utils/id';
 import AnnotationToolbar from '../AnnotationToolbar';
 import NoteEditor from '../../features/notes/components/NoteEditor';
+import PrayerJournal from './PrayerJournal';
 
 const bibleService = new BibleService();
 const highlightRepository = new HighlightRepository();
@@ -65,6 +67,8 @@ type ReaderProps = {
   onNoteSaved?: () => void;
   pendingNavigation: VerseRef | null;
   onPendingNavigationClear: () => void;
+  activeView: ActiveView;
+  prayerRefreshKey: number;
 };
 
 export default function Reader({
@@ -76,6 +80,8 @@ export default function Reader({
   onNoteSaved,
   pendingNavigation,
   onPendingNavigationClear,
+  activeView,
+  prayerRefreshKey,
 }: ReaderProps) {
   const [chapters, setChapters] = useState<BibleChapter[]>([]);
   const [verses, setVerses] = useState<BibleVerse[]>([]);
@@ -179,6 +185,10 @@ export default function Reader({
     setBookmarkModalSourceRef(null);
   };
 
+  const handlePrayerRefresh = () => {
+    onNoteSaved?.();
+  };
+
   useEffect(() => {
     let isActive = true;
 
@@ -251,88 +261,94 @@ export default function Reader({
 
   return (
     <main ref={mainRef} className="flex-1 overflow-y-auto p-6">
-      <div className="mx-auto max-w-3xl rounded border p-6">
-        {selectedBook ? (
-          <div>
-            <h2 className="text-2xl font-semibold">{selectedBook.name}</h2>
-            <p className="mt-2 opacity-80">
-              {selectedBook.testament}
-            </p>
+      {activeView === 'prayer-journal' ? (
+        <div className="mx-auto max-w-3xl rounded border p-6">
+          <PrayerJournal refreshKey={prayerRefreshKey} onRefresh={handlePrayerRefresh} />
+        </div>
+      ) : (
+        <div className="mx-auto max-w-3xl rounded border p-6">
+          {selectedBook ? (
+            <div>
+              <h2 className="text-2xl font-semibold">{selectedBook.name}</h2>
+              <p className="mt-2 opacity-80">
+                {selectedBook.testament}
+              </p>
 
-            <div className="mt-6">
-              <h3 className="mb-3 font-semibold">Chapters</h3>
-              <div className="flex flex-wrap gap-2">
-                {chapters.map((chapter) => {
-                  const chapterNumber = chapter.chapterNumber;
-                  const isSelected = selectedChapter === chapterNumber;
+              <div className="mt-6">
+                <h3 className="mb-3 font-semibold">Chapters</h3>
+                <div className="flex flex-wrap gap-2">
+                  {chapters.map((chapter) => {
+                    const chapterNumber = chapter.chapterNumber;
+                    const isSelected = selectedChapter === chapterNumber;
 
-                  return (
-                    <button
-                      key={chapterNumber}
-                      type="button"
-                      onClick={() => onSelectChapter(chapterNumber)}
-                      className={`rounded border px-3 py-2 ${
-                        isSelected ? 'border-blue-500 bg-blue-50' : ''
-                      }`}
-                    >
-                      {chapterNumber}
-                    </button>
-                  );
-                })}
+                    return (
+                      <button
+                        key={chapterNumber}
+                        type="button"
+                        onClick={() => onSelectChapter(chapterNumber)}
+                        className={`rounded border px-3 py-2 ${
+                          isSelected ? 'border-blue-500 bg-blue-50' : ''
+                        }`}
+                      >
+                        {chapterNumber}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
+
+              {selectedChapter && verses.length > 0 ? (
+                <div ref={setContainerElement} className="mt-6 space-y-2">
+                  {verses.map((verse) => {
+                    const verseHighlights = getHighlightsForVerse(highlights, verse.verseNumber);
+
+                    return (
+                      <p
+                        key={verse.verseNumber}
+                        ref={verseRefCallback(`${selectedBook.id}:${selectedChapter}:${verse.verseNumber}`)}
+                        className={`cursor-pointer leading-relaxed rounded px-1 -mx-1 ${
+                          selectedVerse?.verseNumber === verse.verseNumber
+                            ? 'bg-blue-50'
+                            : 'hover:bg-gray-50'
+                        }`}
+                        data-book={selectedBook.id}
+                        data-chapter={selectedChapter}
+                        data-verse={verse.verseNumber}
+                        onClick={() => handleVerseClick(verse.verseNumber)}
+                      >
+                        <span className="mr-1 text-xs font-semibold align-super text-blue-600">
+                          {verse.verseNumber}
+                        </span>
+                        {getVerseNotes(verse.verseNumber).map((note) => (
+                          <button
+                            key={note.id}
+                            type="button"
+                            onClick={() => handleNoteIndicatorClick(note)}
+                            title={note.title}
+                            className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-amber-500 align-super hover:scale-150"
+                          />
+                        ))}
+                        {renderVerseText(verse.text, verseHighlights)}
+                      </p>
+                    );
+                  })}
+                </div>
+              ) : selectedChapter ? (
+                <p className="mt-4 opacity-80">Loading...</p>
+              ) : (
+                <p className="mt-4 opacity-80">Select a chapter to read.</p>
+              )}
             </div>
-
-            {selectedChapter && verses.length > 0 ? (
-              <div ref={setContainerElement} className="mt-6 space-y-2">
-                {verses.map((verse) => {
-                  const verseHighlights = getHighlightsForVerse(highlights, verse.verseNumber);
-
-                  return (
-                    <p
-                      key={verse.verseNumber}
-                      ref={verseRefCallback(`${selectedBook.id}:${selectedChapter}:${verse.verseNumber}`)}
-                      className={`cursor-pointer leading-relaxed rounded px-1 -mx-1 ${
-                        selectedVerse?.verseNumber === verse.verseNumber
-                          ? 'bg-blue-50'
-                          : 'hover:bg-gray-50'
-                      }`}
-                      data-book={selectedBook.id}
-                      data-chapter={selectedChapter}
-                      data-verse={verse.verseNumber}
-                      onClick={() => handleVerseClick(verse.verseNumber)}
-                    >
-                      <span className="mr-1 text-xs font-semibold align-super text-blue-600">
-                        {verse.verseNumber}
-                      </span>
-                      {getVerseNotes(verse.verseNumber).map((note) => (
-                        <button
-                          key={note.id}
-                          type="button"
-                          onClick={() => handleNoteIndicatorClick(note)}
-                          title={note.title}
-                          className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-amber-500 align-super hover:scale-150"
-                        />
-                      ))}
-                      {renderVerseText(verse.text, verseHighlights)}
-                    </p>
-                  );
-                })}
-              </div>
-            ) : selectedChapter ? (
-              <p className="mt-4 opacity-80">Loading…</p>
-            ) : (
-              <p className="mt-4 opacity-80">Select a chapter to read.</p>
-            )}
-          </div>
-        ) : (
-          <div className="text-center">
-            <h2 className="text-2xl font-semibold">Welcome to Catholic Study Desk</h2>
-            <p className="mt-4 opacity-80">
-              Select a work from the Library to begin reading.
-            </p>
-          </div>
-        )}
-      </div>
+          ) : (
+            <div className="text-center">
+              <h2 className="text-2xl font-semibold">Welcome to Catholic Study Desk</h2>
+              <p className="mt-4 opacity-80">
+                Select a work from the Library to begin reading.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
       {selection && (
         <AnnotationToolbar

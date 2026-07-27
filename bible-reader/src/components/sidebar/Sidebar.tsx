@@ -1,22 +1,47 @@
 import type { BibleBook, Note } from '../../types';
-import { truncateText } from '../../lib/utils/text';
+import type { ActiveView } from '../../layouts/AppLayout';
+import NoteSearch from './NoteSearch';
 
 type SidebarProps = {
   books: BibleBook[];
   selectedBook: BibleBook | null;
   onSelectBook: (book: BibleBook) => void;
   notes: Note[];
+  onNavigateToNote: (sourceReference: string) => void;
+  activeView: ActiveView;
+  onSelectView: (view: ActiveView) => void;
 };
 
-export default function Sidebar({ books, selectedBook, onSelectBook, notes }: SidebarProps) {
+export default function Sidebar({
+  books,
+  selectedBook,
+  onSelectBook,
+  notes,
+  onNavigateToNote,
+  activeView,
+  onSelectView,
+}: SidebarProps) {
   return (
     <aside className="w-64 shrink-0 overflow-y-auto border-r p-4">
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide opacity-70">
+        Notes
+      </h2>
+      <NoteSearch notes={notes} onNavigate={onNavigateToNote} />
+
+      <h2 className="mt-6 mb-3 text-sm font-semibold uppercase tracking-wide opacity-70">
         Library
       </h2>
 
       <div className="space-y-2">
-        <div className="rounded border px-3 py-2">Bible</div>
+        <button
+          type="button"
+          onClick={() => onSelectView('bible')}
+          className={`w-full rounded border px-3 py-2 text-left text-sm ${
+            activeView === 'bible' && !selectedBook ? 'border-blue-500 bg-blue-50' : ''
+          }`}
+        >
+          Bible
+        </button>
         {books.map((book) => {
           const isSelected = selectedBook?.id === book.id;
 
@@ -33,35 +58,21 @@ export default function Sidebar({ books, selectedBook, onSelectBook, notes }: Si
             </button>
           );
         })}
-        <div className="rounded border px-3 py-2">Catechism</div>
-        <div className="rounded border px-3 py-2">Summa Theologiae</div>
-        <div className="rounded border px-3 py-2">Confessions</div>
-        <div className="rounded border px-3 py-2">Imitation of Christ</div>
-        <div className="rounded border px-3 py-2">Devout Life</div>
-        <div className="rounded border px-3 py-2">Prayer Journal</div>
+        <div className="rounded border px-3 py-2 opacity-50">Catechism</div>
+        <div className="rounded border px-3 py-2 opacity-50">Summa Theologiae</div>
+        <div className="rounded border px-3 py-2 opacity-50">Confessions</div>
+        <div className="rounded border px-3 py-2 opacity-50">Imitation of Christ</div>
+        <div className="rounded border px-3 py-2 opacity-50">Devout Life</div>
+        <button
+          type="button"
+          onClick={() => onSelectView('prayer-journal')}
+          className={`w-full rounded border px-3 py-2 text-left text-sm ${
+            activeView === 'prayer-journal' ? 'border-blue-500 bg-blue-50' : ''
+          }`}
+        >
+          Prayer Journal
+        </button>
       </div>
-
-      {notes.length > 0 && (
-        <>
-          <h2 className="mt-6 mb-3 text-sm font-semibold uppercase tracking-wide opacity-70">
-            Notes
-          </h2>
-          <div className="space-y-2">
-            {notes.map((note) => (
-              <div
-                key={note.id}
-                className="rounded border px-3 py-2 text-sm"
-              >
-                <p className="font-medium">{note.title}</p>
-                <p className="mt-1 text-xs opacity-60">{note.sourceReference}</p>
-                {note.content && (
-                  <p className="mt-1 text-xs opacity-80">{truncateText(note.content, 60)}</p>
-                )}
-              </div>
-            ))}
-          </div>
-        </>
-      )}
     </aside>
   );
 }
