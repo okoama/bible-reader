@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Note } from '../../../types';
 import { NoteRepository } from '../../../lib/repositories/NoteRepository';
 import { createId } from '../../../lib/utils/id';
+import { useDraft, type DraftData } from '../../../lib/hooks/useDraft';
 
 const noteRepository = new NoteRepository();
 
@@ -20,6 +21,7 @@ export default function NoteEditor({
   onSave,
   onCancel,
 }: NoteEditorProps) {
+  const draftKey = note?.id ? `note:${note.id}` : `note:new:${sourceReference}`;
   const [title, setTitle] = useState(note?.title ?? '');
   const [content, setContent] = useState(note?.content ?? '');
   const [tags, setTags] = useState<string[]>(note?.tags ?? []);
@@ -29,6 +31,20 @@ export default function NoteEditor({
   const titleRef = useRef<HTMLInputElement>(null);
   const tagInputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  const { hasDraft, restoreDraft, clearDraft } = useDraft(draftKey, title, content);
+
+  const handleRestore = useCallback(() => {
+    const data: DraftData | null = restoreDraft();
+    if (data) {
+      if (data.title) setTitle(data.title);
+      if (data.content) setContent(data.content);
+    }
+  }, [restoreDraft]);
+
+  const handleDiscardDraft = useCallback(() => {
+    clearDraft();
+  }, [clearDraft]);
 
   useEffect(() => {
     titleRef.current?.focus();
@@ -129,6 +145,7 @@ export default function NoteEditor({
       await noteRepository.create(saved);
     }
 
+    clearDraft();
     onSave(saved);
   };
 
@@ -146,6 +163,28 @@ export default function NoteEditor({
         <h2 className="text-lg font-semibold">
           {note ? 'Edit Note' : 'New Note'}
         </h2>
+
+        {hasDraft && (
+          <div className="flex items-center justify-between rounded border border-amber-300 bg-amber-50 px-3 py-2">
+            <p className="text-sm text-amber-800">Unsaved draft found.</p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleDiscardDraft}
+                className="text-xs text-amber-600 hover:text-amber-800"
+              >
+                Discard
+              </button>
+              <button
+                type="button"
+                onClick={handleRestore}
+                className="rounded bg-amber-600 px-2 py-0.5 text-xs text-white hover:bg-amber-700"
+              >
+                Restore
+              </button>
+            </div>
+          </div>
+        )}
 
         <input
           ref={titleRef}

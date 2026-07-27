@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Prayer } from '../../../types';
 import { PrayerRepository } from '../../../lib/repositories/PrayerRepository';
 import { createId } from '../../../lib/utils/id';
+import { useDraft, type DraftData } from '../../../lib/hooks/useDraft';
 
 const prayerRepository = new PrayerRepository();
 
@@ -12,9 +13,24 @@ type PrayerEditorProps = {
 };
 
 export default function PrayerEditor({ prayer, onSave, onCancel }: PrayerEditorProps) {
+  const draftKey = prayer?.id ? `prayer:${prayer.id}` : 'prayer:new';
   const [title, setTitle] = useState(prayer?.title ?? '');
   const [content, setContent] = useState(prayer?.content ?? '');
   const titleRef = useRef<HTMLInputElement>(null);
+
+  const { hasDraft, restoreDraft, clearDraft } = useDraft(draftKey, title, content);
+
+  const handleRestore = useCallback(() => {
+    const data: DraftData | null = restoreDraft();
+    if (data) {
+      if (data.title) setTitle(data.title);
+      if (data.content) setContent(data.content);
+    }
+  }, [restoreDraft]);
+
+  const handleDiscardDraft = useCallback(() => {
+    clearDraft();
+  }, [clearDraft]);
 
   useEffect(() => {
     titleRef.current?.focus();
@@ -54,6 +70,7 @@ export default function PrayerEditor({ prayer, onSave, onCancel }: PrayerEditorP
       await prayerRepository.create(saved);
     }
 
+    clearDraft();
     onSave(saved);
   };
 
@@ -69,6 +86,28 @@ export default function PrayerEditor({ prayer, onSave, onCancel }: PrayerEditorP
         <h2 className="text-lg font-semibold">
           {prayer ? 'Edit Prayer' : 'New Prayer'}
         </h2>
+
+        {hasDraft && (
+          <div className="flex items-center justify-between rounded border border-amber-300 bg-amber-50 px-3 py-2">
+            <p className="text-sm text-amber-800">Unsaved draft found.</p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleDiscardDraft}
+                className="text-xs text-amber-600 hover:text-amber-800"
+              >
+                Discard
+              </button>
+              <button
+                type="button"
+                onClick={handleRestore}
+                className="rounded bg-amber-600 px-2 py-0.5 text-xs text-white hover:bg-amber-700"
+              >
+                Restore
+              </button>
+            </div>
+          </div>
+        )}
 
         <input
           ref={titleRef}
