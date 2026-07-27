@@ -1,12 +1,16 @@
 import { useState } from 'react';
-import type { BibleBook, Note, VerseRef } from '../../types';
+import type { BibleBook, Highlight, Bookmark, Note, VerseRef } from '../../types';
 import { useHighlights } from '../../lib/hooks/useHighlights';
 import { useChapterNotes } from '../../lib/hooks/useChapterNotes';
 import { useBookmarks } from '../../lib/hooks/useBookmarks';
+import { HighlightRepository } from '../../lib/repositories/HighlightRepository';
+import { BookmarkRepository } from '../../lib/repositories/BookmarkRepository';
 import { NoteRepository } from '../../lib/repositories/NoteRepository';
 import { formatDate } from '../../lib/utils/date';
 import ConfirmDialog from '../ConfirmDialog';
 
+const highlightRepository = new HighlightRepository();
+const bookmarkRepository = new BookmarkRepository();
 const noteRepository = new NoteRepository();
 
 type RightPanelProps = {
@@ -33,6 +37,8 @@ export default function RightPanel({
   onNoteDeleted,
 }: RightPanelProps) {
   const [deletingNote, setDeletingNote] = useState<Note | null>(null);
+  const [deletingHighlight, setDeletingHighlight] = useState<Highlight | null>(null);
+  const [deletingBookmark, setDeletingBookmark] = useState<Bookmark | null>(null);
   const highlights = useHighlights(selectedBook?.id ?? null, selectedChapter, refreshKey);
   const notes = useChapterNotes(selectedBook?.id ?? null, selectedChapter, refreshKey);
   const bookmarks = useBookmarks(selectedBook?.id ?? null, selectedChapter, refreshKey);
@@ -44,6 +50,20 @@ export default function RightPanel({
     onNoteDeleted();
   }
 
+  async function handleConfirmDeleteHighlight() {
+    if (!deletingHighlight) return;
+    await highlightRepository.delete(deletingHighlight.id);
+    setDeletingHighlight(null);
+    onNoteDeleted();
+  }
+
+  async function handleConfirmDeleteBookmark() {
+    if (!deletingBookmark) return;
+    await bookmarkRepository.delete(deletingBookmark.id);
+    setDeletingBookmark(null);
+    onNoteDeleted();
+  }
+
   const verseNumber = selectedVerse?.verseNumber ?? null;
 
   const verseHighlights = verseNumber !== null
@@ -52,10 +72,6 @@ export default function RightPanel({
 
   const verseNotes = verseNumber !== null
     ? notes.filter((n) => coversVerse(n.sourceReference, verseNumber))
-    : [];
-
-  const verseBookmarks = verseNumber !== null
-    ? bookmarks.filter((b) => coversVerse(b.sourceReference, verseNumber))
     : [];
 
   const hasSelection = selectedVerse !== null;
@@ -82,9 +98,18 @@ export default function RightPanel({
               <div className="space-y-2">
                 {verseHighlights.map((h) => (
                   <div key={h.id} className="rounded border p-2">
-                    <p className="text-sm" style={{ borderLeft: `3px solid ${h.color}`, paddingLeft: 8 }}>
-                      {h.selectedText}
-                    </p>
+                    <div className="flex items-start justify-between">
+                      <p className="text-sm" style={{ borderLeft: `3px solid ${h.color}`, paddingLeft: 8 }}>
+                        {h.selectedText}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setDeletingHighlight(h)}
+                        className="ml-2 shrink-0 text-xs text-red-500 hover:text-red-700"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -118,23 +143,35 @@ export default function RightPanel({
             </section>
           )}
 
-          {verseBookmarks.length > 0 && (
+          {bookmarks.length > 0 && (
             <section>
               <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide opacity-60">
                 Bookmarks
               </h3>
               <div className="space-y-2">
-                {verseBookmarks.map((b) => (
+                {bookmarks.map((b) => (
                   <div key={b.id} className="rounded border p-2">
-                    <p className="text-sm font-medium">{b.title ?? 'Bookmark'}</p>
-                    <p className="mt-1 text-xs opacity-60">{formatDate(b.createdAt)}</p>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-sm font-medium">{b.title ?? 'Bookmark'}</p>
+                        <p className="mt-1 text-xs opacity-60">{b.sourceReference}</p>
+                        <p className="mt-1 text-xs opacity-60">{formatDate(b.createdAt)}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setDeletingBookmark(b)}
+                        className="ml-2 shrink-0 text-xs text-red-500 hover:text-red-700"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
             </section>
           )}
 
-          {verseHighlights.length === 0 && verseNotes.length === 0 && verseBookmarks.length === 0 && (
+          {verseHighlights.length === 0 && verseNotes.length === 0 && bookmarks.length === 0 && (
             <p className="text-sm opacity-60">
               No annotations on this verse yet.
             </p>
@@ -153,6 +190,20 @@ export default function RightPanel({
           message={`Delete note "${deletingNote.title}"?`}
           onConfirm={handleConfirmDelete}
           onCancel={() => setDeletingNote(null)}
+        />
+      )}
+      {deletingHighlight && (
+        <ConfirmDialog
+          message={`Delete highlight "${deletingHighlight.selectedText}"?`}
+          onConfirm={handleConfirmDeleteHighlight}
+          onCancel={() => setDeletingHighlight(null)}
+        />
+      )}
+      {deletingBookmark && (
+        <ConfirmDialog
+          message={`Delete bookmark "${deletingBookmark.title ?? 'Bookmark'}"?`}
+          onConfirm={handleConfirmDeleteBookmark}
+          onCancel={() => setDeletingBookmark(null)}
         />
       )}
     </aside>

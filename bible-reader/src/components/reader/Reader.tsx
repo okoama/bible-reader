@@ -4,6 +4,7 @@ import { useTextSelection } from '../../features/annotations/hooks/useTextSelect
 import type { SelectedVerse } from '../../features/annotations/hooks/useTextSelection';
 import type { BibleBook, BibleChapter, BibleVerse, Highlight, Note, VerseRef } from '../../types';
 import { HighlightRepository } from '../../lib/repositories/HighlightRepository';
+import { BookmarkEditor } from '../../features/bookmarks';
 import { useHighlights } from '../../lib/hooks/useHighlights';
 import { useChapterNotes } from '../../lib/hooks/useChapterNotes';
 import { createId } from '../../lib/utils/id';
@@ -78,6 +79,7 @@ export default function Reader({
   const [refreshKey, setRefreshKey] = useState(0);
   const [modalSourceRef, setModalSourceRef] = useState<string | null>(null);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
+  const [bookmarkModalSourceRef, setBookmarkModalSourceRef] = useState<string | null>(null);
   const { selection, clearSelection } = useTextSelection(containerElement);
   const highlights = useHighlights(selectedBook?.id ?? null, selectedChapter, refreshKey);
   const chapterNotes = useChapterNotes(selectedBook?.id ?? null, selectedChapter, refreshKey);
@@ -143,8 +145,22 @@ export default function Reader({
   };
 
   const handleBookmark = (verses: SelectedVerse[]) => {
-    console.log('Bookmark:', verses);
+    const first = verses[0];
+    const last = verses[verses.length - 1];
+    const sourceReference = `${first.bookId}:${first.chapterNumber}:${first.verseNumber}-${last.verseNumber}`;
+
+    setBookmarkModalSourceRef(sourceReference);
     clearSelection();
+  };
+
+  const handleBookmarkSave = () => {
+    setBookmarkModalSourceRef(null);
+    setRefreshKey((k) => k + 1);
+    onNoteSaved?.();
+  };
+
+  const handleBookmarkCancel = () => {
+    setBookmarkModalSourceRef(null);
   };
 
   useEffect(() => {
@@ -302,6 +318,14 @@ export default function Reader({
           sourceReference={modalSourceRef}
           onSave={handleNoteSave}
           onCancel={handleNoteCancel}
+        />
+      )}
+
+      {bookmarkModalSourceRef && (
+        <BookmarkEditor
+          sourceReference={bookmarkModalSourceRef}
+          onSave={handleBookmarkSave}
+          onCancel={handleBookmarkCancel}
         />
       )}
     </main>

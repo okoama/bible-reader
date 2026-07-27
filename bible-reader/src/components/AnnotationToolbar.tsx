@@ -50,6 +50,7 @@ export default function AnnotationToolbar({
   return (
     <div
       ref={ref}
+      onMouseDown={(e) => e.preventDefault()}
       style={{ position: 'fixed', left: position.left, top: position.top }}
       className="z-50 flex items-center gap-1 rounded-lg border bg-white px-2 py-1 shadow-md"
     >
