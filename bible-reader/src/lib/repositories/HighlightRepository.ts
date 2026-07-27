@@ -4,28 +4,23 @@ import { db } from '../database/database';
 export class HighlightRepository {
   private readonly database = db;
 
-  async getAll(): Promise<Highlight[]> {
-    void this.database;
-    throw new Error('Not implemented');
+  async findAll(): Promise<Highlight[]> {
+    return this.database.highlights.toArray();
   }
 
-  async getById(id: string): Promise<Highlight | undefined> {
-    void id;
-    throw new Error('Not implemented');
+  async findByPassage(sourceReference: string): Promise<Highlight[]> {
+    return this.database.highlights
+      .where('sourceReference')
+      .equals(sourceReference)
+      .toArray();
   }
 
   async create(highlight: Highlight): Promise<string> {
-    void highlight;
-    throw new Error('Not implemented');
-  }
-
-  async update(highlight: Highlight): Promise<void> {
-    void highlight;
-    throw new Error('Not implemented');
+    await this.database.highlights.put(highlight);
+    return highlight.id;
   }
 
   async delete(id: string): Promise<void> {
-    void id;
-    throw new Error('Not implemented');
+    await this.database.highlights.delete(id);
   }
 }
