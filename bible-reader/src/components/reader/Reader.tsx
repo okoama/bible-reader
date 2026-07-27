@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { BibleService } from '../../features/bible/services/BibleService';
+import { useTextSelection } from '../../features/annotations/hooks/useTextSelection';
 import type { BibleBook, BibleChapter, BibleVerse } from '../../types';
 
 const bibleService = new BibleService();
@@ -17,6 +18,8 @@ export default function Reader({
 }: ReaderProps) {
   const [chapters, setChapters] = useState<BibleChapter[]>([]);
   const [verses, setVerses] = useState<BibleVerse[]>([]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { selection: _selection } = useTextSelection(containerRef);
 
   useEffect(() => {
     let isActive = true;
@@ -107,9 +110,15 @@ export default function Reader({
             </div>
 
             {selectedChapter && verses.length > 0 ? (
-              <div className="mt-6 space-y-2">
+              <div ref={containerRef} className="mt-6 space-y-2">
                 {verses.map((verse) => (
-                  <p key={verse.verseNumber} className="leading-relaxed">
+                  <p
+                    key={verse.verseNumber}
+                    className="leading-relaxed"
+                    data-book={selectedBook.id}
+                    data-chapter={selectedChapter}
+                    data-verse={verse.verseNumber}
+                  >
                     <span className="mr-1 text-xs font-semibold align-super text-blue-600">
                       {verse.verseNumber}
                     </span>
