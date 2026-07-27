@@ -54,7 +54,7 @@ export default function AnnotationToolbar({
       ref={ref}
       onMouseDown={(e) => e.preventDefault()}
       style={{ position: 'fixed', left: position.left, top: position.top }}
-      className="z-50 flex items-center gap-1 rounded-lg border bg-white px-2 py-1 shadow-md"
+      className="z-50 flex items-center gap-0.5 rounded-lg border bg-white px-1.5 py-1 shadow-lg animate-fade-in"
     >
       {showColors ? (
         <>
@@ -68,7 +68,7 @@ export default function AnnotationToolbar({
                   onHighlight(selection.text, selection.verses, c.value);
                   setShowColors(false);
                 }}
-                className="h-5 w-5 rounded-full border border-gray-300 hover:scale-125"
+                className="h-5 w-5 rounded-full border border-gray-300 transition-all duration-150 hover:scale-125 hover:shadow-sm"
                 style={{ backgroundColor: c.value }}
               />
             ))}
@@ -77,7 +77,7 @@ export default function AnnotationToolbar({
           <button
             type="button"
             onClick={() => setShowColors(false)}
-            className="rounded px-2 py-1 text-xs hover:bg-gray-100"
+            className="rounded px-2 py-1 text-xs transition-colors duration-150 hover:bg-gray-100"
           >
             Cancel
           </button>
@@ -87,21 +87,21 @@ export default function AnnotationToolbar({
           <button
             type="button"
             onClick={() => setShowColors(true)}
-            className="rounded px-2 py-1 text-sm hover:bg-yellow-100"
+            className="rounded px-2 py-1 text-sm transition-colors duration-150 hover:bg-amber-100 hover:text-amber-800"
           >
             Highlight
           </button>
           <button
             type="button"
             onClick={() => onNote(selection.text, selection.verses)}
-            className="rounded px-2 py-1 text-sm hover:bg-blue-100"
+            className="rounded px-2 py-1 text-sm transition-colors duration-150 hover:bg-blue-100 hover:text-blue-800"
           >
             Note
           </button>
           <button
             type="button"
             onClick={() => onBookmark(selection.verses)}
-            className="rounded px-2 py-1 text-sm hover:bg-gray-100"
+            className="rounded px-2 py-1 text-sm transition-colors duration-150 hover:bg-gray-100"
           >
             Bookmark
           </button>

@@ -145,8 +145,8 @@ export default function NoteEditor({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={handleBackdropClick} role="dialog" aria-modal="true" aria-label={note ? 'Edit note' : 'New note'}>
-      <div className="mx-4 flex w-full max-w-lg flex-col gap-4 rounded-lg border bg-white p-6 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-fade-in" onClick={handleBackdropClick} role="dialog" aria-modal="true" aria-label={note ? 'Edit note' : 'New note'}>
+      <div className="mx-4 flex w-full max-w-lg flex-col gap-4 rounded-lg border bg-white p-6 shadow-xl animate-slide-up">
         <h2 className="text-lg font-semibold">
           {note ? 'Edit Note' : 'New Note'}
         </h2>
@@ -179,7 +179,7 @@ export default function NoteEditor({
           placeholder="Title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="rounded border px-3 py-2 text-sm outline-none focus:border-blue-500"
+          className="rounded-md border px-3 py-2 text-sm outline-none transition-colors duration-150 focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
         />
 
         <RichTextEditor
@@ -252,7 +252,7 @@ export default function NoteEditor({
           <button
             type="button"
             onClick={onCancel}
-            className="rounded border px-4 py-2 text-sm hover:bg-gray-100"
+            className="rounded-md border px-4 py-2 text-sm transition-colors duration-150 hover:bg-gray-100"
           >
             Cancel
           </button>
@@ -260,7 +260,7 @@ export default function NoteEditor({
             type="button"
             onClick={handleSave}
             disabled={!title.trim()}
-            className="rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-40"
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Save
           </button>

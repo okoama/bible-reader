@@ -125,13 +125,13 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, sel
         placeholder="Search notes..."
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        className="mb-2 w-full rounded border px-3 py-2 text-sm outline-none focus:border-blue-500"
+        className="mb-2 w-full rounded-md border px-3 py-2 text-sm outline-none transition-colors duration-150 focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
       />
 
       <button
         type="button"
         onClick={() => setShowFilters(!showFilters)}
-        className="mb-3 flex items-center gap-1 text-xs opacity-60 hover:opacity-100"
+        className="mb-3 flex items-center gap-1 text-xs opacity-50 transition-opacity duration-150 hover:opacity-100"
       >
         <span>{showFilters ? 'Hide' : 'Show'} filters</span>
         {hasActiveFilters && (
@@ -140,13 +140,13 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, sel
       </button>
 
       {showFilters && (
-        <div className="mb-3 space-y-2 rounded border p-2">
+        <div className="mb-3 space-y-2 rounded-md border p-2 animate-fade-in">
           <div>
             <label className="mb-0.5 block text-xs opacity-60">Book</label>
             <select
               value={filterBook}
               onChange={(e) => setFilterBook(e.target.value)}
-              className="w-full rounded border px-2 py-1 text-xs outline-none focus:border-blue-500"
+              className="w-full rounded-md border px-2 py-1 text-xs outline-none transition-colors duration-150 focus:border-blue-500"
             >
               <option value="">All books</option>
               {uniqueBookIds.map((id) => (
@@ -162,7 +162,7 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, sel
             <select
               value={filterTag}
               onChange={(e) => setFilterTag(e.target.value)}
-              className="w-full rounded border px-2 py-1 text-xs outline-none focus:border-blue-500"
+              className="w-full rounded-md border px-2 py-1 text-xs outline-none transition-colors duration-150 focus:border-blue-500"
             >
               <option value="">All tags</option>
               {uniqueTags.map((tag) => (
@@ -178,7 +178,7 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, sel
             <select
               value={filterDate}
               onChange={(e) => setFilterDate(e.target.value as DateFilter)}
-              className="w-full rounded border px-2 py-1 text-xs outline-none focus:border-blue-500"
+              className="w-full rounded-md border px-2 py-1 text-xs outline-none transition-colors duration-150 focus:border-blue-500"
             >
               <option value="all">All time</option>
               <option value="today">Today</option>
@@ -192,7 +192,7 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, sel
             <button
               type="button"
               onClick={clearFilters}
-              className="text-xs text-red-500 hover:text-red-700"
+              className="text-xs text-red-500 transition-colors duration-150 hover:text-red-700"
             >
               Clear filters
             </button>
@@ -232,7 +232,7 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, sel
               onNavigate(note.sourceReference);
               onSelectNote?.(note.id);
             }}
-            className={`w-full rounded border px-3 py-2 text-left text-sm hover:bg-gray-50 ${
+            className={`w-full rounded-md border px-3 py-2 text-left text-sm transition-colors duration-150 hover:bg-gray-50 ${
               selectedNoteId === note.id ? 'border-blue-500 bg-blue-50' : ''
             }`}
           >
@@ -255,11 +255,11 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, sel
         ))}
 
         {notes.length === 0 && (
-          <p className="text-xs opacity-60">A blank page for your reflections.</p>
+          <p className="py-2 text-xs opacity-50 italic">A blank page for your reflections.</p>
         )}
 
         {notes.length > 0 && filtered.length === 0 && (
-          <p className="text-xs opacity-60">No matching notes.</p>
+          <p className="py-2 text-xs opacity-50 italic">No matching notes.</p>
         )}
       </div>
     </div>

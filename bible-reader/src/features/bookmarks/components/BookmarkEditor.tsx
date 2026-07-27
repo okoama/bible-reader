@@ -55,7 +55,7 @@ export default function BookmarkEditor({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-fade-in"
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
@@ -63,7 +63,7 @@ export default function BookmarkEditor({
     >
       <div
         ref={dialogRef}
-        className="mx-4 flex w-full max-w-lg flex-col gap-4 rounded-lg border bg-white p-6 shadow-xl"
+        className="mx-4 flex w-full max-w-lg flex-col gap-4 rounded-lg border bg-white p-6 shadow-xl animate-slide-up"
       >
         <h2 className="text-lg font-semibold">New Bookmark</h2>
 
@@ -73,7 +73,7 @@ export default function BookmarkEditor({
           placeholder="Label (optional)"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="rounded border px-3 py-2 text-sm outline-none focus:border-blue-500"
+          className="rounded-md border px-3 py-2 text-sm outline-none transition-colors duration-150 focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
         />
 
         <p className="text-xs opacity-60">
@@ -84,14 +84,14 @@ export default function BookmarkEditor({
           <button
             type="button"
             onClick={onCancel}
-            className="rounded border px-4 py-2 text-sm hover:bg-gray-100"
+            className="rounded-md border px-4 py-2 text-sm transition-colors duration-150 hover:bg-gray-100"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={handleSave}
-            className="rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-blue-700"
           >
             Save
           </button>

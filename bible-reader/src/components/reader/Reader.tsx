@@ -333,21 +333,21 @@ export default function Reader({
   return (
     <main ref={mainRef} className="flex-1 overflow-y-auto p-6">
       {activeView === 'prayer-journal' ? (
-        <div className="mx-auto max-w-3xl rounded border p-6">
+        <div className="mx-auto max-w-3xl rounded-lg border p-6 animate-fade-in">
           <PrayerJournal refreshKey={prayerRefreshKey} onRefresh={handlePrayerRefresh} />
         </div>
       ) : (
-        <div className="mx-auto max-w-3xl rounded border p-6">
+        <div className="mx-auto max-w-3xl rounded-lg border p-6">
           {selectedBook ? (
             <div>
               <h2 className="text-2xl font-semibold">{selectedBook.name}</h2>
-              <p className="mt-2 opacity-80">
+              <p className="mt-1 text-sm opacity-60">
                 {selectedBook.testament}
               </p>
 
               <div className="mt-6">
-                <h3 className="mb-3 font-semibold">Chapters</h3>
-                <div className="flex flex-wrap gap-2">
+                <h3 className="mb-2 font-semibold">Chapters</h3>
+                <div className="flex flex-wrap gap-1.5">
                   {chapters.map((chapter) => {
                     const chapterNumber = chapter.chapterNumber;
                     const isSelected = selectedChapter === chapterNumber;
@@ -357,8 +357,10 @@ export default function Reader({
                         key={chapterNumber}
                         type="button"
                         onClick={() => onSelectChapter(chapterNumber)}
-                        className={`rounded border px-3 py-2 ${
-                          isSelected ? 'border-blue-500 bg-blue-50' : ''
+                        className={`rounded-md px-3 py-1.5 text-sm transition-colors duration-150 ${
+                          isSelected
+                            ? 'bg-blue-600 text-white'
+                            : 'border hover:bg-gray-100'
                         }`}
                       >
                         {chapterNumber}
@@ -369,7 +371,7 @@ export default function Reader({
               </div>
 
               {selectedChapter && verses.length > 0 ? (
-                <div ref={setContainerElement} className="mt-6 space-y-2">
+                <div ref={setContainerElement} className="mt-6 space-y-1">
                   {verses.map((verse) => {
                     const verseHighlights = getHighlightsForVerse(highlights, verse.verseNumber);
 
@@ -377,7 +379,7 @@ export default function Reader({
                       <p
                         key={verse.verseNumber}
                         ref={verseRefCallback(`${selectedBook.id}:${selectedChapter}:${verse.verseNumber}`)}
-                        className={`cursor-pointer leading-relaxed rounded px-1 -mx-1 ${
+                        className={`cursor-pointer leading-relaxed rounded px-1 -mx-1 transition-colors duration-100 ${
                           selectedVerse?.verseNumber === verse.verseNumber
                             ? 'bg-blue-50'
                             : 'hover:bg-gray-50'
@@ -386,6 +388,11 @@ export default function Reader({
                         data-chapter={selectedChapter}
                         data-verse={verse.verseNumber}
                         onClick={() => handleVerseClick(verse.verseNumber)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') handleVerseClick(verse.verseNumber);
+                        }}
                       >
                         <span className="mr-1 text-xs font-semibold align-super text-blue-600">
                           {verse.verseNumber}
@@ -394,9 +401,9 @@ export default function Reader({
                           <button
                             key={note.id}
                             type="button"
-                            onClick={() => handleNoteIndicatorClick(note)}
+                            onClick={(e) => { e.stopPropagation(); handleNoteIndicatorClick(note); }}
                             title={note.title}
-                            className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-amber-500 align-super hover:scale-150"
+                            className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-amber-500 align-super transition-transform duration-150 hover:scale-150"
                           />
                         ))}
                         {renderVerseText(verse.text, verseHighlights)}
@@ -405,15 +412,20 @@ export default function Reader({
                   })}
                 </div>
               ) : selectedChapter ? (
-                <p className="mt-4 opacity-80">Loading...</p>
+                <div className="mt-8 flex items-center justify-center gap-2 text-sm opacity-60">
+                  <svg className="h-4 w-4 animate-spin-slow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 2v4m0 12v4m10-10h-4M6 12H2m15.07-5.07l-2.83 2.83M9.76 14.24l-2.83 2.83m11.14 0l-2.83-2.83M9.76 9.76L6.93 6.93" />
+                  </svg>
+                  Loading...
+                </div>
               ) : (
-                <p className="mt-4 opacity-80">Select a chapter to read.</p>
+                <p className="mt-4 opacity-60">Select a chapter to read.</p>
               )}
             </div>
           ) : (
-            <div className="text-center">
+            <div className="py-12 text-center">
               <h2 className="text-2xl font-semibold">Welcome to Catholic Study Desk</h2>
-              <p className="mt-4 opacity-80">
+              <p className="mt-3 opacity-60">
                 Select a work from the Library to begin reading.
               </p>
             </div>

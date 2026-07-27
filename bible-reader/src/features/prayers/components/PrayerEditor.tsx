@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Prayer } from '../../../types';
 import { PrayerRepository } from '../../../lib/repositories/PrayerRepository';
 import { createId } from '../../../lib/utils/id';
-import { useDraft, type DraftData } from '../../../lib/hooks/useDraft';
+import { useDraft } from '../../../lib/hooks/useDraft';
 import RichTextEditor from '../../../components/RichTextEditor';
 
 const prayerRepository = new PrayerRepository();
@@ -22,16 +22,14 @@ export default function PrayerEditor({ prayer, onSave, onCancel }: PrayerEditorP
   const { hasDraft, restoreDraft, clearDraft } = useDraft(draftKey, title, content);
 
   const handleRestore = useCallback(() => {
-    const data: DraftData | null = restoreDraft();
+    const data = restoreDraft();
     if (data) {
       if (data.title) setTitle(data.title);
       if (data.content) setContent(data.content);
     }
   }, [restoreDraft]);
 
-  const handleDiscardDraft = useCallback(() => {
-    clearDraft();
-  }, [clearDraft]);
+  const handleDiscardDraft = useCallback(() => clearDraft(), [clearDraft]);
 
   useEffect(() => {
     titleRef.current?.focus();
@@ -77,13 +75,13 @@ export default function PrayerEditor({ prayer, onSave, onCancel }: PrayerEditorP
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-fade-in"
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
       aria-label={prayer ? 'Edit prayer' : 'New prayer'}
     >
-      <div className="mx-4 flex w-full max-w-lg flex-col gap-4 rounded-lg border bg-white p-6 shadow-xl">
+      <div className="mx-4 flex w-full max-w-lg flex-col gap-4 rounded-lg border bg-white p-6 shadow-xl animate-slide-up">
         <h2 className="text-lg font-semibold">
           {prayer ? 'Edit Prayer' : 'New Prayer'}
         </h2>
@@ -116,7 +114,7 @@ export default function PrayerEditor({ prayer, onSave, onCancel }: PrayerEditorP
           placeholder="Title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="rounded border px-3 py-2 text-sm outline-none focus:border-blue-500"
+          className="rounded-md border px-3 py-2 text-sm outline-none transition-colors duration-150 focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
         />
 
         <RichTextEditor
@@ -130,7 +128,7 @@ export default function PrayerEditor({ prayer, onSave, onCancel }: PrayerEditorP
           <button
             type="button"
             onClick={onCancel}
-            className="rounded border px-4 py-2 text-sm hover:bg-gray-100"
+            className="rounded-md border px-4 py-2 text-sm transition-colors duration-150 hover:bg-gray-100"
           >
             Cancel
           </button>
@@ -138,7 +136,7 @@ export default function PrayerEditor({ prayer, onSave, onCancel }: PrayerEditorP
             type="button"
             onClick={handleSave}
             disabled={!title.trim()}
-            className="rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-40"
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Save
           </button>

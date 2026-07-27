@@ -150,8 +150,11 @@ export default function RightPanel({
       style={{ width: panelWidth }}
     >
       <div
-        className="absolute left-0 top-0 z-10 h-full w-1 cursor-col-resize hover:bg-blue-300 active:bg-blue-400"
+        className="absolute left-0 top-0 z-10 h-full w-1 cursor-col-resize transition-colors duration-150 hover:bg-blue-300 active:bg-blue-400"
         onMouseDown={handleDragStart}
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize panel"
       />
 
       <div className="flex-1 overflow-y-auto p-4 pl-5">
@@ -314,19 +317,27 @@ function Section({
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center gap-2 py-1 text-left text-xs font-semibold uppercase tracking-wide opacity-70 hover:opacity-100"
+        className="flex w-full items-center gap-2 rounded py-1 text-left text-xs font-semibold uppercase tracking-wide opacity-60 transition-opacity duration-150 hover:opacity-100"
+        aria-expanded={!collapsed}
+        aria-controls={`section-${id}`}
       >
-        <span className={`inline-block text-[10px] transition-transform ${collapsed ? '' : 'rotate-90'}`}>
+        <span className={`inline-block text-[10px] transition-transform duration-150 ${collapsed ? '' : 'rotate-90'}`}>
           &#9654;
         </span>
         {title}
         {count > 0 && (
-          <span className="ml-auto rounded bg-gray-200 px-1.5 py-0.5 text-[10px] font-normal">
+          <span className="ml-auto rounded-full bg-gray-200 px-1.5 py-0.5 text-[10px] font-normal">
             {count}
           </span>
         )}
       </button>
-      {!collapsed && <div className="mt-1">{children}</div>}
+      <div
+        id={`section-${id}`}
+        role="region"
+        className={`transition-all duration-150 ${collapsed ? 'h-0 overflow-hidden' : 'mt-1'}`}
+      >
+        {children}
+      </div>
     </div>
   );
 }
