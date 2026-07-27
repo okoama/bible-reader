@@ -255,7 +255,7 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, sel
         ))}
 
         {notes.length === 0 && (
-          <p className="text-xs opacity-60">No notes yet. Select text and click Note to create one.</p>
+          <p className="text-xs opacity-60">A blank page for your reflections.</p>
         )}
 
         {notes.length > 0 && filtered.length === 0 && (

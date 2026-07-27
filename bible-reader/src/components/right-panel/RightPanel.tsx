@@ -214,7 +214,7 @@ export default function RightPanel({
               ))}
             </div>
           ) : (
-            <p className="text-sm opacity-60">No highlights on this verse.</p>
+            <p className="text-sm opacity-60">Your lamp for the journey awaits a verse.</p>
           )}
         </Section>
 
@@ -271,7 +271,7 @@ export default function RightPanel({
               ))}
             </div>
           ) : (
-            <p className="text-sm opacity-60">No bookmarks in this book.</p>
+            <p className="text-sm opacity-60">Pin the verses that speak to you.</p>
           )}
         </Section>
       </div>
