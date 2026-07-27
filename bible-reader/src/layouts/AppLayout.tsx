@@ -71,6 +71,10 @@ export default function AppLayout() {
     setNotesRefreshKey((k) => k + 1);
   };
 
+  const handleNoteDeleted = () => {
+    setNotesRefreshKey((k) => k + 1);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -93,6 +97,8 @@ export default function AppLayout() {
           selectedVerse={selectedVerse}
           selectedBook={selectedBook}
           selectedChapter={selectedChapter}
+          refreshKey={notesRefreshKey}
+          onNoteDeleted={handleNoteDeleted}
         />
       </div>
 

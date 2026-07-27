@@ -1,13 +1,20 @@
-import type { BibleBook, VerseRef } from '../../types';
+import { useState } from 'react';
+import type { BibleBook, Note, VerseRef } from '../../types';
 import { useHighlights } from '../../lib/hooks/useHighlights';
 import { useChapterNotes } from '../../lib/hooks/useChapterNotes';
 import { useBookmarks } from '../../lib/hooks/useBookmarks';
+import { NoteRepository } from '../../lib/repositories/NoteRepository';
 import { formatDate } from '../../lib/utils/date';
+import ConfirmDialog from '../ConfirmDialog';
+
+const noteRepository = new NoteRepository();
 
 type RightPanelProps = {
   selectedVerse: VerseRef | null;
   selectedBook: BibleBook | null;
   selectedChapter: number | null;
+  refreshKey: number;
+  onNoteDeleted: () => void;
 };
 
 function coversVerse(sourceReference: string, verseNumber: number): boolean {
@@ -22,10 +29,20 @@ export default function RightPanel({
   selectedVerse,
   selectedBook,
   selectedChapter,
+  refreshKey,
+  onNoteDeleted,
 }: RightPanelProps) {
-  const highlights = useHighlights(selectedBook?.id ?? null, selectedChapter);
-  const notes = useChapterNotes(selectedBook?.id ?? null, selectedChapter);
-  const bookmarks = useBookmarks(selectedBook?.id ?? null, selectedChapter);
+  const [deletingNote, setDeletingNote] = useState<Note | null>(null);
+  const highlights = useHighlights(selectedBook?.id ?? null, selectedChapter, refreshKey);
+  const notes = useChapterNotes(selectedBook?.id ?? null, selectedChapter, refreshKey);
+  const bookmarks = useBookmarks(selectedBook?.id ?? null, selectedChapter, refreshKey);
+
+  async function handleConfirmDelete() {
+    if (!deletingNote) return;
+    await noteRepository.delete(deletingNote.id);
+    setDeletingNote(null);
+    onNoteDeleted();
+  }
 
   const verseNumber = selectedVerse?.verseNumber ?? null;
 
@@ -82,7 +99,16 @@ export default function RightPanel({
               <div className="space-y-2">
                 {verseNotes.map((note) => (
                   <div key={note.id} className="rounded border p-2">
-                    <p className="font-medium text-sm">{note.title}</p>
+                    <div className="flex items-start justify-between">
+                      <p className="font-medium text-sm">{note.title}</p>
+                      <button
+                        type="button"
+                        onClick={() => setDeletingNote(note)}
+                        className="ml-2 shrink-0 text-xs text-red-500 hover:text-red-700"
+                      >
+                        Delete
+                      </button>
+                    </div>
                     {note.content && (
                       <p className="mt-1 text-xs opacity-80">{note.content}</p>
                     )}
@@ -121,6 +147,13 @@ export default function RightPanel({
             Click a verse to see highlights, notes, and bookmarks.
           </p>
         </div>
+      )}
+      {deletingNote && (
+        <ConfirmDialog
+          message={`Delete note "${deletingNote.title}"?`}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setDeletingNote(null)}
+        />
       )}
     </aside>
   );
