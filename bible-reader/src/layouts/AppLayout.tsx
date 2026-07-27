@@ -6,6 +6,7 @@ import RightPanel from '../components/right-panel/RightPanel';
 import StatusBar from '../components/status-bar/StatusBar';
 import { BibleService } from '../features/bible/services/BibleService';
 import { useReadingProgress } from '../lib/hooks/useReadingProgress';
+import { useNotes } from '../lib/hooks/useNotes';
 import type { BibleBook } from '../types';
 
 const bibleService = new BibleService();
@@ -14,7 +15,9 @@ export default function AppLayout() {
   const [books, setBooks] = useState<BibleBook[]>([]);
   const [selectedBook, setSelectedBook] = useState<BibleBook | null>(null);
   const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
+  const [notesRefreshKey, setNotesRefreshKey] = useState(0);
   const { lastPosition, loaded, savePosition } = useReadingProgress();
+  const notes = useNotes(notesRefreshKey);
 
   useEffect(() => {
     let isActive = true;
@@ -57,6 +60,10 @@ export default function AppLayout() {
     }
   };
 
+  const handleNoteSaved = () => {
+    setNotesRefreshKey((k) => k + 1);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -66,13 +73,15 @@ export default function AppLayout() {
           books={books}
           selectedBook={selectedBook}
           onSelectBook={handleSelectBook}
+          notes={notes}
         />
         <Reader
           selectedBook={selectedBook}
           selectedChapter={selectedChapter}
           onSelectChapter={handleSelectChapter}
+          onNoteSaved={handleNoteSaved}
         />
-        <RightPanel />
+        <RightPanel notes={notes} />
       </div>
 
       <StatusBar />

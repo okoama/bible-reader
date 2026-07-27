@@ -15,6 +15,13 @@ export class HighlightRepository {
       .toArray();
   }
 
+  async findByBook(bookId: string): Promise<Highlight[]> {
+    return this.database.highlights
+      .where('sourceReference')
+      .startsWith(`${bookId}:`)
+      .toArray();
+  }
+
   async create(highlight: Highlight): Promise<string> {
     await this.database.highlights.put(highlight);
     return highlight.id;

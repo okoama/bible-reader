@@ -2,35 +2,117 @@ import { useEffect, useState } from 'react';
 import { BibleService } from '../../features/bible/services/BibleService';
 import { useTextSelection } from '../../features/annotations/hooks/useTextSelection';
 import type { SelectedVerse } from '../../features/annotations/hooks/useTextSelection';
-import type { BibleBook, BibleChapter, BibleVerse } from '../../types';
+import type { BibleBook, BibleChapter, BibleVerse, Highlight, Note } from '../../types';
+import { HighlightRepository } from '../../lib/repositories/HighlightRepository';
+import { useHighlights } from '../../lib/hooks/useHighlights';
+import { createId } from '../../lib/utils/id';
 import AnnotationToolbar from '../AnnotationToolbar';
+import NoteEditor from '../../features/notes/components/NoteEditor';
 
 const bibleService = new BibleService();
+const highlightRepository = new HighlightRepository();
+
+function getHighlightsForVerse(highlights: Highlight[], verseNumber: number): Highlight[] {
+  return highlights.filter((h) => {
+    const match = h.sourceReference.match(/^[^:]+:\d+:(\d+)(?:-(\d+))?$/);
+    if (!match) return false;
+    const start = Number.parseInt(match[1], 10);
+    const end = match[2] ? Number.parseInt(match[2], 10) : start;
+    return verseNumber >= start && verseNumber <= end;
+  });
+}
+
+function renderVerseText(text: string, verseHighlights: Highlight[]): React.ReactNode {
+  if (verseHighlights.length === 0) {
+    return text;
+  }
+
+  const segments: React.ReactNode[] = [];
+  let remaining = text;
+
+  for (const h of verseHighlights) {
+    const idx = remaining.indexOf(h.selectedText);
+    if (idx === -1) continue;
+
+    if (idx > 0) {
+      segments.push(remaining.slice(0, idx));
+    }
+
+    segments.push(
+      <mark key={h.id} style={{ backgroundColor: h.color }}>
+        {remaining.slice(idx, idx + h.selectedText.length)}
+      </mark>,
+    );
+
+    remaining = remaining.slice(idx + h.selectedText.length);
+  }
+
+  if (remaining) {
+    segments.push(remaining);
+  }
+
+  return segments.length > 0 ? segments : text;
+}
 
 type ReaderProps = {
   selectedBook: BibleBook | null;
   selectedChapter: number | null;
   onSelectChapter: (chapterNumber: number) => void;
+  onNoteSaved?: () => void;
 };
 
 export default function Reader({
   selectedBook,
   selectedChapter,
   onSelectChapter,
+  onNoteSaved,
 }: ReaderProps) {
   const [chapters, setChapters] = useState<BibleChapter[]>([]);
   const [verses, setVerses] = useState<BibleVerse[]>([]);
   const [containerElement, setContainerElement] = useState<HTMLDivElement | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [modalSourceRef, setModalSourceRef] = useState<string | null>(null);
+  const [editingNote, setEditingNote] = useState<Note | null>(null);
   const { selection, clearSelection } = useTextSelection(containerElement);
+  const highlights = useHighlights(selectedBook?.id ?? null, selectedChapter, refreshKey);
 
-  const handleHighlight = (text: string, verses: SelectedVerse[]) => {
-    console.log('Highlight:', text, verses);
+  const handleHighlight = async (text: string, selectedVerses: SelectedVerse[]) => {
+    const first = selectedVerses[0];
+    const last = selectedVerses[selectedVerses.length - 1];
+    const sourceReference = `${first.bookId}:${first.chapterNumber}:${first.verseNumber}-${last.verseNumber}`;
+
+    await highlightRepository.create({
+      id: createId('hl'),
+      sourceReference,
+      color: '#fef08a',
+      selectedText: text,
+      createdAt: new Date().toISOString(),
+    });
+
+    setRefreshKey((k) => k + 1);
     clearSelection();
   };
 
   const handleNote = (text: string, verses: SelectedVerse[]) => {
-    console.log('Note:', text, verses);
+    const first = verses[0];
+    const last = verses[verses.length - 1];
+    const sourceReference = `${first.bookId}:${first.chapterNumber}:${first.verseNumber}-${last.verseNumber}`;
+
+    setEditingNote(null);
+    setModalSourceRef(sourceReference);
     clearSelection();
+  };
+
+  const handleNoteSave = () => {
+    setEditingNote(null);
+    setModalSourceRef(null);
+    setRefreshKey((k) => k + 1);
+    onNoteSaved?.();
+  };
+
+  const handleNoteCancel = () => {
+    setEditingNote(null);
+    setModalSourceRef(null);
   };
 
   const handleBookmark = (verses: SelectedVerse[]) => {
@@ -128,20 +210,24 @@ export default function Reader({
 
             {selectedChapter && verses.length > 0 ? (
               <div ref={setContainerElement} className="mt-6 space-y-2">
-                {verses.map((verse) => (
-                  <p
-                    key={verse.verseNumber}
-                    className="leading-relaxed"
-                    data-book={selectedBook.id}
-                    data-chapter={selectedChapter}
-                    data-verse={verse.verseNumber}
-                  >
-                    <span className="mr-1 text-xs font-semibold align-super text-blue-600">
-                      {verse.verseNumber}
-                    </span>
-                    {verse.text}
-                  </p>
-                ))}
+                {verses.map((verse) => {
+                  const verseHighlights = getHighlightsForVerse(highlights, verse.verseNumber);
+
+                  return (
+                    <p
+                      key={verse.verseNumber}
+                      className="leading-relaxed"
+                      data-book={selectedBook.id}
+                      data-chapter={selectedChapter}
+                      data-verse={verse.verseNumber}
+                    >
+                      <span className="mr-1 text-xs font-semibold align-super text-blue-600">
+                        {verse.verseNumber}
+                      </span>
+                      {renderVerseText(verse.text, verseHighlights)}
+                    </p>
+                  );
+                })}
               </div>
             ) : selectedChapter ? (
               <p className="mt-4 opacity-80">Loading…</p>
@@ -165,6 +251,15 @@ export default function Reader({
           onHighlight={handleHighlight}
           onNote={handleNote}
           onBookmark={handleBookmark}
+        />
+      )}
+
+      {modalSourceRef && (
+        <NoteEditor
+          note={editingNote ?? undefined}
+          sourceReference={modalSourceRef}
+          onSave={handleNoteSave}
+          onCancel={handleNoteCancel}
         />
       )}
     </main>
