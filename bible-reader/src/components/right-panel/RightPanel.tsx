@@ -67,7 +67,7 @@ export default function RightPanel({
   const [deletingBookmark, setDeletingBookmark] = useState<Bookmark | null>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const dragRef = useRef<{ startX: number; startWidth: number } | null>(null);
-  const panelRef = useRef<aside>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   const highlights = useHighlights(selectedBook?.id ?? null, selectedChapter, refreshKey);
   const bookmarks = useBookmarks(selectedBook?.id ?? null, null, refreshKey);

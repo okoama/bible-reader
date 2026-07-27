@@ -152,7 +152,7 @@ export default function Reader({
     clearSelection();
   };
 
-  const handleNote = (text: string, verses: SelectedVerse[]) => {
+  const handleNote = (_text: string, verses: SelectedVerse[]) => {
     const first = verses[0];
     const last = verses[verses.length - 1];
     const sourceReference = `${first.bookId}:${first.chapterNumber}:${first.verseNumber}-${last.verseNumber}`;

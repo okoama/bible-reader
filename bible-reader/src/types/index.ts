@@ -7,4 +7,5 @@ export type { Note } from './note';
 export type { Prayer } from './prayer';
 export type { ReadingProgress } from './readingProgress';
 export type { SourceReference, WorkType } from './sourceReference';
+export type { TextBlock, TextSection, TextWork } from './textWork';
 export type { VerseRef } from './verseRef';

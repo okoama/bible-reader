@@ -142,6 +142,7 @@ export default function AppLayout() {
         <Reader
           selectedBook={selectedBook}
           selectedChapter={selectedChapter}
+          selectedVerse={selectedVerse}
           onSelectChapter={handleSelectChapter}
           onSelectVerse={handleSelectVerse}
           onNoteSaved={handleNoteSaved}
