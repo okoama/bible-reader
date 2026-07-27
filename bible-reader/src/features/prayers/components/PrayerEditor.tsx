@@ -3,6 +3,7 @@ import type { Prayer } from '../../../types';
 import { PrayerRepository } from '../../../lib/repositories/PrayerRepository';
 import { createId } from '../../../lib/utils/id';
 import { useDraft, type DraftData } from '../../../lib/hooks/useDraft';
+import RichTextEditor from '../../../components/RichTextEditor';
 
 const prayerRepository = new PrayerRepository();
 
@@ -118,12 +119,11 @@ export default function PrayerEditor({ prayer, onSave, onCancel }: PrayerEditorP
           className="rounded border px-3 py-2 text-sm outline-none focus:border-blue-500"
         />
 
-        <textarea
-          placeholder="Write your prayer here..."
+        <RichTextEditor
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={setContent}
+          placeholder="Write your prayer here..."
           rows={8}
-          className="resize-none rounded border px-3 py-2 text-sm outline-none focus:border-blue-500"
         />
 
         <div className="flex justify-end gap-2">

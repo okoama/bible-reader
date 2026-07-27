@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Note } from '../../../types';
 import { NoteRepository } from '../../../lib/repositories/NoteRepository';
 import { createId } from '../../../lib/utils/id';
-import { useDraft, type DraftData } from '../../../lib/hooks/useDraft';
+import { useDraft } from '../../../lib/hooks/useDraft';
+import RichTextEditor from '../../../components/RichTextEditor';
 
 const noteRepository = new NoteRepository();
 
@@ -35,16 +36,14 @@ export default function NoteEditor({
   const { hasDraft, restoreDraft, clearDraft } = useDraft(draftKey, title, content);
 
   const handleRestore = useCallback(() => {
-    const data: DraftData | null = restoreDraft();
+    const data = restoreDraft();
     if (data) {
       if (data.title) setTitle(data.title);
       if (data.content) setContent(data.content);
     }
   }, [restoreDraft]);
 
-  const handleDiscardDraft = useCallback(() => {
-    clearDraft();
-  }, [clearDraft]);
+  const handleDiscardDraft = useCallback(() => clearDraft(), [clearDraft]);
 
   useEffect(() => {
     titleRef.current?.focus();
@@ -97,9 +96,7 @@ export default function NoteEditor({
 
   function addTag(tag: string) {
     const trimmed = tag.trim().toLowerCase();
-    if (trimmed && !tags.includes(trimmed)) {
-      setTags([...tags, trimmed]);
-    }
+    if (trimmed && !tags.includes(trimmed)) setTags([...tags, trimmed]);
     setTagInput('');
     setShowSuggestions(false);
     tagInputRef.current?.focus();
@@ -121,9 +118,7 @@ export default function NoteEditor({
   }
 
   const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onCancel();
-    }
+    if (e.target === e.currentTarget) onCancel();
   };
 
   const handleSave = async () => {
@@ -150,16 +145,8 @@ export default function NoteEditor({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-      onClick={handleBackdropClick}
-      role="dialog"
-      aria-modal="true"
-      aria-label={note ? 'Edit note' : 'New note'}
-    >
-      <div
-        className="mx-4 flex w-full max-w-lg flex-col gap-4 rounded-lg border bg-white p-6 shadow-xl"
-      >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={handleBackdropClick} role="dialog" aria-modal="true" aria-label={note ? 'Edit note' : 'New note'}>
+      <div className="mx-4 flex w-full max-w-lg flex-col gap-4 rounded-lg border bg-white p-6 shadow-xl">
         <h2 className="text-lg font-semibold">
           {note ? 'Edit Note' : 'New Note'}
         </h2>
@@ -195,12 +182,11 @@ export default function NoteEditor({
           className="rounded border px-3 py-2 text-sm outline-none focus:border-blue-500"
         />
 
-        <textarea
-          placeholder="Write your note here..."
+        <RichTextEditor
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={setContent}
+          placeholder="Write your note here..."
           rows={6}
-          className="resize-none rounded border px-3 py-2 text-sm outline-none focus:border-blue-500"
         />
 
         <div className="relative">

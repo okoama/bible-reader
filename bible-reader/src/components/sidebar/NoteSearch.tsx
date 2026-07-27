@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { BibleBook, Note } from '../../types';
-import { truncateText } from '../../lib/utils/text';
+import { truncateHtml, stripHtml } from '../../lib/utils/text';
 import { formatDate } from '../../lib/utils/date';
 
 type DateFilter = 'all' | 'today' | 'week' | 'month' | 'year';
@@ -90,7 +90,7 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, sel
         const lower = query.toLowerCase();
         const matches =
           note.title.toLowerCase().includes(lower) ||
-          note.content.toLowerCase().includes(lower) ||
+          stripHtml(note.content).toLowerCase().includes(lower) ||
           note.tags.some((t) => t.toLowerCase().includes(lower));
         if (!matches) return false;
       }
@@ -240,7 +240,7 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, sel
             <p className="mt-1 text-xs opacity-60">{formatDate(note.createdAt)}</p>
             <p className="mt-0.5 text-xs opacity-40">{note.sourceReference}</p>
             {note.content && (
-              <p className="mt-1 text-xs opacity-80">{truncateText(note.content, 60)}</p>
+              <p className="mt-1 text-xs opacity-80">{truncateHtml(note.content, 60)}</p>
             )}
             {note.tags.length > 0 && (
               <div className="mt-1 flex flex-wrap gap-1">

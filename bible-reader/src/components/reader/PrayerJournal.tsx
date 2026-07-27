@@ -3,6 +3,7 @@ import type { Prayer } from '../../types';
 import { usePrayers } from '../../lib/hooks/usePrayers';
 import { PrayerRepository } from '../../lib/repositories/PrayerRepository';
 import { formatDate } from '../../lib/utils/date';
+import { stripHtml } from '../../lib/utils/text';
 import PrayerEditor from '../../features/prayers/components/PrayerEditor';
 import ConfirmDialog from '../ConfirmDialog';
 
@@ -27,7 +28,7 @@ export default function PrayerJournal({ refreshKey, onRefresh }: PrayerJournalPr
     return prayers.filter(
       (p) =>
         p.title.toLowerCase().includes(lower) ||
-        p.content.toLowerCase().includes(lower),
+        stripHtml(p.content).toLowerCase().includes(lower),
     );
   }, [prayers, query]);
 
@@ -88,9 +89,10 @@ export default function PrayerJournal({ refreshKey, onRefresh }: PrayerJournalPr
                 <p className="font-semibold">{prayer.title}</p>
                 <p className="mt-1 text-xs opacity-60">{formatDate(prayer.updatedAt)}</p>
                 {prayer.content && (
-                  <p className="mt-2 text-sm leading-relaxed opacity-80 whitespace-pre-wrap">
-                    {prayer.content}
-                  </p>
+                  <div
+                    className="mt-2 text-sm leading-relaxed opacity-80 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-1 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-2 [&_li]:mb-0.5 [&_blockquote]:border-l-4 [&_blockquote]:border-gray-300 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:opacity-70 [&_blockquote]:my-2 [&_.scripture-ref]:text-blue-600 [&_.scripture-ref]:italic"
+                    dangerouslySetInnerHTML={{ __html: prayer.content }}
+                  />
                 )}
               </div>
               <div className="ml-3 flex gap-2 shrink-0">
