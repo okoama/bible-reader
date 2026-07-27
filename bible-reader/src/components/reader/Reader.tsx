@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { BibleService } from '../../features/bible/services/BibleService';
 import { useTextSelection } from '../../features/annotations/hooks/useTextSelection';
 import type { SelectedVerse } from '../../features/annotations/hooks/useTextSelection';
@@ -63,6 +63,8 @@ type ReaderProps = {
   onSelectChapter: (chapterNumber: number) => void;
   onSelectVerse: (verse: VerseRef) => void;
   onNoteSaved?: () => void;
+  pendingNavigation: VerseRef | null;
+  onPendingNavigationClear: () => void;
 };
 
 export default function Reader({
@@ -72,10 +74,14 @@ export default function Reader({
   onSelectChapter,
   onSelectVerse,
   onNoteSaved,
+  pendingNavigation,
+  onPendingNavigationClear,
 }: ReaderProps) {
   const [chapters, setChapters] = useState<BibleChapter[]>([]);
   const [verses, setVerses] = useState<BibleVerse[]>([]);
   const [containerElement, setContainerElement] = useState<HTMLDivElement | null>(null);
+  const mainRef = useRef<HTMLElement>(null);
+  const verseRefs = useRef<Map<string, HTMLParagraphElement>>(new Map());
   const [refreshKey, setRefreshKey] = useState(0);
   const [modalSourceRef, setModalSourceRef] = useState<string | null>(null);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
@@ -83,6 +89,16 @@ export default function Reader({
   const { selection, clearSelection } = useTextSelection(containerElement);
   const highlights = useHighlights(selectedBook?.id ?? null, selectedChapter, refreshKey);
   const chapterNotes = useChapterNotes(selectedBook?.id ?? null, selectedChapter, refreshKey);
+
+  const verseRefCallback = useCallback((key: string) => {
+    return (node: HTMLParagraphElement | null) => {
+      if (node) {
+        verseRefs.current.set(key, node);
+      } else {
+        verseRefs.current.delete(key);
+      }
+    };
+  }, []);
 
   function getVerseNotes(verseNumber: number): Note[] {
     return chapterNotes.filter((n) => {
@@ -179,7 +195,6 @@ export default function Reader({
 
       if (isActive) {
         setChapters(loadedChapters);
-        setVerses([]);
       }
     };
 
@@ -201,6 +216,10 @@ export default function Reader({
         return;
       }
 
+      if (isActive) {
+        setVerses([]);
+      }
+
       const loadedVerses = await bibleService.loadVerses(
         selectedBook.id,
         selectedChapter,
@@ -218,8 +237,20 @@ export default function Reader({
     };
   }, [selectedBook, selectedChapter]);
 
+  useEffect(() => {
+    if (!pendingNavigation || verses.length === 0) return;
+
+    const key = `${pendingNavigation.bookId}:${pendingNavigation.chapterNumber}:${pendingNavigation.verseNumber}`;
+    const el = verseRefs.current.get(key);
+
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      onPendingNavigationClear();
+    }
+  }, [pendingNavigation, verses, onPendingNavigationClear]);
+
   return (
-    <main className="flex-1 overflow-y-auto p-6">
+    <main ref={mainRef} className="flex-1 overflow-y-auto p-6">
       <div className="mx-auto max-w-3xl rounded border p-6">
         {selectedBook ? (
           <div>
@@ -259,6 +290,7 @@ export default function Reader({
                   return (
                     <p
                       key={verse.verseNumber}
+                      ref={verseRefCallback(`${selectedBook.id}:${selectedChapter}:${verse.verseNumber}`)}
                       className={`cursor-pointer leading-relaxed rounded px-1 -mx-1 ${
                         selectedVerse?.verseNumber === verse.verseNumber
                           ? 'bg-blue-50'

@@ -17,6 +17,7 @@ export default function AppLayout() {
   const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
   const [notesRefreshKey, setNotesRefreshKey] = useState(0);
   const [selectedVerse, setSelectedVerse] = useState<VerseRef | null>(null);
+  const [pendingNavigation, setPendingNavigation] = useState<VerseRef | null>(null);
   const { lastPosition, loaded, savePosition } = useReadingProgress();
   const notes = useNotes(notesRefreshKey);
 
@@ -75,6 +76,30 @@ export default function AppLayout() {
     setNotesRefreshKey((k) => k + 1);
   };
 
+  const handleNavigateToBookmark = (sourceReference: string) => {
+    const match = sourceReference.match(/^([^:]+):(\d+):(\d+)/);
+    if (!match) return;
+
+    const [, bookId, chapterStr, verseStr] = match;
+    const book = books.find((b) => b.id === bookId);
+    if (!book) return;
+
+    const target: VerseRef = {
+      bookId,
+      chapterNumber: Number.parseInt(chapterStr, 10),
+      verseNumber: Number.parseInt(verseStr, 10),
+    };
+
+    setSelectedBook(book);
+    setSelectedChapter(target.chapterNumber);
+    setSelectedVerse(target);
+    setPendingNavigation(target);
+  };
+
+  const handlePendingNavigationClear = () => {
+    setPendingNavigation(null);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -92,6 +117,8 @@ export default function AppLayout() {
           onSelectChapter={handleSelectChapter}
           onSelectVerse={handleSelectVerse}
           onNoteSaved={handleNoteSaved}
+          pendingNavigation={pendingNavigation}
+          onPendingNavigationClear={handlePendingNavigationClear}
         />
         <RightPanel
           selectedVerse={selectedVerse}
@@ -99,6 +126,7 @@ export default function AppLayout() {
           selectedChapter={selectedChapter}
           refreshKey={notesRefreshKey}
           onNoteDeleted={handleNoteDeleted}
+          onNavigateToBookmark={handleNavigateToBookmark}
         />
       </div>
 

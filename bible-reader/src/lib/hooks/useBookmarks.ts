@@ -15,18 +15,20 @@ export function useBookmarks(
     let isActive = true;
 
     const load = async () => {
-      if (!bookId || chapterNumber === null) {
+      if (!bookId) {
         if (isActive) setBookmarks([]);
         return;
       }
 
       const all = await repo.findByBook(bookId);
-      const chapterBookmarks = all.filter((b) => {
-        const match = b.sourceReference.match(/^[^:]+:(\d+):(\d+)(?:-(\d+))?$/);
-        if (!match) return false;
-        const refChapter = Number.parseInt(match[1], 10);
-        return refChapter === chapterNumber;
-      });
+      const chapterBookmarks = chapterNumber === null
+        ? all
+        : all.filter((b) => {
+            const match = b.sourceReference.match(/^[^:]+:(\d+):(\d+)(?:-(\d+))?$/);
+            if (!match) return false;
+            const refChapter = Number.parseInt(match[1], 10);
+            return refChapter === chapterNumber;
+          });
 
       if (isActive) setBookmarks(chapterBookmarks);
     };
