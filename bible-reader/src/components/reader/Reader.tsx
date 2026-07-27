@@ -78,14 +78,19 @@ export default function Reader({
   const highlights = useHighlights(selectedBook?.id ?? null, selectedChapter, refreshKey);
   const chapterNotes = useChapterNotes(selectedBook?.id ?? null, selectedChapter, refreshKey);
 
-  function verseHasNote(verseNumber: number): boolean {
-    return chapterNotes.some((n) => {
+  function getVerseNotes(verseNumber: number): Note[] {
+    return chapterNotes.filter((n) => {
       const match = n.sourceReference.match(/^[^:]+:\d+:(\d+)(?:-(\d+))?$/);
       if (!match) return false;
       const start = Number.parseInt(match[1], 10);
       const end = match[2] ? Number.parseInt(match[2], 10) : start;
       return verseNumber >= start && verseNumber <= end;
     });
+  }
+
+  function handleNoteIndicatorClick(note: Note) {
+    setEditingNote(note);
+    setModalSourceRef(note.sourceReference);
   }
 
   const handleHighlight = async (text: string, selectedVerses: SelectedVerse[]) => {
@@ -236,9 +241,15 @@ export default function Reader({
                       <span className="mr-1 text-xs font-semibold align-super text-blue-600">
                         {verse.verseNumber}
                       </span>
-                      {verseHasNote(verse.verseNumber) && (
-                        <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-amber-500 align-super" />
-                      )}
+                      {getVerseNotes(verse.verseNumber).map((note) => (
+                        <button
+                          key={note.id}
+                          type="button"
+                          onClick={() => handleNoteIndicatorClick(note)}
+                          title={note.title}
+                          className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-amber-500 align-super hover:scale-150"
+                        />
+                      ))}
                       {renderVerseText(verse.text, verseHighlights)}
                     </p>
                   );
@@ -271,6 +282,7 @@ export default function Reader({
 
       {modalSourceRef && (
         <NoteEditor
+          key={editingNote?.id ?? 'new'}
           note={editingNote ?? undefined}
           sourceReference={modalSourceRef}
           onSave={handleNoteSave}
