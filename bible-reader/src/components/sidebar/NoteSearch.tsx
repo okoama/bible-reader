@@ -1,36 +1,225 @@
 import { useMemo, useState } from 'react';
-import type { Note } from '../../types';
+import type { BibleBook, Note } from '../../types';
 import { truncateText } from '../../lib/utils/text';
+import { formatDate } from '../../lib/utils/date';
+
+type DateFilter = 'all' | 'today' | 'week' | 'month' | 'year';
 
 type NoteSearchProps = {
   notes: Note[];
+  books: BibleBook[];
   onNavigate: (sourceReference: string) => void;
 };
 
-export default function NoteSearch({ notes, onNavigate }: NoteSearchProps) {
+function extractBookId(sourceReference: string): string {
+  const idx = sourceReference.indexOf(':');
+  return idx > 0 ? sourceReference.slice(0, idx) : '';
+}
+
+function matchesDateFilter(note: Note, filter: DateFilter): boolean {
+  if (filter === 'all') return true;
+
+  const created = new Date(note.createdAt);
+  const now = new Date();
+
+  switch (filter) {
+    case 'today': {
+      return (
+        created.getFullYear() === now.getFullYear() &&
+        created.getMonth() === now.getMonth() &&
+        created.getDate() === now.getDate()
+      );
+    }
+    case 'week': {
+      const weekAgo = new Date(now);
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return created >= weekAgo;
+    }
+    case 'month': {
+      const monthAgo = new Date(now);
+      monthAgo.setMonth(monthAgo.getMonth() - 1);
+      return created >= monthAgo;
+    }
+    case 'year': {
+      const yearAgo = new Date(now);
+      yearAgo.setFullYear(yearAgo.getFullYear() - 1);
+      return created >= yearAgo;
+    }
+  }
+}
+
+export default function NoteSearch({ notes, books, onNavigate }: NoteSearchProps) {
   const [query, setQuery] = useState('');
+  const [filterBook, setFilterBook] = useState('');
+  const [filterTag, setFilterTag] = useState('');
+  const [filterDate, setFilterDate] = useState<DateFilter>('all');
+  const [showFilters, setShowFilters] = useState(false);
+
+  const bookIdToName = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const book of books) {
+      map.set(book.id, book.name);
+    }
+    return map;
+  }, [books]);
+
+  const uniqueBookIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const note of notes) {
+      const id = extractBookId(note.sourceReference);
+      if (id) ids.add(id);
+    }
+    return [...ids].sort();
+  }, [notes]);
+
+  const uniqueTags = useMemo(() => {
+    const tags = new Set<string>();
+    for (const note of notes) {
+      for (const tag of note.tags) {
+        tags.add(tag);
+      }
+    }
+    return [...tags].sort();
+  }, [notes]);
 
   const filtered = useMemo(() => {
-    if (!query.trim()) return notes;
+    return notes.filter((note) => {
+      if (query.trim()) {
+        const lower = query.toLowerCase();
+        const matches =
+          note.title.toLowerCase().includes(lower) ||
+          note.content.toLowerCase().includes(lower) ||
+          note.tags.some((t) => t.toLowerCase().includes(lower));
+        if (!matches) return false;
+      }
 
-    const lower = query.toLowerCase();
-    return notes.filter(
-      (n) =>
-        n.title.toLowerCase().includes(lower) ||
-        n.content.toLowerCase().includes(lower) ||
-        n.tags.some((t) => t.toLowerCase().includes(lower)),
-    );
-  }, [notes, query]);
+      if (filterBook) {
+        const noteBook = extractBookId(note.sourceReference);
+        if (noteBook !== filterBook) return false;
+      }
+
+      if (filterTag) {
+        if (!note.tags.includes(filterTag)) return false;
+      }
+
+      if (!matchesDateFilter(note, filterDate)) return false;
+
+      return true;
+    });
+  }, [notes, query, filterBook, filterTag, filterDate]);
+
+  const hasActiveFilters = filterBook || filterTag || filterDate !== 'all';
+
+  function clearFilters() {
+    setFilterBook('');
+    setFilterTag('');
+    setFilterDate('all');
+  }
 
   return (
     <div>
       <input
         type="text"
-        placeholder="Search notes…"
+        placeholder="Search notes..."
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        className="mb-3 w-full rounded border px-3 py-2 text-sm outline-none focus:border-blue-500"
+        className="mb-2 w-full rounded border px-3 py-2 text-sm outline-none focus:border-blue-500"
       />
+
+      <button
+        type="button"
+        onClick={() => setShowFilters(!showFilters)}
+        className="mb-3 flex items-center gap-1 text-xs opacity-60 hover:opacity-100"
+      >
+        <span>{showFilters ? 'Hide' : 'Show'} filters</span>
+        {hasActiveFilters && (
+          <span className="inline-block h-1.5 w-1.5 rounded-full bg-blue-500" />
+        )}
+      </button>
+
+      {showFilters && (
+        <div className="mb-3 space-y-2 rounded border p-2">
+          <div>
+            <label className="mb-0.5 block text-xs opacity-60">Book</label>
+            <select
+              value={filterBook}
+              onChange={(e) => setFilterBook(e.target.value)}
+              className="w-full rounded border px-2 py-1 text-xs outline-none focus:border-blue-500"
+            >
+              <option value="">All books</option>
+              {uniqueBookIds.map((id) => (
+                <option key={id} value={id}>
+                  {bookIdToName.get(id) ?? id}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-0.5 block text-xs opacity-60">Tag</label>
+            <select
+              value={filterTag}
+              onChange={(e) => setFilterTag(e.target.value)}
+              className="w-full rounded border px-2 py-1 text-xs outline-none focus:border-blue-500"
+            >
+              <option value="">All tags</option>
+              {uniqueTags.map((tag) => (
+                <option key={tag} value={tag}>
+                  {tag}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-0.5 block text-xs opacity-60">Date</label>
+            <select
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value as DateFilter)}
+              className="w-full rounded border px-2 py-1 text-xs outline-none focus:border-blue-500"
+            >
+              <option value="all">All time</option>
+              <option value="today">Today</option>
+              <option value="week">Last 7 days</option>
+              <option value="month">Last 30 days</option>
+              <option value="year">Last year</option>
+            </select>
+          </div>
+
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="text-xs text-red-500 hover:text-red-700"
+            >
+              Clear filters
+            </button>
+          )}
+        </div>
+      )}
+
+      {hasActiveFilters && (
+        <div className="mb-2 flex flex-wrap gap-1">
+          {filterBook && (
+            <span className="inline-flex items-center gap-1 rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">
+              {bookIdToName.get(filterBook) ?? filterBook}
+              <button type="button" onClick={() => setFilterBook('')} className="hover:text-blue-900">&times;</button>
+            </span>
+          )}
+          {filterTag && (
+            <span className="inline-flex items-center gap-1 rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">
+              {filterTag}
+              <button type="button" onClick={() => setFilterTag('')} className="hover:text-blue-900">&times;</button>
+            </span>
+          )}
+          {filterDate !== 'all' && (
+            <span className="inline-flex items-center gap-1 rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">
+              {filterDate === 'week' ? 'Last 7 days' : filterDate === 'month' ? 'Last 30 days' : filterDate === 'year' ? 'Last year' : 'Today'}
+              <button type="button" onClick={() => setFilterDate('all')} className="hover:text-blue-900">&times;</button>
+            </span>
+          )}
+        </div>
+      )}
 
       <div className="space-y-2">
         {filtered.map((note) => (
@@ -41,7 +230,8 @@ export default function NoteSearch({ notes, onNavigate }: NoteSearchProps) {
             className="w-full rounded border px-3 py-2 text-left text-sm hover:bg-gray-50"
           >
             <p className="font-medium">{note.title || 'Untitled'}</p>
-            <p className="mt-1 text-xs opacity-60">{note.sourceReference}</p>
+            <p className="mt-1 text-xs opacity-60">{formatDate(note.createdAt)}</p>
+            <p className="mt-0.5 text-xs opacity-40">{note.sourceReference}</p>
             {note.content && (
               <p className="mt-1 text-xs opacity-80">{truncateText(note.content, 60)}</p>
             )}
@@ -61,7 +251,7 @@ export default function NoteSearch({ notes, onNavigate }: NoteSearchProps) {
           <p className="text-xs opacity-60">No notes yet. Select text and click Note to create one.</p>
         )}
 
-        {query.trim() && filtered.length === 0 && notes.length > 0 && (
+        {notes.length > 0 && filtered.length === 0 && (
           <p className="text-xs opacity-60">No matching notes.</p>
         )}
       </div>

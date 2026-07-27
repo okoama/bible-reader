@@ -26,7 +26,7 @@ export default function Sidebar({
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide opacity-70">
         Notes
       </h2>
-      <NoteSearch notes={notes} onNavigate={onNavigateToNote} />
+      <NoteSearch notes={notes} books={books} onNavigate={onNavigateToNote} />
 
       <h2 className="mt-6 mb-3 text-sm font-semibold uppercase tracking-wide opacity-70">
         Library
