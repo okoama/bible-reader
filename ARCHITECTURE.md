@@ -68,3 +68,14 @@ React components
 - Reading progress
 
 These are stored locally and are separate from the bundled Bible content.
+
+## Annotation Workflow
+User selects text
+Selection toolbar appears
+Choose:
+- Highlight
+- Note
+- Bookmark
+Save
+Stored in IndexedDB
+Annotation appears immediately
