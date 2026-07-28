@@ -48,7 +48,7 @@ async function main() {
   try {
     parseImitation(
       path.join(INPUT_DIR, "imitation.txt"),
-      path.join(OUTPUT_DIR, "imitation.json")
+      path.join(OUTPUT_DIR, "imitation")
     );
   } catch (e: any) {
     console.error("  FAILED:", e.message);
@@ -58,7 +58,7 @@ async function main() {
   try {
     parseDevoutLife(
       path.join(INPUT_DIR, "devout-life.txt"),
-      path.join(OUTPUT_DIR, "devout-life.json")
+      path.join(OUTPUT_DIR, "devout-life")
     );
   } catch (e: any) {
     console.error("  FAILED:", e.message);

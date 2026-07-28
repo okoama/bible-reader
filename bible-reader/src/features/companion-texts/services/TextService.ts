@@ -1,12 +1,18 @@
 import type { TextWork } from '../../../types';
 
-interface WorkManifestEntry {
+export interface SectionSummary {
+  id: string;
+  label: string;
+}
+
+export interface WorkManifestEntry {
   id: string;
   name: string;
   author?: string;
   group: string;
   dataPath: string;
   order: number;
+  sections: SectionSummary[];
 }
 
 const WORK_MANIFEST: WorkManifestEntry[] = [
@@ -16,6 +22,13 @@ const WORK_MANIFEST: WorkManifestEntry[] = [
     group: 'Catechism',
     dataPath: '/data/catechism.json',
     order: 1,
+    sections: [
+      { id: 'prologue', label: 'Prologue' },
+      { id: 'part-1', label: 'Part I: The Profession of Faith' },
+      { id: 'part-2', label: 'Part II: The Celebration of the Christian Mystery' },
+      { id: 'part-3', label: 'Part III: Life in Christ' },
+      { id: 'part-4', label: 'Part IV: Christian Prayer' },
+    ],
   },
   {
     id: 'summa-fp',
@@ -24,6 +37,7 @@ const WORK_MANIFEST: WorkManifestEntry[] = [
     group: 'Summa Theologiae',
     dataPath: '/data/summa/summa-fp.json',
     order: 2,
+    sections: [],
   },
   {
     id: 'summa-fs',
@@ -32,6 +46,7 @@ const WORK_MANIFEST: WorkManifestEntry[] = [
     group: 'Summa Theologiae',
     dataPath: '/data/summa/summa-fs.json',
     order: 3,
+    sections: [],
   },
   {
     id: 'summa-ss',
@@ -40,6 +55,7 @@ const WORK_MANIFEST: WorkManifestEntry[] = [
     group: 'Summa Theologiae',
     dataPath: '/data/summa/summa-ss.json',
     order: 4,
+    sections: [],
   },
   {
     id: 'summa-tp',
@@ -48,6 +64,7 @@ const WORK_MANIFEST: WorkManifestEntry[] = [
     group: 'Summa Theologiae',
     dataPath: '/data/summa/summa-tp.json',
     order: 5,
+    sections: [],
   },
   {
     id: 'summa-x1',
@@ -56,6 +73,7 @@ const WORK_MANIFEST: WorkManifestEntry[] = [
     group: 'Summa Theologiae',
     dataPath: '/data/summa/summa-x1.json',
     order: 6,
+    sections: [],
   },
   {
     id: 'summa-x2',
@@ -64,6 +82,7 @@ const WORK_MANIFEST: WorkManifestEntry[] = [
     group: 'Summa Theologiae',
     dataPath: '/data/summa/summa-x2.json',
     order: 7,
+    sections: [],
   },
   {
     id: 'summa-xp',
@@ -72,6 +91,7 @@ const WORK_MANIFEST: WorkManifestEntry[] = [
     group: 'Summa Theologiae',
     dataPath: '/data/summa/summa-xp.json',
     order: 8,
+    sections: [],
   },
   {
     id: 'confessions',
@@ -80,22 +100,102 @@ const WORK_MANIFEST: WorkManifestEntry[] = [
     group: 'Confessions',
     dataPath: '/data/confessions.json',
     order: 9,
+    sections: [
+      { id: 'book-1', label: 'Book I' },
+      { id: 'book-2', label: 'Book II' },
+      { id: 'book-3', label: 'Book III' },
+      { id: 'book-4', label: 'Book IV' },
+      { id: 'book-5', label: 'Book V' },
+      { id: 'book-6', label: 'Book VI' },
+      { id: 'book-7', label: 'Book VII' },
+      { id: 'book-8', label: 'Book VIII' },
+      { id: 'book-9', label: 'Book IX' },
+      { id: 'book-10', label: 'Book X' },
+      { id: 'book-11', label: 'Book XI' },
+      { id: 'book-12', label: 'Book XII' },
+      { id: 'book-13', label: 'Book XIII' },
+    ],
   },
   {
-    id: 'imitation',
-    name: 'The Imitation of Christ',
+    id: 'imitation-book-1',
+    name: 'Book 1: Admonitions Profitable for the Spiritual Life',
     author: 'Thomas à Kempis',
     group: 'Imitation of Christ',
-    dataPath: '/data/imitation.json',
+    dataPath: '/data/imitation/imitation-book-1.json',
     order: 10,
+    sections: [],
   },
   {
-    id: 'devout-life',
-    name: 'Introduction to the Devout Life',
+    id: 'imitation-book-2',
+    name: 'Book 2: Directions for the Interior Life',
+    author: 'Thomas à Kempis',
+    group: 'Imitation of Christ',
+    dataPath: '/data/imitation/imitation-book-2.json',
+    order: 11,
+    sections: [],
+  },
+  {
+    id: 'imitation-book-3',
+    name: 'Book 3: Of Interior Consolation',
+    author: 'Thomas à Kempis',
+    group: 'Imitation of Christ',
+    dataPath: '/data/imitation/imitation-book-3.json',
+    order: 12,
+    sections: [],
+  },
+  {
+    id: 'imitation-book-4',
+    name: 'Book 4: Of the Blessed Sacrament',
+    author: 'Thomas à Kempis',
+    group: 'Imitation of Christ',
+    dataPath: '/data/imitation/imitation-book-4.json',
+    order: 13,
+    sections: [],
+  },
+  {
+    id: 'devout-life-part-1',
+    name: 'Part 1: Counsels and Practices for the Soul\'s Guidance',
     author: 'St. Francis de Sales',
     group: 'Devout Life',
-    dataPath: '/data/devout-life.json',
-    order: 11,
+    dataPath: '/data/devout-life/devout-life-part-1.json',
+    order: 14,
+    sections: [],
+  },
+  {
+    id: 'devout-life-part-2',
+    name: 'Part 2: Counsels for Uplifting the Soul to God in Prayer',
+    author: 'St. Francis de Sales',
+    group: 'Devout Life',
+    dataPath: '/data/devout-life/devout-life-part-2.json',
+    order: 15,
+    sections: [],
+  },
+  {
+    id: 'devout-life-part-3',
+    name: 'Part 3: Counsels Concerning the Practice of Virtue',
+    author: 'St. Francis de Sales',
+    group: 'Devout Life',
+    dataPath: '/data/devout-life/devout-life-part-3.json',
+    order: 16,
+    sections: [],
+  },
+  {
+    id: 'devout-life-part-4',
+    name: 'Part 4: Counsels Concerning Ordinary Temptations',
+    author: 'St. Francis de Sales',
+    group: 'Devout Life',
+    dataPath: '/data/devout-life/devout-life-part-4.json',
+    order: 17,
+    sections: [],
+  },
+  {
+    id: 'devout-life-part-5',
+    name: 'Part 5: Counsels for Renewing and Confirming the Soul in Devotion',
+    author: 'St. Francis de Sales',
+    group: 'Devout Life',
+    dataPath: '/data/devout-life/devout-life-part-5.json',
+    order: 18,
+    sections: [],
   },
 ];
 
@@ -118,7 +218,7 @@ export class TextService {
       name: entry.name,
       author: entry.author,
       group: entry.group,
-      sectionCount: 0,
+      sectionCount: entry.sections.length,
       order: entry.order,
     }));
   }

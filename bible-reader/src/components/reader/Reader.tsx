@@ -14,6 +14,8 @@ import NoteEditor from '../../features/notes/components/NoteEditor';
 import PrayerJournal from './PrayerJournal';
 import ContentReader from './ContentReader';
 
+import CompanionTextReader from './CompanionTextReader';
+
 const bibleService = new BibleService();
 const highlightRepository = new HighlightRepository();
 
@@ -69,6 +71,9 @@ type ReaderProps = {
   pendingNavigation: VerseRef | null;
   onPendingNavigationClear: () => void;
   activeView: ActiveView;
+  selectedWorkId: string | null;
+  selectedSectionId: string | null;
+  onSelectWork: (workId: string, sectionId?: string) => void;
   prayerRefreshKey: number;
   selectedNoteId: string | null;
   onSelectNote: (noteId: string | null) => void;
@@ -85,6 +90,9 @@ export default function Reader({
   pendingNavigation,
   onPendingNavigationClear,
   activeView,
+  selectedWorkId,
+  selectedSectionId,
+  onSelectWork: _onSelectWork,
   prayerRefreshKey,
   selectedNoteId,
   onSelectNote,
@@ -339,6 +347,10 @@ export default function Reader({
       {activeView === 'prayer-journal' ? (
         <div className="mx-auto max-w-3xl rounded-lg border p-6 animate-fade-in">
           <PrayerJournal refreshKey={prayerRefreshKey} onRefresh={handlePrayerRefresh} />
+        </div>
+      ) : activeView === 'companion-text' && selectedWorkId ? (
+        <div className="animate-fade-in">
+          <CompanionTextReader workId={selectedWorkId} initialSectionId={selectedSectionId} />
         </div>
       ) : selectedBook ? (
         <ContentReader

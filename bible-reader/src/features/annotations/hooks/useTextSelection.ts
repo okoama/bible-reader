@@ -12,7 +12,31 @@ export interface TextSelection {
   verses: SelectedVerse[];
 }
 
-function collectVerses(selection: globalThis.Selection): SelectedVerse[] {
+export interface SelectionConfig {
+  itemSelector: string;
+  bookAttr: string;
+  chapterAttr: string;
+  verseAttr: string;
+}
+
+export const BIBLE_SELECTION_CONFIG: SelectionConfig = {
+  itemSelector: '[data-verse]',
+  bookAttr: 'data-book',
+  chapterAttr: 'data-chapter',
+  verseAttr: 'data-verse',
+};
+
+export const COMPANION_TEXT_SELECTION_CONFIG: SelectionConfig = {
+  itemSelector: '[data-block]',
+  bookAttr: 'data-work',
+  chapterAttr: 'data-section',
+  verseAttr: 'data-block',
+};
+
+function collectVerses(
+  selection: globalThis.Selection,
+  config: SelectionConfig,
+): SelectedVerse[] {
   if (selection.rangeCount === 0) {
     return [];
   }
@@ -25,27 +49,33 @@ function collectVerses(selection: globalThis.Selection): SelectedVerse[] {
   for (const node of nodes) {
     const el =
       node.nodeType === Node.ELEMENT_NODE
-        ? (node as Element).closest<HTMLElement>('[data-verse]')
-        : (node.parentElement as HTMLElement | null)?.closest<HTMLElement>('[data-verse]');
+        ? (node as Element).closest<HTMLElement>(config.itemSelector)
+        : (node.parentElement as HTMLElement | null)?.closest<HTMLElement>(config.itemSelector);
 
     if (!el) {
       continue;
     }
 
-    const bookId = el.dataset.book;
-    const chapterNumber = Number.parseInt(el.dataset.chapter ?? '', 10);
-    const verseNumber = Number.parseInt(el.dataset.verse ?? '', 10);
+    const bookId = el.getAttribute(config.bookAttr) ?? '';
+    const chapterRaw = el.getAttribute(config.chapterAttr) ?? '';
+    const verseRaw = el.getAttribute(config.verseAttr) ?? '';
 
-    if (!bookId || Number.isNaN(chapterNumber) || Number.isNaN(verseNumber)) {
-      continue;
-    }
+    if (!bookId) continue;
 
-    const key = `${bookId}:${chapterNumber}:${verseNumber}`;
+    const chapterNumber = Number(chapterRaw);
+    const verseNumber = Number(verseRaw);
+    const chapterKey = chapterNumber || 0;
+
+    const key = `${bookId}:${chapterRaw}:${verseRaw}`;
     if (seen.has(key)) {
       continue;
     }
     seen.add(key);
-    verses.push({ bookId, chapterNumber, verseNumber });
+    verses.push({
+      bookId,
+      chapterNumber: Number.isNaN(chapterNumber) ? 0 : chapterNumber,
+      verseNumber: Number.isNaN(verseNumber) ? 0 : verseNumber,
+    });
   }
 
   verses.sort((a, b) => a.chapterNumber - b.chapterNumber || a.verseNumber - b.verseNumber);
@@ -90,6 +120,7 @@ function computeUnionRect(verseEls: Element[]): DOMRect {
 
 export function useTextSelection(
   containerElement: HTMLDivElement | null,
+  config: SelectionConfig = BIBLE_SELECTION_CONFIG,
 ): {
   selection: TextSelection | null;
   clearSelection: () => void;
@@ -113,7 +144,7 @@ export function useTextSelection(
         return;
       }
 
-      const verses = collectVerses(sel);
+      const verses = collectVerses(sel, config);
       if (verses.length === 0) {
         clearSelection();
         return;
@@ -121,7 +152,9 @@ export function useTextSelection(
 
       const range = sel.getRangeAt(0);
       const verseEls = verses.map((v) =>
-        containerElement.querySelector(`[data-book="${v.bookId}"][data-chapter="${v.chapterNumber}"][data-verse="${v.verseNumber}"]`),
+        containerElement.querySelector(
+          `[${config.bookAttr}="${v.bookId}"][${config.chapterAttr}="${v.chapterNumber}"][${config.verseAttr}="${v.verseNumber}"]`,
+        ),
       ).filter((el): el is Element => el !== null);
 
       const rect = verseEls.length > 0
@@ -139,7 +172,7 @@ export function useTextSelection(
     return () => {
       containerElement.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [containerElement, clearSelection]);
+  }, [containerElement, clearSelection, config]);
 
   return { selection, clearSelection };
 }

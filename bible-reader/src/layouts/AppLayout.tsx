@@ -10,7 +10,7 @@ import { useNotes } from '../lib/hooks/useNotes';
 import { NoteRepository } from '../lib/repositories/NoteRepository';
 import type { BibleBook, VerseRef } from '../types';
 
-export type ActiveView = 'bible' | 'prayer-journal';
+export type ActiveView = 'bible' | 'prayer-journal' | 'companion-text';
 
 const bibleService = new BibleService();
 const noteRepository = new NoteRepository();
@@ -24,6 +24,8 @@ export default function AppLayout() {
   const [pendingNavigation, setPendingNavigation] = useState<VerseRef | null>(null);
   const [activeView, setActiveView] = useState<ActiveView>('bible');
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+  const [selectedWorkId, setSelectedWorkId] = useState<string | null>(null);
+  const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const { lastPosition, loaded, savePosition } = useReadingProgress();
   const notes = useNotes(notesRefreshKey);
 
@@ -69,7 +71,17 @@ export default function AppLayout() {
       setSelectedBook(null);
       setSelectedChapter(null);
       setSelectedVerse(null);
+      setSelectedWorkId(null);
     }
+  };
+
+  const handleSelectWork = (workId: string, sectionId?: string) => {
+    setActiveView('companion-text');
+    setSelectedBook(null);
+    setSelectedChapter(null);
+    setSelectedVerse(null);
+    setSelectedWorkId(workId);
+    setSelectedSectionId(sectionId ?? null);
   };
 
   const handleSelectChapter = (chapter: number) => {
@@ -138,6 +150,9 @@ export default function AppLayout() {
           onSelectBook={handleSelectBook}
           activeView={activeView}
           onSelectView={handleSelectView}
+          selectedWorkId={selectedWorkId}
+          selectedSectionId={selectedSectionId}
+          onSelectWork={handleSelectWork}
         />
         <Reader
           selectedBook={selectedBook}
@@ -149,12 +164,15 @@ export default function AppLayout() {
           pendingNavigation={pendingNavigation}
           onPendingNavigationClear={handlePendingNavigationClear}
           activeView={activeView}
+          selectedWorkId={selectedWorkId}
+          selectedSectionId={selectedSectionId}
+          onSelectWork={handleSelectWork}
           prayerRefreshKey={notesRefreshKey}
           selectedNoteId={selectedNoteId}
           onSelectNote={handleSelectNote}
           onDeleteSelectedNote={handleDeleteSelectedNote}
         />
-        {activeView === 'bible' && (
+        {(activeView === 'bible' || activeView === 'companion-text') && (
           <RightPanel
             selectedVerse={selectedVerse}
             selectedBook={selectedBook}
@@ -167,6 +185,8 @@ export default function AppLayout() {
             onNavigateToNote={handleNavigateToBookmark}
             selectedNoteId={selectedNoteId}
             onSelectNote={handleSelectNote}
+            workId={activeView === 'companion-text' ? selectedWorkId : null}
+            sectionId={activeView === 'companion-text' ? selectedSectionId : null}
           />
         )}
       </div>

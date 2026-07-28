@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { TextWork, TextSection, TextBlock } from "./models.js";
 
-const PART_TITLES: Record<number, string> = {
+const PART_NAMES: Record<number, string> = {
   1: "Counsels and Practices for the Soul's Guidance",
   2: "Counsels for Uplifting the Soul to God in Prayer",
   3: "Counsels Concerning the Practice of Virtue",
@@ -44,11 +44,11 @@ function romanToInt(s: string): number {
   return result;
 }
 
-export function parseDevoutLife(inputPath: string, outputPath: string): void {
+export function parseDevoutLife(inputPath: string, outputDir: string): void {
   const raw = fs.readFileSync(inputPath, "utf-8");
   const cleaned = stripHeader(raw);
 
-  const partPattern = /^\s*PART\s+(I{1,5})\.\s+(.*)$/gm;
+  const partPattern = /^\s*PART\s+(I{1,3}|IV|V)\.\s+(.*)$/gm;
   const partMatches: { match: RegExpExecArray; num: number; title: string }[] = [];
   let pm: RegExpExecArray | null;
   while ((pm = partPattern.exec(cleaned)) !== null) {
@@ -70,16 +70,20 @@ export function parseDevoutLife(inputPath: string, outputPath: string): void {
     });
   }
 
-  const sections: TextSection[] = [];
+  fs.mkdirSync(outputDir, { recursive: true });
+
   let globalParaNum = 0;
 
   for (let p = 0; p < partMatches.length; p++) {
+    const partNum = partMatches[p].num;
     const partStart = partMatches[p].match.index;
     const partEnd = p + 1 < partMatches.length ? partMatches[p + 1].match.index : cleaned.length;
 
     const chaptersInPart = allChapters.filter(
       (ch) => ch.globalIdx >= partStart && ch.globalIdx < partEnd
     );
+
+    const sections: TextSection[] = [];
 
     for (let c = 0; c < chaptersInPart.length; c++) {
       const chStart = chaptersInPart[c].match.index + chaptersInPart[c].match[0].length;
@@ -104,23 +108,23 @@ export function parseDevoutLife(inputPath: string, outputPath: string): void {
 
       if (blocks.length > 0) {
         sections.push({
-          id: `part-${partMatches[p].num}-ch-${chaptersInPart[c].num}`,
-          label: `Part ${partMatches[p].num}, Ch. ${chaptersInPart[c].num}: ${chaptersInPart[c].title}`,
+          id: `ch-${chaptersInPart[c].num}`,
+          label: `Chapter ${chaptersInPart[c].num}: ${chaptersInPart[c].title}`,
           content: blocks,
         });
       }
     }
+
+    const work: TextWork = {
+      id: `devout-life-part-${partNum}`,
+      name: `Part ${partNum}: ${PART_NAMES[partNum]}`,
+      author: "St. Francis de Sales",
+      workType: "devout-life",
+      sections,
+    };
+
+    const outPath = path.join(outputDir, `devout-life-part-${partNum}.json`);
+    fs.writeFileSync(outPath, JSON.stringify(work, null, 2));
+    console.log(`  devout-life-part-${partNum}: ${sections.length} chapters → ${outPath}`);
   }
-
-  const work: TextWork = {
-    id: "devout-life",
-    name: "Introduction to the Devout Life",
-    author: "St. Francis de Sales",
-    workType: "devout-life",
-    sections,
-  };
-
-  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-  fs.writeFileSync(outputPath, JSON.stringify(work, null, 2));
-  console.log(`  devout-life: ${sections.length} chapters, ${globalParaNum} paragraphs → ${outputPath}`);
 }

@@ -2,6 +2,13 @@ import * as fs from "fs";
 import * as path from "path";
 import { TextWork, TextSection, TextBlock } from "./models.js";
 
+const BOOK_NAMES: Record<number, string> = {
+  1: "Admonitions Profitable for the Spiritual Life",
+  2: "Directions for the Interior Life",
+  3: "Of Interior Consolation",
+  4: "Of the Blessed Sacrament",
+};
+
 function stripGutenbergHeader(text: string): string {
   const startMarker = "*** START OF THE PROJECT GUTENBERG EBOOK";
   const startIdx = text.indexOf(startMarker);
@@ -30,30 +37,29 @@ function romanToInt(s: string): number {
   for (let i = 0; i < s.length; i++) {
     const cur = map[s[i]];
     const next = map[s[i + 1]];
-    if (next && cur < next) {
-      result -= cur;
-    } else {
-      result += cur;
-    }
+    if (next && cur < next) result -= cur;
+    else result += cur;
   }
   return result;
 }
 
-export function parseImitation(inputPath: string, outputPath: string): void {
+export function parseImitation(inputPath: string, outputDir: string): void {
   const raw = fs.readFileSync(inputPath, "utf-8");
   const cleaned = stripGutenbergHeader(raw);
 
   const bookPattern = /^THE\s+(FIRST|SECOND|THIRD|FOURTH)\s+BOOK/gm;
-  const bookMatches: { match: RegExpExecArray; label: string; index: number }[] = [];
+  const bookMatches: { match: RegExpExecArray; index: number }[] = [];
   let m: RegExpExecArray | null;
   while ((m = bookPattern.exec(cleaned)) !== null) {
-    bookMatches.push({ match: m, label: m[1] + " BOOK", index: m.index });
+    bookMatches.push({ match: m, index: m.index });
   }
 
-  const sections: TextSection[] = [];
+  fs.mkdirSync(outputDir, { recursive: true });
+
   let globalParaNum = 0;
 
   for (let i = 0; i < bookMatches.length; i++) {
+    const bookNum = i + 1;
     const bookStart = bookMatches[i].index;
     const bookEnd = i + 1 < bookMatches.length ? bookMatches[i + 1].index : cleaned.length;
     const bookText = cleaned.substring(bookStart, bookEnd);
@@ -65,6 +71,8 @@ export function parseImitation(inputPath: string, outputPath: string): void {
       chapters.push({ match: cm, num: romanToInt(cm[1]) });
     }
 
+    const sections: TextSection[] = [];
+
     if (chapters.length === 0) {
       const paragraphs = splitIntoParagraphs(bookText);
       const blocks: TextBlock[] = [];
@@ -74,45 +82,44 @@ export function parseImitation(inputPath: string, outputPath: string): void {
       }
       if (blocks.length > 0) {
         sections.push({
-          id: `book-${i + 1}`,
-          label: bookMatches[i].label,
+          id: "all",
+          label: `Book ${bookNum}`,
           content: blocks,
         });
       }
-      continue;
+    } else {
+      for (let j = 0; j < chapters.length; j++) {
+        const chStart = chapters[j].match.index + chapters[j].match[0].length;
+        const chEnd = j + 1 < chapters.length ? chapters[j + 1].match.index : bookText.length;
+        const chText = bookText.substring(chStart, chEnd).trim();
+        const paragraphs = splitIntoParagraphs(chText);
+
+        const blocks: TextBlock[] = [];
+        for (const para of paragraphs) {
+          globalParaNum++;
+          blocks.push({ id: `p${globalParaNum}`, number: globalParaNum, text: para });
+        }
+
+        if (blocks.length > 0) {
+          sections.push({
+            id: `ch-${chapters[j].num}`,
+            label: `Chapter ${chapters[j].num}`,
+            content: blocks,
+          });
+        }
+      }
     }
 
-    for (let j = 0; j < chapters.length; j++) {
-      const chStart = chapters[j].match.index + chapters[j].match[0].length;
-      const chEnd = j + 1 < chapters.length ? chapters[j + 1].match.index : bookText.length;
-      const chText = bookText.substring(chStart, chEnd).trim();
-      const paragraphs = splitIntoParagraphs(chText);
+    const work: TextWork = {
+      id: `imitation-book-${bookNum}`,
+      name: `Book ${bookNum}: ${BOOK_NAMES[bookNum]}`,
+      author: "Thomas à Kempis",
+      workType: "imitation",
+      sections,
+    };
 
-      const blocks: TextBlock[] = [];
-      for (const para of paragraphs) {
-        globalParaNum++;
-        blocks.push({ id: `p${globalParaNum}`, number: globalParaNum, text: para });
-      }
-
-      if (blocks.length > 0) {
-        sections.push({
-          id: `book-${i + 1}-ch-${chapters[j].num}`,
-          label: `Book ${i + 1}, Ch. ${chapters[j].num}`,
-          content: blocks,
-        });
-      }
-    }
+    const outPath = path.join(outputDir, `imitation-book-${bookNum}.json`);
+    fs.writeFileSync(outPath, JSON.stringify(work, null, 2));
+    console.log(`  imitation-book-${bookNum}: ${sections.length} chapters → ${outPath}`);
   }
-
-  const work: TextWork = {
-    id: "imitation",
-    name: "The Imitation of Christ",
-    author: "Thomas à Kempis",
-    workType: "imitation",
-    sections,
-  };
-
-  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-  fs.writeFileSync(outputPath, JSON.stringify(work, null, 2));
-  console.log(`  imitation: ${sections.length} chapters, ${globalParaNum} paragraphs → ${outputPath}`);
 }

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { BibleBook, Highlight, Bookmark, Note, VerseRef } from '../../types';
 import { useHighlights } from '../../lib/hooks/useHighlights';
+import { useWorkHighlights } from '../../lib/hooks/useWorkHighlights';
 import { useBookmarks } from '../../lib/hooks/useBookmarks';
 import { HighlightRepository } from '../../lib/repositories/HighlightRepository';
 import { BookmarkRepository } from '../../lib/repositories/BookmarkRepository';
@@ -39,6 +40,8 @@ type RightPanelProps = {
   onNavigateToNote: (sourceReference: string) => void;
   selectedNoteId: string | null;
   onSelectNote: (noteId: string | null) => void;
+  workId?: string | null;
+  sectionId?: string | null;
 };
 
 function coversVerse(sourceReference: string, verseNumber: number): boolean {
@@ -61,6 +64,8 @@ export default function RightPanel({
   onNavigateToNote,
   selectedNoteId,
   onSelectNote,
+  workId,
+  sectionId,
 }: RightPanelProps) {
   const [panelWidth, setPanelWidth] = useState(getStoredWidth);
   const [deletingHighlight, setDeletingHighlight] = useState<Highlight | null>(null);
@@ -69,14 +74,18 @@ export default function RightPanel({
   const dragRef = useRef<{ startX: number; startWidth: number } | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const highlights = useHighlights(selectedBook?.id ?? null, selectedChapter, refreshKey);
-  const bookmarks = useBookmarks(selectedBook?.id ?? null, null, refreshKey);
+  const isCompanion = !!(workId && sectionId);
+
+  const highlights = isCompanion
+    ? useWorkHighlights(workId, sectionId, refreshKey)
+    : useHighlights(selectedBook?.id ?? null, selectedChapter, refreshKey);
+  const bookmarks = useBookmarks(isCompanion ? workId : selectedBook?.id ?? null, null, refreshKey);
 
   const verseNumber = selectedVerse?.verseNumber ?? null;
 
-  const verseHighlights = verseNumber !== null
+  const verseHighlights = !isCompanion && verseNumber !== null
     ? highlights.filter((h) => coversVerse(h.sourceReference, verseNumber))
-    : [];
+    : highlights;
 
   function toggleSection(id: string) {
     setCollapsed((prev) => {
@@ -163,16 +172,20 @@ export default function RightPanel({
           title="Passage"
           collapsed={isCollapsed('passage')}
           onToggle={() => toggleSection('passage')}
-          count={verseNumber ? 1 : 0}
+          count={!isCompanion && verseNumber ? 1 : sectionId ? 1 : 0}
         >
-          {verseNumber && selectedBook ? (
+          {isCompanion && sectionId ? (
+            <div className="rounded border p-3">
+              <p className="font-semibold">Section: {sectionId}</p>
+            </div>
+          ) : verseNumber && selectedBook ? (
             <div className="rounded border p-3">
               <p className="font-semibold">
                 {selectedBook.name} {selectedChapter}:{verseNumber}
               </p>
             </div>
           ) : (
-            <p className="text-sm opacity-60">No verse selected.</p>
+            <p className="text-sm opacity-60">No passage selected.</p>
           )}
         </Section>
 
