@@ -15,6 +15,22 @@ export type ActiveView = 'bible' | 'prayer-journal' | 'companion-text';
 const bibleService = new BibleService();
 const noteRepository = new NoteRepository();
 
+const COMPANION_POSITIONS_KEY = 'companion-positions';
+
+function loadCompanionPositions(): Record<string, string> {
+  try {
+    const stored = localStorage.getItem(COMPANION_POSITIONS_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch {}
+  return {};
+}
+
+function persistCompanionPositions(positions: Record<string, string>): void {
+  try {
+    localStorage.setItem(COMPANION_POSITIONS_KEY, JSON.stringify(positions));
+  } catch {}
+}
+
 export default function AppLayout() {
   const [books, setBooks] = useState<BibleBook[]>([]);
   const [selectedBook, setSelectedBook] = useState<BibleBook | null>(null);
@@ -26,6 +42,7 @@ export default function AppLayout() {
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [selectedWorkId, setSelectedWorkId] = useState<string | null>(null);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
+  const [companionPositions, setCompanionPositions] = useState<Record<string, string>>(loadCompanionPositions);
   const { lastPosition, loaded, savePosition } = useReadingProgress();
   const notes = useNotes(notesRefreshKey);
 
@@ -76,12 +93,22 @@ export default function AppLayout() {
   };
 
   const handleSelectWork = (workId: string, sectionId?: string) => {
+    if (activeView === 'companion-text' && selectedWorkId && selectedSectionId) {
+      setCompanionPositions((prev) => {
+        const next = { ...prev, [selectedWorkId]: selectedSectionId };
+        persistCompanionPositions(next);
+        return next;
+      });
+    }
+
     setActiveView('companion-text');
     setSelectedBook(null);
     setSelectedChapter(null);
     setSelectedVerse(null);
     setSelectedWorkId(workId);
-    setSelectedSectionId(sectionId ?? null);
+
+    const targetSectionId = sectionId ?? companionPositions[workId] ?? null;
+    setSelectedSectionId(targetSectionId);
   };
 
   const handleSelectChapter = (chapter: number) => {
@@ -128,6 +155,17 @@ export default function AppLayout() {
     setPendingNavigation(null);
   };
 
+  const handleSelectSection = (sectionId: string) => {
+    setSelectedSectionId(sectionId);
+    if (selectedWorkId) {
+      setCompanionPositions((prev) => {
+        const next = { ...prev, [selectedWorkId]: sectionId };
+        persistCompanionPositions(next);
+        return next;
+      });
+    }
+  };
+
   const handleSelectNote = (noteId: string | null) => {
     setSelectedNoteId(noteId);
   };
@@ -167,6 +205,7 @@ export default function AppLayout() {
           selectedWorkId={selectedWorkId}
           selectedSectionId={selectedSectionId}
           onSelectWork={handleSelectWork}
+          onSelectSection={handleSelectSection}
           prayerRefreshKey={notesRefreshKey}
           selectedNoteId={selectedNoteId}
           onSelectNote={handleSelectNote}

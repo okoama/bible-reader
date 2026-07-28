@@ -18,6 +18,7 @@ const highlightRepository = new HighlightRepository();
 type CompanionTextReaderProps = {
   workId: string;
   initialSectionId?: string | null;
+  onSectionChange?: (sectionId: string) => void;
 };
 
 function getHighlightsForBlock(highlights: Highlight[], blockNumber: number): Highlight[] {
@@ -62,7 +63,7 @@ function renderBlockText(text: string, blockHighlights: Highlight[]): React.Reac
   return segments.length > 0 ? segments : text;
 }
 
-export default function CompanionTextReader({ workId, initialSectionId }: CompanionTextReaderProps) {
+export default function CompanionTextReader({ workId, initialSectionId, onSectionChange }: CompanionTextReaderProps) {
   const [work, setWork] = useState<TextWork | null>(null);
   const [selectedSection, setSelectedSection] = useState<string | null>(initialSectionId ?? null);
   const [section, setSection] = useState<TextSection | null>(null);
@@ -128,6 +129,12 @@ export default function CompanionTextReader({ workId, initialSectionId }: Compan
 
     return () => { isActive = false; };
   }, [workId, work, selectedSection]);
+
+  useEffect(() => {
+    if (selectedSection) {
+      onSectionChange?.(selectedSection);
+    }
+  }, [selectedSection, onSectionChange]);
 
   const sections = work?.sections.map((s) => ({ id: s.id, label: s.label })) ?? [];
 

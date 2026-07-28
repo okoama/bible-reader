@@ -74,6 +74,7 @@ type ReaderProps = {
   selectedWorkId: string | null;
   selectedSectionId: string | null;
   onSelectWork: (workId: string, sectionId?: string) => void;
+  onSelectSection?: (sectionId: string) => void;
   prayerRefreshKey: number;
   selectedNoteId: string | null;
   onSelectNote: (noteId: string | null) => void;
@@ -93,6 +94,7 @@ export default function Reader({
   selectedWorkId,
   selectedSectionId,
   onSelectWork: _onSelectWork,
+  onSelectSection,
   prayerRefreshKey,
   selectedNoteId,
   onSelectNote,
@@ -350,7 +352,7 @@ export default function Reader({
         </div>
       ) : activeView === 'companion-text' && selectedWorkId ? (
         <div className="animate-fade-in">
-          <CompanionTextReader workId={selectedWorkId} initialSectionId={selectedSectionId} />
+          <CompanionTextReader workId={selectedWorkId} initialSectionId={selectedSectionId} onSectionChange={onSelectSection} />
         </div>
       ) : selectedBook ? (
         <ContentReader
