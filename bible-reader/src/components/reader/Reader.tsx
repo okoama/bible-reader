@@ -363,7 +363,7 @@ export default function Reader({
           onSelectSection={(id) => onSelectChapter(Number.parseInt(id, 10))}
           loading={!!isLoading}
         >
-          <div ref={setContainerElement} className="space-y-1">
+          <div ref={setContainerElement} className="animate-fade-in space-y-1">
             {verses.map((verse) => {
               const verseHighlights = getHighlightsForVerse(highlights, verse.verseNumber);
 

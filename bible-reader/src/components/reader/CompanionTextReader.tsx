@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import ContentReader from './ContentReader';
 import { TextService } from '../../features/companion-texts/services/TextService';
 import { useTextSelection, COMPANION_TEXT_SELECTION_CONFIG } from '../../features/annotations/hooks/useTextSelection';
-import type { SelectedVerse, TextSelection as TextSelectionType } from '../../features/annotations/hooks/useTextSelection';
+import type { SelectedVerse } from '../../features/annotations/hooks/useTextSelection';
 import AnnotationToolbar from '../AnnotationToolbar';
 import NoteEditor from '../../features/notes/components/NoteEditor';
 import { BookmarkEditor } from '../../features/bookmarks';
@@ -75,7 +75,7 @@ export default function CompanionTextReader({ workId, initialSectionId, onSectio
   const [modalSourceRef, setModalSourceRef] = useState<string | null>(null);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [bookmarkModalSourceRef, setBookmarkModalSourceRef] = useState<string | null>(null);
-  const blockRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const topRef = useRef<HTMLDivElement>(null);
 
   const { selection, clearSelection } = useTextSelection(containerElement, COMPANION_TEXT_SELECTION_CONFIG);
   const highlights = useWorkHighlights(workId, selectedSection, refreshKey);
@@ -136,6 +136,12 @@ export default function CompanionTextReader({ workId, initialSectionId, onSectio
     }
   }, [selectedSection, onSectionChange]);
 
+  useEffect(() => {
+    if (section && topRef.current) {
+      topRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [section]);
+
   const sections = work?.sections.map((s) => ({ id: s.id, label: s.label })) ?? [];
 
   const handleHighlight = async (text: string, selectedVerses: SelectedVerse[], color: string) => {
@@ -194,6 +200,49 @@ export default function CompanionTextReader({ workId, initialSectionId, onSectio
     setBookmarkModalSourceRef(null);
   };
 
+  useEffect(() => {
+    const isInputFocused = () => {
+      const el = document.activeElement;
+      return el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement;
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isInputFocused()) return;
+
+      const ctrl = e.ctrlKey || e.metaKey;
+
+      if (e.key === 'Escape') {
+        if (modalSourceRef) {
+          handleNoteCancel();
+        } else if (bookmarkModalSourceRef) {
+          handleBookmarkCancel();
+        } else if (selection) {
+          clearSelection();
+        }
+        return;
+      }
+
+      if (ctrl && e.key === 'b') {
+        e.preventDefault();
+        if (selection) {
+          handleBookmark(selection.verses);
+        }
+        return;
+      }
+
+      if (ctrl && e.shiftKey && e.key === 'N') {
+        e.preventDefault();
+        if (selection) {
+          handleNote(selection.text, selection.verses);
+        }
+        return;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [selection, modalSourceRef, bookmarkModalSourceRef, handleNote, handleNoteCancel, handleBookmarkCancel, clearSelection, handleBookmark]);
+
   const getBlockNotes = useCallback((blockNumber: number): Note[] => {
     return chapterNotes.filter((n) => {
       const match = n.sourceReference.match(/^[^:]+:[^:]+:(\d+)(?:-(\d+))?$/);
@@ -237,6 +286,7 @@ export default function CompanionTextReader({ workId, initialSectionId, onSectio
         </div>
       ) : section ? (
         <div ref={setContainerElement} className="space-y-4">
+          <div ref={topRef} />
           {section.content.map((block) => {
             const blockHighlights = getHighlightsForBlock(highlights, block.number ?? 0);
             const blockNotes = getBlockNotes(block.number ?? 0);

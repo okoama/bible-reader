@@ -7,6 +7,7 @@ import { HighlightRepository } from '../../lib/repositories/HighlightRepository'
 import { BookmarkRepository } from '../../lib/repositories/BookmarkRepository';
 import { HIGHLIGHT_COLORS } from '../../lib/constants';
 import { formatDate } from '../../lib/utils/date';
+import { TextService } from '../../features/companion-texts/services/TextService';
 import ConfirmDialog from '../ConfirmDialog';
 import NoteSearch from '../sidebar/NoteSearch';
 
@@ -73,8 +74,33 @@ export default function RightPanel({
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const dragRef = useRef<{ startX: number; startWidth: number } | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const textServiceRef = useRef(new TextService());
 
   const isCompanion = !!(workId && sectionId);
+  const [sectionLabel, setSectionLabel] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isCompanion || !workId || !sectionId) {
+      setSectionLabel(null);
+      return;
+    }
+
+    const entry = textServiceRef.current.getManifestEntry(workId);
+    if (entry && entry.sections.length > 0) {
+      const section = entry.sections.find((s) => s.id === sectionId);
+      if (section) {
+        setSectionLabel(section.label);
+        return;
+      }
+    }
+
+    textServiceRef.current.loadWork(workId).then((work) => {
+      const section = work.sections.find((s) => s.id === sectionId);
+      setSectionLabel(section?.label ?? sectionId);
+    }).catch(() => {
+      setSectionLabel(sectionId);
+    });
+  }, [workId, sectionId, isCompanion]);
 
   const highlights = isCompanion
     ? useWorkHighlights(workId, sectionId, refreshKey)
@@ -176,7 +202,7 @@ export default function RightPanel({
         >
           {isCompanion && sectionId ? (
             <div className="rounded border p-3">
-              <p className="font-semibold">Section: {sectionId}</p>
+              <p className="font-semibold">{sectionLabel ?? sectionId}</p>
             </div>
           ) : verseNumber && selectedBook ? (
             <div className="rounded border p-3">

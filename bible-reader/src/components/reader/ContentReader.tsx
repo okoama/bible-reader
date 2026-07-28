@@ -34,25 +34,27 @@ export default function ContentReader({
       )}
 
       {sections.length > 0 && (
-        <div className="mt-6 flex flex-wrap gap-1.5">
-          {sections.map((section) => {
-            const isSelected = currentSectionId === section.id;
+        <div className={`mt-6 ${sections.length > 60 ? 'max-h-60 overflow-y-auto border rounded-lg p-2' : 'flex flex-wrap gap-1.5'}`}>
+          <div className={sections.length > 60 ? 'space-y-0.5' : 'flex flex-wrap gap-1.5'}>
+            {sections.map((section) => {
+              const isSelected = currentSectionId === section.id;
 
-            return (
-              <button
-                key={section.id}
-                type="button"
-                onClick={() => onSelectSection(section.id)}
-                className={`rounded-md px-3 py-1.5 text-sm transition-colors duration-150 ${
-                  isSelected
-                    ? 'bg-blue-600 text-white'
-                    : 'border hover:bg-gray-100'
-                }`}
-              >
-                {section.label}
-              </button>
-            );
-          })}
+              return (
+                <button
+                  key={section.id}
+                  type="button"
+                  onClick={() => onSelectSection(section.id)}
+                  className={`rounded-md px-3 py-1.5 text-sm transition-colors duration-150 ${
+                    isSelected
+                      ? 'bg-blue-600 text-white'
+                      : 'border hover:bg-gray-100'
+                  } ${sections.length > 60 ? 'w-full text-left' : ''}`}
+                >
+                  {section.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 
