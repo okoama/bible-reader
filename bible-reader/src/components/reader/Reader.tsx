@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { BibleService } from '../../features/bible/services/BibleService';
 import { useTextSelection } from '../../features/annotations/hooks/useTextSelection';
 import type { SelectedVerse } from '../../features/annotations/hooks/useTextSelection';
-import type { BibleBook, BibleVerse, Highlight, Note, VerseRef } from '../../types';
+import type { BibleBook, BibleVerse, Highlight, Note, PrayerFilter, VerseRef } from '../../types';
 import type { ActiveView } from '../../layouts/AppLayout';
 import { HighlightRepository } from '../../lib/repositories/HighlightRepository';
 import { BookmarkEditor } from '../../features/bookmarks';
@@ -11,7 +11,7 @@ import { useChapterNotes } from '../../lib/hooks/useChapterNotes';
 import { createId } from '../../lib/utils/id';
 import AnnotationToolbar from '../AnnotationToolbar';
 import NoteEditor from '../../features/notes/components/NoteEditor';
-import PrayerJournal from './PrayerJournal';
+import PrayerLibrary from './PrayerLibrary';
 import ContentReader from './ContentReader';
 
 import CompanionTextReader from './CompanionTextReader';
@@ -79,6 +79,7 @@ type ReaderProps = {
   selectedNoteId: string | null;
   onSelectNote: (noteId: string | null) => void;
   onDeleteSelectedNote: () => void;
+  prayerFilter: PrayerFilter;
 };
 
 export default function Reader({
@@ -99,6 +100,7 @@ export default function Reader({
   selectedNoteId,
   onSelectNote,
   onDeleteSelectedNote,
+  prayerFilter,
 }: ReaderProps) {
   const [chapterNumbers, setChapterNumbers] = useState<number[]>([]);
   const [verses, setVerses] = useState<BibleVerse[]>([]);
@@ -348,7 +350,7 @@ export default function Reader({
     <main ref={mainRef} className="flex-1 overflow-y-auto p-6">
       {activeView === 'prayer-journal' ? (
         <div className="mx-auto max-w-3xl rounded-lg border p-6 animate-fade-in">
-          <PrayerJournal refreshKey={prayerRefreshKey} onRefresh={handlePrayerRefresh} />
+          <PrayerLibrary filter={prayerFilter} refreshKey={prayerRefreshKey} onRefresh={handlePrayerRefresh} />
         </div>
       ) : activeView === 'companion-text' && selectedWorkId ? (
         <div className="animate-fade-in">

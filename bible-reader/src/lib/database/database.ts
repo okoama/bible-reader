@@ -34,6 +34,18 @@ export class BibleReaderDatabase extends Dexie {
         prayer.tags = [];
       });
     });
+
+    this.version(4).stores({
+      notes: 'id, sourceReference, title, createdAt, updatedAt',
+      highlights: 'id, sourceReference, color, createdAt',
+      bookmarks: 'id, sourceReference, createdAt',
+      prayers: 'id, title, category, favorite, answered, *tags, createdAt, updatedAt, lastPrayed',
+      readingProgress: 'id, sourceReference, updatedAt',
+    }).upgrade(async (tx) => {
+      await tx.table('prayers').toCollection().modify((prayer) => {
+        prayer.answered = false;
+      });
+    });
   }
 }
 

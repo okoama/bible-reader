@@ -27,8 +27,22 @@ export interface Prayer {
   content: string;
   category: PrayerCategory;
   favorite: boolean;
+  answered: boolean;
   createdAt: string;
   updatedAt: string;
   lastPrayed: string | null;
   tags: string[];
 }
+
+export type PrayerFilterType = 'all' | 'favorites' | 'answered' | 'recent';
+
+export type PrayerFilter =
+  | { type: PrayerFilterType }
+  | { type: 'category'; category: PrayerCategory };
+
+export const PRAYER_FILTER_LABELS: Record<PrayerFilterType, string> = {
+  all: 'All Prayers',
+  favorites: 'Favorites',
+  answered: 'Answered',
+  recent: 'Recent',
+};

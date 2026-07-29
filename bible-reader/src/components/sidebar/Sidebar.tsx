@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import type { BibleBook } from '../../types';
+import type { BibleBook, PrayerCategory, PrayerFilter } from '../../types';
+import { PRAYER_CATEGORIES } from '../../types';
 import type { ActiveView } from '../../layouts/AppLayout';
 import { TextService } from '../../features/companion-texts/services/TextService';
 
@@ -14,6 +15,8 @@ type SidebarProps = {
   selectedWorkId: string | null;
   selectedSectionId: string | null;
   onSelectWork: (workId: string, sectionId?: string) => void;
+  prayerFilter: PrayerFilter;
+  onPrayerFilter: (filter: PrayerFilter) => void;
 };
 
 type CollapsibleGroupProps = {
@@ -51,6 +54,8 @@ export default function Sidebar({
   selectedWorkId,
   selectedSectionId,
   onSelectWork,
+  prayerFilter,
+  onPrayerFilter,
 }: SidebarProps) {
   const [bibleExpanded, setBibleExpanded] = useState(true);
   const [catechismExpanded, setCatechismExpanded] = useState(false);
@@ -58,6 +63,7 @@ export default function Sidebar({
   const [confessionsExpanded, setConfessionsExpanded] = useState(false);
   const [imitationExpanded, setImitationExpanded] = useState(false);
   const [devoutLifeExpanded, setDevoutLifeExpanded] = useState(false);
+  const [prayersExpanded, setPrayersExpanded] = useState(true);
 
   const catechismEntry = textService.getManifestEntry('catechism');
   const summaWorks = textService.getWorksByGroup('Summa Theologiae');
@@ -209,18 +215,68 @@ export default function Sidebar({
           ))}
         </CollapsibleGroup>
 
-        {/* Prayer Journal */}
-        <button
-          type="button"
-          onClick={() => onSelectView('prayer-journal')}
-          className={`w-full rounded px-3 py-1.5 text-left text-sm transition-colors duration-150 ${
-            activeView === 'prayer-journal'
-              ? 'bg-blue-50 text-blue-700'
-              : 'hover:bg-gray-100'
-          }`}
+        {/* Prayers */}
+        <CollapsibleGroup
+          label="Prayers"
+          expanded={prayersExpanded}
+          onToggle={() => setPrayersExpanded((prev) => !prev)}
         >
-          Prayer Journal
-        </button>
+          <button
+            type="button"
+            onClick={() => { onPrayerFilter({ type: 'all' }); onSelectView('prayer-journal'); }}
+            className={`w-full rounded px-3 py-1 text-left text-xs transition-colors duration-150 ${
+              activeView === 'prayer-journal' && prayerFilter.type === 'all'
+                ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-100'
+            }`}
+          >
+            All Prayers
+          </button>
+          <button
+            type="button"
+            onClick={() => { onPrayerFilter({ type: 'favorites' }); onSelectView('prayer-journal'); }}
+            className={`w-full rounded px-3 py-1 text-left text-xs transition-colors duration-150 ${
+              activeView === 'prayer-journal' && prayerFilter.type === 'favorites'
+                ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-100'
+            }`}
+          >
+            Favorites
+          </button>
+          <button
+            type="button"
+            onClick={() => { onPrayerFilter({ type: 'answered' }); onSelectView('prayer-journal'); }}
+            className={`w-full rounded px-3 py-1 text-left text-xs transition-colors duration-150 ${
+              activeView === 'prayer-journal' && prayerFilter.type === 'answered'
+                ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-100'
+            }`}
+          >
+            Answered
+          </button>
+          <div className="ml-2 mt-1 space-y-0.5">
+            {PRAYER_CATEGORIES.filter((c) => c.value !== 'custom').map((cat) => (
+              <button
+                key={cat.value}
+                type="button"
+                onClick={() => { onPrayerFilter({ type: 'category', category: cat.value }); onSelectView('prayer-journal'); }}
+                className={`w-full rounded px-3 py-1 text-left text-[11px] transition-colors duration-150 ${
+                  activeView === 'prayer-journal' && prayerFilter.type === 'category' && prayerFilter.category === cat.value
+                    ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-100'
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => { onPrayerFilter({ type: 'recent' }); onSelectView('prayer-journal'); }}
+            className={`w-full rounded px-3 py-1 text-left text-xs transition-colors duration-150 ${
+              activeView === 'prayer-journal' && prayerFilter.type === 'recent'
+                ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-100'
+            }`}
+          >
+            Recent
+          </button>
+        </CollapsibleGroup>
       </div>
     </aside>
   );

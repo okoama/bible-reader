@@ -20,6 +20,10 @@ export class PrayerRepository {
     return this.database.prayers.where('favorite').equals(1).toArray();
   }
 
+  async findAnswered(): Promise<Prayer[]> {
+    return this.database.prayers.where('answered').equals(1).toArray();
+  }
+
   async findByTag(tag: string): Promise<Prayer[]> {
     return this.database.prayers.where('tags').equals(tag).toArray();
   }

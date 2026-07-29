@@ -8,7 +8,7 @@ import { BibleService } from '../features/bible/services/BibleService';
 import { useReadingProgress } from '../lib/hooks/useReadingProgress';
 import { useNotes } from '../lib/hooks/useNotes';
 import { NoteRepository } from '../lib/repositories/NoteRepository';
-import type { BibleBook, VerseRef } from '../types';
+import type { BibleBook, PrayerFilter, VerseRef } from '../types';
 
 export type ActiveView = 'bible' | 'prayer-journal' | 'companion-text';
 
@@ -43,6 +43,7 @@ export default function AppLayout() {
   const [selectedWorkId, setSelectedWorkId] = useState<string | null>(null);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [companionPositions, setCompanionPositions] = useState<Record<string, string>>(loadCompanionPositions);
+  const [prayerFilter, setPrayerFilter] = useState<PrayerFilter>({ type: 'all' });
   const { lastPosition, loaded, savePosition } = useReadingProgress();
   const notes = useNotes(notesRefreshKey);
 
@@ -90,6 +91,10 @@ export default function AppLayout() {
       setSelectedVerse(null);
       setSelectedWorkId(null);
     }
+  };
+
+  const handlePrayerFilter = (filter: PrayerFilter) => {
+    setPrayerFilter(filter);
   };
 
   const handleSelectWork = (workId: string, sectionId?: string) => {
@@ -191,6 +196,8 @@ export default function AppLayout() {
           selectedWorkId={selectedWorkId}
           selectedSectionId={selectedSectionId}
           onSelectWork={handleSelectWork}
+          prayerFilter={prayerFilter}
+          onPrayerFilter={handlePrayerFilter}
         />
         <Reader
           selectedBook={selectedBook}
@@ -207,6 +214,7 @@ export default function AppLayout() {
           onSelectWork={handleSelectWork}
           onSelectSection={handleSelectSection}
           prayerRefreshKey={notesRefreshKey}
+          prayerFilter={prayerFilter}
           selectedNoteId={selectedNoteId}
           onSelectNote={handleSelectNote}
           onDeleteSelectedNote={handleDeleteSelectedNote}
