@@ -5,6 +5,7 @@ export interface Note {
   content: string;
   tags: string[];
   favorite: boolean;
+  projectId?: string;
   createdAt: string;
   updatedAt: string;
 }

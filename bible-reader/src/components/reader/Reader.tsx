@@ -253,14 +253,14 @@ export default function Reader({
     setShowCollectionEditor(true);
   };
 
-  const handleSaveCollection = async (name: string, description: string) => {
+  const handleSaveCollection = async (name: string, description: string, projectId?: string) => {
     if (editingCollection) {
-      await collectionRepo.update({ ...editingCollection, name, description });
+      await collectionRepo.update({ ...editingCollection, name, description, projectId });
       setShowCollectionEditor(false);
       setEditingCollection(null);
       if (session && !session.endTime) logCollectionEvent(editingCollection.id, name, 'update');
     } else {
-      const id = await collectionRepo.create(name, description || undefined);
+      const id = await collectionRepo.create(name, description || undefined, projectId);
       setShowCollectionEditor(false);
       if (session && !session.endTime) logCollectionEvent(id, name, 'create');
     }
@@ -296,7 +296,7 @@ export default function Reader({
       const updated = { ...editingProject, title, description, status, icon, color, updatedAt: new Date().toISOString() };
       await projectRepository.save(updated);
     } else {
-      await projectRepository.save({ id: createId('project'), title, description, status, icon, color, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+      await projectRepository.save({ id: createId('project'), title, description, status, icon, color, notes: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
     }
     setShowProjectEditor(false);
     setEditingProject(null);

@@ -447,7 +447,7 @@ export default function AppLayout() {
 
       {showNewCollection && (
         <CollectionEditor
-          onSave={(_name: string, _desc: string) => { setShowNewCollection(false); }}
+          onSave={() => { setShowNewCollection(false); }}
           onCancel={() => setShowNewCollection(false)}
         />
       )}
@@ -456,7 +456,7 @@ export default function AppLayout() {
         <ProjectEditor
           onSave={(title, description, status, icon, color) => {
             const repo = new ResearchProjectRepository();
-            void repo.save({ id: createId('project'), title, description, status, icon, color, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+            void repo.save({ id: createId('project'), title, description, status, icon, color, notes: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
             setShowNewProject(false);
           }}
           onCancel={() => setShowNewProject(false)}

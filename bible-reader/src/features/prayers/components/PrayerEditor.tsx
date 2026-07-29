@@ -5,6 +5,7 @@ import { PrayerRepository } from '../../../lib/repositories/PrayerRepository';
 import { createId } from '../../../lib/utils/id';
 import { useDraft } from '../../../lib/hooks/useDraft';
 import RichTextEditor from '../../../components/RichTextEditor';
+import ProjectPicker from '../../../components/projects/ProjectPicker';
 
 const prayerRepository = new PrayerRepository();
 
@@ -12,15 +13,17 @@ type PrayerEditorProps = {
   prayer?: Prayer;
   onSave: (prayer: Prayer) => void;
   onCancel: () => void;
+  initialProjectId?: string;
 };
 
-export default function PrayerEditor({ prayer, onSave, onCancel }: PrayerEditorProps) {
+export default function PrayerEditor({ prayer, onSave, onCancel, initialProjectId }: PrayerEditorProps) {
   const draftKey = prayer?.id ? `prayer:${prayer.id}` : 'prayer:new';
   const [title, setTitle] = useState(prayer?.title ?? '');
   const [content, setContent] = useState(prayer?.content ?? '');
   const [category, setCategory] = useState<PrayerCategory>(prayer?.category ?? 'custom');
   const [tagsInput, setTagsInput] = useState(prayer?.tags?.join(', ') ?? '');
   const [favorite, setFavorite] = useState(prayer?.favorite ?? false);
+  const [projectId, setProjectId] = useState<string | undefined>(initialProjectId);
   const titleRef = useRef<HTMLInputElement>(null);
 
   const { hasDraft, restoreDraft, clearDraft } = useDraft(draftKey, title, content);
@@ -71,6 +74,7 @@ export default function PrayerEditor({ prayer, onSave, onCancel }: PrayerEditorP
       favorite,
       answered: prayer?.answered ?? false,
       tags,
+      projectId,
       createdAt: prayer?.createdAt ?? now,
       updatedAt: now,
       lastPrayed: prayer?.lastPrayed ?? null,
@@ -164,6 +168,8 @@ export default function PrayerEditor({ prayer, onSave, onCancel }: PrayerEditorP
           placeholder="Write your prayer here..."
           rows={8}
         />
+
+        <ProjectPicker value={projectId} onChange={setProjectId} />
 
         <div className="flex justify-end gap-2">
           <button

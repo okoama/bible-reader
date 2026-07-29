@@ -13,13 +13,14 @@ export class CollectionRepository {
     return this.database.collections.get(id);
   }
 
-  async create(name: string, description?: string): Promise<string> {
+  async create(name: string, description?: string, projectId?: string): Promise<string> {
     const now = new Date().toISOString();
     const collection: Collection = {
       id: createId('col'),
       name,
       description,
       items: [],
+      projectId,
       createdAt: now,
       updatedAt: now,
     };
@@ -50,5 +51,9 @@ export class CollectionRepository {
     collection.items = collection.items.filter((i) => i.id !== itemId);
     collection.updatedAt = new Date().toISOString();
     await this.database.collections.put(collection);
+  }
+
+  async findByProjectId(projectId: string): Promise<Collection[]> {
+    return this.database.collections.where('projectId').equals(projectId).toArray();
   }
 }

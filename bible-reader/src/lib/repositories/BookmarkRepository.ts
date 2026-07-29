@@ -31,4 +31,8 @@ export class BookmarkRepository {
   async delete(id: string): Promise<void> {
     await this.database.bookmarks.delete(id);
   }
+
+  async findByProjectId(projectId: string): Promise<Bookmark[]> {
+    return this.database.bookmarks.where('projectId').equals(projectId).toArray();
+  }
 }

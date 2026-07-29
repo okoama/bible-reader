@@ -4,6 +4,7 @@ import { NoteRepository } from '../../../lib/repositories/NoteRepository';
 import { createId } from '../../../lib/utils/id';
 import { useDraft } from '../../../lib/hooks/useDraft';
 import RichTextEditor from '../../../components/RichTextEditor';
+import ProjectPicker from '../../../components/projects/ProjectPicker';
 
 const noteRepository = new NoteRepository();
 
@@ -14,6 +15,7 @@ type NoteEditorProps = {
   sourceReference: string;
   onSave: (note: Note) => void;
   onCancel: () => void;
+  initialProjectId?: string;
 };
 
 export default function NoteEditor({
@@ -21,6 +23,7 @@ export default function NoteEditor({
   sourceReference,
   onSave,
   onCancel,
+  initialProjectId,
 }: NoteEditorProps) {
   const draftKey = note?.id ? `note:${note.id}` : `note:new:${sourceReference}`;
   const [title, setTitle] = useState(note?.title ?? '');
@@ -30,6 +33,7 @@ export default function NoteEditor({
   const [tagInput, setTagInput] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [allUsedTags, setAllUsedTags] = useState<string[]>([]);
+  const [projectId, setProjectId] = useState<string | undefined>(initialProjectId);
   const titleRef = useRef<HTMLInputElement>(null);
   const tagInputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
@@ -132,6 +136,7 @@ export default function NoteEditor({
       content,
       tags,
       favorite,
+      projectId,
       createdAt: note?.createdAt ?? now,
       updatedAt: now,
     };
@@ -255,6 +260,8 @@ export default function NoteEditor({
             </div>
           )}
         </div>
+
+        <ProjectPicker value={projectId} onChange={setProjectId} />
 
         <p className="text-xs opacity-60">
           Attached to: {sourceReference}

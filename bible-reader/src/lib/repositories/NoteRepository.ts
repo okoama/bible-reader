@@ -54,6 +54,10 @@ export class NoteRepository {
     return this.database.notes.orderBy('updatedAt').reverse().limit(limit).toArray();
   }
 
+  async findByProjectId(projectId: string): Promise<Note[]> {
+    return this.database.notes.where('projectId').equals(projectId).toArray();
+  }
+
   async delete(id: string): Promise<void> {
     await this.database.notes.delete(id);
   }

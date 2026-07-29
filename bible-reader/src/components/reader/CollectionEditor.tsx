@@ -1,15 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Collection } from '../../types';
+import ProjectPicker from '../projects/ProjectPicker';
 
 type CollectionEditorProps = {
   collection?: Collection;
-  onSave: (name: string, description: string) => void;
+  onSave: (name: string, description: string, projectId?: string) => void;
   onCancel: () => void;
 };
 
 export default function CollectionEditor({ collection, onSave, onCancel }: CollectionEditorProps) {
   const [name, setName] = useState(collection?.name ?? '');
   const [description, setDescription] = useState(collection?.description ?? '');
+  const [projectId, setProjectId] = useState<string | undefined>(collection?.projectId);
   const nameRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -50,6 +52,8 @@ export default function CollectionEditor({ collection, onSave, onCancel }: Colle
           className="rounded-md border px-3 py-2 text-sm outline-none transition-colors focus-accent resize-none"
         />
 
+        <ProjectPicker value={projectId} onChange={setProjectId} />
+
         <div className="flex justify-end gap-2">
           <button
             type="button"
@@ -61,7 +65,7 @@ export default function CollectionEditor({ collection, onSave, onCancel }: Colle
           <button
             type="button"
             disabled={!name.trim()}
-            onClick={() => onSave(name.trim(), description.trim())}
+            onClick={() => onSave(name.trim(), description.trim(), projectId)}
             className="rounded-md bg-accent px-4 py-2 text-sm text-white transition-colors hover:bg-accent-hover disabled:opacity-50"
           >
             {collection ? 'Save' : 'Create'}

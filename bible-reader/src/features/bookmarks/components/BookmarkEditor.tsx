@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { Bookmark } from '../../../types';
 import { BookmarkRepository } from '../../../lib/repositories/BookmarkRepository';
 import { createId } from '../../../lib/utils/id';
+import ProjectPicker from '../../../components/projects/ProjectPicker';
 
 const bookmarkRepository = new BookmarkRepository();
 
@@ -9,15 +10,18 @@ type BookmarkEditorProps = {
   sourceReference: string;
   onSave: (bookmark: Bookmark) => void;
   onCancel: () => void;
+  initialProjectId?: string;
 };
 
 export default function BookmarkEditor({
   sourceReference,
   onSave,
   onCancel,
+  initialProjectId,
 }: BookmarkEditorProps) {
   const [title, setTitle] = useState('');
   const [favorite, setFavorite] = useState(false);
+  const [projectId, setProjectId] = useState<string | undefined>(initialProjectId);
   const titleRef = useRef<HTMLInputElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
 
@@ -48,6 +52,7 @@ export default function BookmarkEditor({
       sourceReference,
       title: title.trim() || undefined,
       favorite,
+      projectId,
       createdAt: new Date().toISOString(),
     };
 
@@ -91,6 +96,8 @@ export default function BookmarkEditor({
           />
           Mark as favorite
         </label>
+
+        <ProjectPicker value={projectId} onChange={setProjectId} />
 
         <div className="flex justify-end gap-2">
           <button

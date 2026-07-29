@@ -29,6 +29,7 @@ export interface Prayer {
   category: PrayerCategory;
   favorite: boolean;
   answered: boolean;
+  projectId?: string;
   createdAt: string;
   updatedAt: string;
   lastPrayed: string | null;

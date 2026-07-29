@@ -3,5 +3,6 @@ export interface Bookmark {
   sourceReference: string;
   title?: string;
   favorite: boolean;
+  projectId?: string;
   createdAt: string;
 }

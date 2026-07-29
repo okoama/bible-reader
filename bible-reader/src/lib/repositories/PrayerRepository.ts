@@ -53,4 +53,8 @@ export class PrayerRepository {
   async delete(id: string): Promise<void> {
     await this.database.prayers.delete(id);
   }
+
+  async findByProjectId(projectId: string): Promise<Prayer[]> {
+    return this.database.prayers.where('projectId').equals(projectId).toArray();
+  }
 }

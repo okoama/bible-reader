@@ -14,6 +14,7 @@ export interface Collection {
   name: string;
   description?: string;
   items: CollectionItem[];
+  projectId?: string;
   createdAt: string;
   updatedAt: string;
 }

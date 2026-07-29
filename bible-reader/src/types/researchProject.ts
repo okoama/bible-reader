@@ -7,6 +7,7 @@ export interface ResearchProject {
   status: ProjectStatus;
   icon: string;
   color: string;
+  notes: string;
   createdAt: string;
   updatedAt: string;
 }

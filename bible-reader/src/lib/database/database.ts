@@ -90,6 +90,17 @@ export class BibleReaderDatabase extends Dexie {
       sessions: 'id, startTime, endTime',
       projects: 'id, title, status, createdAt, updatedAt',
     });
+
+    this.version(9).stores({
+      notes: 'id, sourceReference, title, favorite, projectId, createdAt, updatedAt',
+      highlights: 'id, sourceReference, color, createdAt',
+      bookmarks: 'id, sourceReference, favorite, projectId, createdAt',
+      prayers: 'id, title, category, favorite, answered, *tags, projectId, createdAt, updatedAt, lastPrayed',
+      readingProgress: 'id, sourceReference, updatedAt',
+      collections: 'id, name, projectId, createdAt, updatedAt',
+      sessions: 'id, startTime, endTime',
+      projects: 'id, title, status, createdAt, updatedAt',
+    });
   }
 }
 
