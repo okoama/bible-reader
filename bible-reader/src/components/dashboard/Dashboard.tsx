@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { BibleBook, Collection, Note, Prayer, ReadingProgress } from '../../types';
+import type { BibleBook, Collection, Note, Prayer, ReadingProgress, ResearchProject } from '../../types';
 import type { ActiveView } from '../../layouts/AppLayout';
 import { NoteRepository } from '../../lib/repositories/NoteRepository';
 import { PrayerRepository } from '../../lib/repositories/PrayerRepository';
@@ -11,6 +11,7 @@ import { formatDate } from '../../lib/utils/date';
 import { stripHtml } from '../../lib/utils/text';
 import { TextService } from '../../features/companion-texts/services/TextService';
 import { StudySessionRepository } from '../../lib/repositories/StudySessionRepository';
+import { ResearchProjectRepository } from '../../lib/repositories/ResearchProjectRepository';
 import type { StudySession } from '../../types';
 
 const noteRepo = new NoteRepository();
@@ -18,6 +19,7 @@ const prayerRepo = new PrayerRepository();
 const collectionRepo = new CollectionRepository();
 const readingProgressRepo = new ReadingProgressRepository();
 const sessionRepo = new StudySessionRepository();
+const projectRepo = new ResearchProjectRepository();
 const textService = new TextService();
 
 type DashboardProps = {
@@ -106,6 +108,7 @@ export default function Dashboard({ books, onNavigateToPassage, onSelectView, on
   const [history, setHistory] = useState<ReadingProgress[]>([]);
   const [recentlyOpened, setRecentlyOpened] = useState<RecentlyOpenedItem[]>([]);
   const [recentSessions, setRecentSessions] = useState<StudySession[]>([]);
+  const [recentProjects, setRecentProjects] = useState<ResearchProject[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -116,6 +119,7 @@ export default function Dashboard({ books, onNavigateToPassage, onSelectView, on
       readingProgressRepo.findAll().then((all) => setHistory(all.filter((r) => !r.id.startsWith('last:')).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 10))),
       Promise.resolve(setRecentlyOpened(getRecentlyOpened().slice(0, 10))),
       sessionRepo.findAll().then((all) => setRecentSessions(all.filter((s) => s.endTime).slice(0, 5))),
+      projectRepo.findAll().then((all) => setRecentProjects(all.slice(0, 5))),
     ]).finally(() => setLoading(false));
   }, []);
 
@@ -216,6 +220,24 @@ export default function Dashboard({ books, onNavigateToPassage, onSelectView, on
                 <li key={s.id} className="flex items-center justify-between text-sm">
                   <span className="truncate">{s.title}</span>
                   <span className="shrink-0 text-xs opacity-50">{formatDate(s.startTime)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </SectionCard>
+
+        <SectionCard title="Projects" actionLabel="">
+          {recentProjects.length === 0 ? (
+            <p className="text-sm italic opacity-50">No research projects yet</p>
+          ) : (
+            <ul className="space-y-1">
+              {recentProjects.map((p) => (
+                <li key={p.id} className="flex items-center gap-2 text-sm">
+                  <span>{p.icon}</span>
+                  <span className="truncate">{p.title}</span>
+                  <span className={`ml-auto shrink-0 rounded-full px-2 py-0.5 text-xs capitalize ${
+                    p.status === 'active' ? 'bg-accent-light text-accent' : 'bg-gray-100 text-gray-600'
+                  }`}>{p.status}</span>
                 </li>
               ))}
             </ul>

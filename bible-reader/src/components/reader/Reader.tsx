@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { BibleService } from '../../features/bible/services/BibleService';
 import { useTextSelection } from '../../features/annotations/hooks/useTextSelection';
 import type { SelectedVerse } from '../../features/annotations/hooks/useTextSelection';
-import type { BibleBook, BibleVerse, Bookmark, Collection, CollectionItem, Highlight, Note, PrayerFilter, VerseRef } from '../../types';
+import type { BibleBook, BibleVerse, Bookmark, Collection, CollectionItem, Highlight, Note, PrayerFilter, ResearchProject, VerseRef } from '../../types';
 import type { ActiveView } from '../../layouts/AppLayout';
 import { CollectionRepository } from '../../lib/repositories/CollectionRepository';
 import { HighlightRepository } from '../../lib/repositories/HighlightRepository';
@@ -21,9 +21,14 @@ import CollectionEditor from './CollectionEditor';
 import ContentReader from './ContentReader';
 
 import CompanionTextReader from './CompanionTextReader';
+import ProjectsPage from '../projects/ProjectsPage';
+import ProjectViewer from '../projects/ProjectViewer';
+import ProjectEditor from '../projects/ProjectEditor';
+import { ResearchProjectRepository } from '../../lib/repositories/ResearchProjectRepository';
 
 const bibleService = new BibleService();
 const highlightRepository = new HighlightRepository();
+const projectRepository = new ResearchProjectRepository();
 
 function getHighlightsForVerse(highlights: Highlight[], verseNumber: number): Highlight[] {
   return highlights.filter((h) => {
@@ -120,6 +125,10 @@ export default function Reader({
   const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
   const [showCollectionEditor, setShowCollectionEditor] = useState(false);
   const [editingCollection, setEditingCollection] = useState<Collection | null>(null);
+  const [projectsRefreshKey, setProjectsRefreshKey] = useState(0);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [showProjectEditor, setShowProjectEditor] = useState(false);
+  const [editingProject, setEditingProject] = useState<ResearchProject | null>(null);
   const [modalSourceRef, setModalSourceRef] = useState<string | null>(null);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [bookmarkModalSourceRef, setBookmarkModalSourceRef] = useState<string | null>(null);
@@ -262,6 +271,52 @@ export default function Reader({
     await collectionRepo.delete(id);
     setSelectedCollectionId(null);
     setCollectionsRefreshKey((k) => k + 1);
+  };
+
+  const handleSelectProject = (id: string) => {
+    setSelectedProjectId(id);
+  };
+
+  const handleBackToProjects = () => {
+    setSelectedProjectId(null);
+  };
+
+  const handleNewProject = () => {
+    setEditingProject(null);
+    setShowProjectEditor(true);
+  };
+
+  const handleEditProject = (p: ResearchProject) => {
+    setEditingProject(p);
+    setShowProjectEditor(true);
+  };
+
+  const handleSaveProject = async (title: string, description: string, status: ResearchProject['status'], icon: string, color: string) => {
+    if (editingProject) {
+      const updated = { ...editingProject, title, description, status, icon, color, updatedAt: new Date().toISOString() };
+      await projectRepository.save(updated);
+    } else {
+      await projectRepository.save({ id: createId('project'), title, description, status, icon, color, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+    }
+    setShowProjectEditor(false);
+    setEditingProject(null);
+    setProjectsRefreshKey((k) => k + 1);
+  };
+
+  const handleDeleteProject = async (id: string) => {
+    await projectRepository.delete(id);
+    setSelectedProjectId(null);
+    setProjectsRefreshKey((k) => k + 1);
+  };
+
+  const handleProjectStatusChange = async (id: string, status: ResearchProject['status']) => {
+    const p = await projectRepository.findById(id);
+    if (p) {
+      p.status = status;
+      p.updatedAt = new Date().toISOString();
+      await projectRepository.save(p);
+      setProjectsRefreshKey((k) => k + 1);
+    }
   };
 
   const handleNavigateToCollectionItem = (item: CollectionItem) => {
@@ -450,6 +505,21 @@ export default function Reader({
           onSelectCollection={handleSelectCollection}
           onNewCollection={handleNewCollection}
         />
+      ) : activeView === 'projects' && selectedProjectId ? (
+        <ProjectViewer
+          projectId={selectedProjectId}
+          refreshKey={projectsRefreshKey}
+          onBack={handleBackToProjects}
+          onEdit={handleEditProject}
+          onDelete={handleDeleteProject}
+          onStatusChange={handleProjectStatusChange}
+        />
+      ) : activeView === 'projects' ? (
+        <ProjectsPage
+          refreshKey={projectsRefreshKey}
+          onSelectProject={handleSelectProject}
+          onNewProject={handleNewProject}
+        />
       ) : selectedBook ? (
         <ContentReader
           title={selectedBook.name}
@@ -543,6 +613,14 @@ export default function Reader({
           collection={editingCollection ?? undefined}
           onSave={handleSaveCollection}
           onCancel={() => { setShowCollectionEditor(false); setEditingCollection(null); }}
+        />
+      )}
+
+      {showProjectEditor && (
+        <ProjectEditor
+          project={editingProject ?? undefined}
+          onSave={handleSaveProject}
+          onCancel={() => { setShowProjectEditor(false); setEditingProject(null); }}
         />
       )}
     </main>

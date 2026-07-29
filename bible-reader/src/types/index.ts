@@ -17,3 +17,5 @@ export type { StudySession, SessionVisit, SessionNote, SessionPrayer, SessionBoo
 export type { WorkspaceSettings, AccentName } from './workspaceSettings';
 export { ACCENT_NAMES } from './workspaceSettings';
 export type { WorkspaceBackup } from './workspaceBackup';
+export type { ResearchProject, ProjectStatus } from './researchProject';
+export { PROJECT_STATUSES, PROJECT_DEFAULT_ICONS } from './researchProject';

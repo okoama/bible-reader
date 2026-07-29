@@ -13,14 +13,17 @@ import NoteViewer from '../components/reader/NoteViewer';
 import NoteEditor from '../features/notes/components/NoteEditor';
 import PrayerEditor from '../features/prayers/components/PrayerEditor';
 import CollectionEditor from '../components/reader/CollectionEditor';
+import ProjectEditor from '../components/projects/ProjectEditor';
 import Dashboard from '../components/dashboard/Dashboard';
 import { addRecentlyOpened } from '../lib/utils/recentlyOpened';
 import { TextService } from '../features/companion-texts/services/TextService';
 import { useStudySession } from '../lib/contexts/StudySessionContext';
 import GlobalSearchModal from '../components/search/GlobalSearchModal';
+import { ResearchProjectRepository } from '../lib/repositories/ResearchProjectRepository';
+import { createId } from '../lib/utils/id';
 import KeyboardShortcutsHelp from '../components/help/KeyboardShortcutsHelp';
 
-export type ActiveView = 'dashboard' | 'bible' | 'prayer-journal' | 'companion-text' | 'favorites' | 'collections';
+export type ActiveView = 'dashboard' | 'bible' | 'prayer-journal' | 'companion-text' | 'favorites' | 'collections' | 'projects';
 
 interface NavSnapshot {
   activeView: ActiveView;
@@ -74,6 +77,7 @@ export default function AppLayout() {
   const [showNewNote, setShowNewNote] = useState(false);
   const [showNewPrayer, setShowNewPrayer] = useState(false);
   const [showNewCollection, setShowNewCollection] = useState(false);
+  const [showNewProject, setShowNewProject] = useState(false);
 
   const navBackStack = useRef<NavSnapshot[]>([]);
   const navForwardStack = useRef<NavSnapshot[]>([]);
@@ -445,6 +449,17 @@ export default function AppLayout() {
         <CollectionEditor
           onSave={(_name: string, _desc: string) => { setShowNewCollection(false); }}
           onCancel={() => setShowNewCollection(false)}
+        />
+      )}
+
+      {showNewProject && (
+        <ProjectEditor
+          onSave={(title, description, status, icon, color) => {
+            const repo = new ResearchProjectRepository();
+            void repo.save({ id: createId('project'), title, description, status, icon, color, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+            setShowNewProject(false);
+          }}
+          onCancel={() => setShowNewProject(false)}
         />
       )}
     </div>
