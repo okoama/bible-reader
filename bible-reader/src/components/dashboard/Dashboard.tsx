@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { BibleBook, Collection, Note, Prayer, ReadingProgress } from '../../types';
 import type { ActiveView } from '../../layouts/AppLayout';
 import { NoteRepository } from '../../lib/repositories/NoteRepository';
@@ -48,6 +48,56 @@ function getPassageLabel(books: BibleBook[], ref: string): string {
   return ref;
 }
 
+function RecentlyOpenedItemButton({ item, onNavigateToPassage, onNavigateToWork }: {
+  item: RecentlyOpenedItem;
+  onNavigateToPassage: (bookId: string, chapter: number) => void;
+  onNavigateToWork: (workId: string, sectionId?: string) => void;
+}) {
+  const handleClick = useCallback(() => {
+    if (item.type === 'bible') {
+      const parts = item.id.split(':');
+      onNavigateToPassage(parts[1], Number(parts[2]));
+    } else {
+      const parts = item.id.split(':');
+      onNavigateToWork(parts[0], parts[1]);
+    }
+  }, [item, onNavigateToPassage, onNavigateToWork]);
+
+  return (
+    <button type="button" onClick={handleClick} className="w-full text-left text-sm hover:text-accent">
+      <span className="font-medium">{item.label}</span>
+      <span className="ml-2 text-xs opacity-50">{item.subtitle}</span>
+    </button>
+  );
+}
+
+function HistoryItemButton({ r, onNavigateToPassage, onNavigateToWork }: {
+  r: ReadingProgress;
+  onNavigateToPassage: (bookId: string, chapter: number) => void;
+  onNavigateToWork: (workId: string, sectionId?: string) => void;
+}) {
+  const ref = r.sourceReference;
+  const match = ref.match(/^([^:]+):(\d+)/);
+  const label = match ? `${getWorkLabel(match[1])} ${match[2]}` : ref;
+
+  const handleClick = useCallback(() => {
+    if (match) {
+      if (match[1] === 'bible') {
+        onNavigateToPassage(match[1], Number(match[2]));
+      } else {
+        onNavigateToWork(match[1], match[2]);
+      }
+    }
+  }, [match, onNavigateToPassage, onNavigateToWork]);
+
+  return (
+    <button type="button" onClick={handleClick} className="w-full text-left text-sm hover:text-accent">
+      <span className="font-medium">{label}</span>
+      <span className="ml-2 text-xs opacity-50">{formatDate(r.updatedAt)}</span>
+    </button>
+  );
+}
+
 export default function Dashboard({ books, onNavigateToPassage, onSelectView, onNavigateToWork }: DashboardProps) {
   const { lastPosition } = useReadingProgress();
   const [recentNotes, setRecentNotes] = useState<Note[]>([]);
@@ -56,14 +106,17 @@ export default function Dashboard({ books, onNavigateToPassage, onSelectView, on
   const [history, setHistory] = useState<ReadingProgress[]>([]);
   const [recentlyOpened, setRecentlyOpened] = useState<RecentlyOpenedItem[]>([]);
   const [recentSessions, setRecentSessions] = useState<StudySession[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    void noteRepo.findRecent(5).then(setRecentNotes);
-    void prayerRepo.findRecentPrayed(50).then((prayers) => setTodayPrayers(prayers.filter((p) => p.lastPrayed && isToday(p.lastPrayed))));
-    void collectionRepo.findAll().then((all) => setCollections(all.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 5)));
-    void readingProgressRepo.findAll().then((all) => setHistory(all.filter((r) => !r.id.startsWith('last:')).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 10)));
-    setRecentlyOpened(getRecentlyOpened().slice(0, 10));
-    void sessionRepo.findAll().then((all) => setRecentSessions(all.filter((s) => s.endTime).slice(0, 5)));
+    Promise.allSettled([
+      noteRepo.findRecent(5).then(setRecentNotes),
+      prayerRepo.findRecentPrayed(50).then((prayers) => setTodayPrayers(prayers.filter((p) => p.lastPrayed && isToday(p.lastPrayed)))),
+      collectionRepo.findAll().then((all) => setCollections(all.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 5))),
+      readingProgressRepo.findAll().then((all) => setHistory(all.filter((r) => !r.id.startsWith('last:')).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 10))),
+      Promise.resolve(setRecentlyOpened(getRecentlyOpened().slice(0, 10))),
+      sessionRepo.findAll().then((all) => setRecentSessions(all.filter((s) => s.endTime).slice(0, 5))),
+    ]).finally(() => setLoading(false));
   }, []);
 
   return (
@@ -73,7 +126,12 @@ export default function Dashboard({ books, onNavigateToPassage, onSelectView, on
         <p className="mt-1 opacity-60">Your Catholic study workspace</p>
       </header>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <p className="text-sm opacity-50">Loading...</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {lastPosition && (
           <SectionCard title="Continue Reading" onAction={() => onNavigateToPassage(lastPosition.bookId, lastPosition.chapter)} actionLabel="Continue">
             <p className="font-medium">{getBookName(books, lastPosition.bookId)}</p>
@@ -82,67 +140,62 @@ export default function Dashboard({ books, onNavigateToPassage, onSelectView, on
         )}
 
         <SectionCard title="Favorites" onAction={() => onSelectView('favorites')} actionLabel="View All">
-          <p className="text-sm opacity-60">Your saved favorites</p>
+          <p className="text-sm italic opacity-50">Save favorite passages and notes for quick access</p>
         </SectionCard>
 
-        {recentNotes.length > 0 && (
-          <SectionCard title="Recent Notes" onAction={() => onSelectView('favorites')} actionLabel="All Notes">
+        <SectionCard title="Recent Notes" onAction={() => onSelectView('favorites')} actionLabel="All Notes">
+          {recentNotes.length === 0 ? (
+            <p className="text-sm italic opacity-50">No notes yet — create one with Ctrl+Alt+N</p>
+          ) : (
             <ul className="space-y-1">
               {recentNotes.map((note) => (
                 <li key={note.id} className="flex items-center justify-between gap-2">
                   <span className="truncate text-sm">{note.title || stripHtml(note.content).slice(0, 40)}</span>
-                  <button
-                    type="button"
-                    onClick={() => onNavigateToPassage(note.sourceReference.split(':')[0], Number(note.sourceReference.split(':')[1]))}
-                    className="shrink-0 text-xs text-accent hover:underline"
-                  >
-                    {getPassageLabel(books, note.sourceReference)}
-                  </button>
+                  {note.sourceReference && (
+                    <button
+                      type="button"
+                      onClick={() => onNavigateToPassage(note.sourceReference.split(':')[0], Number(note.sourceReference.split(':')[1]))}
+                      className="shrink-0 text-xs text-accent hover:underline"
+                    >
+                      {getPassageLabel(books, note.sourceReference)}
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>
-          </SectionCard>
-        )}
+          )}
+        </SectionCard>
 
-        {todayPrayers.length > 0 && (
-          <SectionCard title="Today's Prayers" onAction={() => onSelectView('prayer-journal')} actionLabel="Prayer Journal">
+        <SectionCard title="Today's Prayers" onAction={() => onSelectView('prayer-journal')} actionLabel="Prayer Journal">
+          {todayPrayers.length === 0 ? (
+            <p className="text-sm italic opacity-50">No prayers recorded today</p>
+          ) : (
             <ul className="space-y-1">
               {todayPrayers.map((p) => (
                 <li key={p.id} className="truncate text-sm">{p.title}</li>
               ))}
             </ul>
-          </SectionCard>
-        )}
+          )}
+        </SectionCard>
 
-        {recentlyOpened.length > 0 && (
-          <SectionCard title="Recently Opened" actionLabel="">
+        <SectionCard title="Recently Opened" actionLabel="">
+          {recentlyOpened.length === 0 ? (
+            <p className="text-sm italic opacity-50">No recently opened items</p>
+          ) : (
             <ul className="space-y-1">
               {recentlyOpened.map((item) => (
                 <li key={item.id}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (item.type === 'bible') {
-                        const parts = item.id.split(':');
-                        onNavigateToPassage(parts[1], Number(parts[2]));
-                      } else {
-                        const parts = item.id.split(':');
-                        onNavigateToWork(parts[0], parts[1]);
-                      }
-                    }}
-                    className="w-full text-left text-sm hover:text-accent"
-                  >
-                    <span className="font-medium">{item.label}</span>
-                    <span className="ml-2 text-xs opacity-50">{item.subtitle}</span>
-                  </button>
+                  <RecentlyOpenedItemButton item={item} onNavigateToPassage={onNavigateToPassage} onNavigateToWork={onNavigateToWork} />
                 </li>
               ))}
             </ul>
-          </SectionCard>
-        )}
+          )}
+        </SectionCard>
 
-        {collections.length > 0 && (
-          <SectionCard title="Recent Collections" onAction={() => onSelectView('collections')} actionLabel="All Collections">
+        <SectionCard title="Recent Collections" onAction={() => onSelectView('collections')} actionLabel="All Collections">
+          {collections.length === 0 ? (
+            <p className="text-sm italic opacity-50">No collections yet</p>
+          ) : (
             <ul className="space-y-1">
               {collections.map((c) => (
                 <li key={c.id} className="truncate text-sm">
@@ -151,11 +204,13 @@ export default function Dashboard({ books, onNavigateToPassage, onSelectView, on
                 </li>
               ))}
             </ul>
-          </SectionCard>
-        )}
+          )}
+        </SectionCard>
 
-        {recentSessions.length > 0 && (
-          <SectionCard title="Recent Sessions" actionLabel="">
+        <SectionCard title="Recent Sessions" actionLabel="">
+          {recentSessions.length === 0 ? (
+            <p className="text-sm italic opacity-50">No study sessions yet</p>
+          ) : (
             <ul className="space-y-1">
               {recentSessions.map((s) => (
                 <li key={s.id} className="flex items-center justify-between text-sm">
@@ -164,41 +219,24 @@ export default function Dashboard({ books, onNavigateToPassage, onSelectView, on
                 </li>
               ))}
             </ul>
-          </SectionCard>
-        )}
+          )}
+        </SectionCard>
 
-        {history.length > 0 && (
-          <SectionCard title="Reading History" actionLabel="">
+        <SectionCard title="Reading History" actionLabel="">
+          {history.length === 0 ? (
+            <p className="text-sm italic opacity-50">No reading history yet</p>
+          ) : (
             <ul className="space-y-1">
-              {history.map((r) => {
-                const ref = r.sourceReference;
-                const match = ref.match(/^([^:]+):(\d+)/);
-                const label = match ? `${getWorkLabel(match[1])} ${match[2]}` : ref;
-                return (
-                  <li key={r.id}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (match) {
-                          if (match[1] === 'bible') {
-                            onNavigateToPassage(match[1], Number(match[2]));
-                          } else {
-                            onNavigateToWork(match[1], match[2]);
-                          }
-                        }
-                      }}
-                      className="w-full text-left text-sm hover:text-accent"
-                    >
-                      <span className="font-medium">{label}</span>
-                      <span className="ml-2 text-xs opacity-50">{formatDate(r.updatedAt)}</span>
-                    </button>
-                  </li>
-                );
-              })}
+              {history.map((r) => (
+                <li key={r.id}>
+                  <HistoryItemButton r={r} onNavigateToPassage={onNavigateToPassage} onNavigateToWork={onNavigateToWork} />
+                </li>
+              ))}
             </ul>
-          </SectionCard>
-        )}
-      </div>
+          )}
+        </SectionCard>
+        </div>
+      )}
     </div>
   );
 }

@@ -15,7 +15,7 @@ type PrayerViewerProps = {
 
 const CATEGORY_COLORS: Record<string, string> = {
   thanksgiving: 'bg-green-100 text-green-800',
-  petitions: 'bg-blue-100 text-blue-800',
+  petitions: 'bg-accent-light text-accent',
   intercession: 'bg-purple-100 text-purple-800',
   rosary: 'bg-indigo-100 text-indigo-800',
   novena: 'bg-pink-100 text-pink-800',
@@ -84,7 +84,7 @@ export default function PrayerViewer({ prayer, readOnly = false, onClose, onEdit
         </div>
 
         <div
-          className="prose prose-sm max-w-none [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:mt-4 [&_h2]:mb-2 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-3 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-3 [&_li]:mb-1 [&_blockquote]:border-l-4 [&_blockquote]:border-blue-300 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-3 [&_blockquote]:text-gray-600"
+          className="prose prose-sm max-w-none [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:mt-4 [&_h2]:mb-2 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-3 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-3 [&_li]:mb-1 [&_blockquote]:border-l-4 [&_blockquote]:border-accent [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-3 [&_blockquote]:text-gray-600"
           dangerouslySetInnerHTML={{ __html: prayer.content }}
         />
 

@@ -127,7 +127,7 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onT
         placeholder="Search notes..."
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        className="mb-2 w-full rounded-md border px-3 py-2 text-sm outline-none transition-colors duration-150 focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
+        className="mb-2 w-full rounded-md border px-3 py-2 text-sm outline-none transition-colors duration-150 focus-accent"
       />
 
       <button
@@ -148,7 +148,7 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onT
             <select
               value={filterBook}
               onChange={(e) => setFilterBook(e.target.value)}
-              className="w-full rounded-md border px-2 py-1 text-xs outline-none transition-colors duration-150 focus:border-blue-500"
+              className="w-full rounded-md border px-2 py-1 text-xs outline-none transition-colors duration-150 focus-accent"
             >
               <option value="">All books</option>
               {uniqueBookIds.map((id) => (
@@ -164,7 +164,7 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onT
             <select
               value={filterTag}
               onChange={(e) => setFilterTag(e.target.value)}
-              className="w-full rounded-md border px-2 py-1 text-xs outline-none transition-colors duration-150 focus:border-blue-500"
+              className="w-full rounded-md border px-2 py-1 text-xs outline-none transition-colors duration-150 focus-accent"
             >
               <option value="">All tags</option>
               {uniqueTags.map((tag) => (
@@ -180,7 +180,7 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onT
             <select
               value={filterDate}
               onChange={(e) => setFilterDate(e.target.value as DateFilter)}
-              className="w-full rounded-md border px-2 py-1 text-xs outline-none transition-colors duration-150 focus:border-blue-500"
+              className="w-full rounded-md border px-2 py-1 text-xs outline-none transition-colors duration-150 focus-accent"
             >
               <option value="all">All time</option>
               <option value="today">Today</option>

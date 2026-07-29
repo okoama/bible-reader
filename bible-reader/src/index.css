@@ -20,6 +20,11 @@
 .hover\:text-accent:hover { color: var(--accent); }
 .hover\:text-accent-hover:hover { color: var(--accent); }
 .border-accent { border-color: var(--accent); }
+.focus-accent:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent-ring);
+  outline: none;
+}
 
 .reading-width { max-width: var(--reading-width); }
 .reading-text { font-size: var(--font-size); }

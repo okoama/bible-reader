@@ -78,7 +78,7 @@ export default function InsertLinkModal({ onInsert, onClose }: InsertLinkModalPr
         <select
           value={linkType}
           onChange={(e) => setLinkType(e.target.value as CrossLinkType)}
-          className="rounded-md border px-3 py-2 text-sm outline-none focus:border-blue-500"
+          className="rounded-md border px-3 py-2 text-sm outline-none focus-accent"
         >
           {LINK_TYPES.map((t) => (
             <option key={t.value} value={t.value}>{t.label}</option>
@@ -92,7 +92,7 @@ export default function InsertLinkModal({ onInsert, onClose }: InsertLinkModalPr
               placeholder={linkType === 'passage' ? 'e.g. gen:1:1' : 'e.g. catechism:part-1'}
               value={manualId}
               onChange={(e) => setManualId(e.target.value)}
-              className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:border-blue-500"
+              className="w-full rounded-md border px-3 py-2 text-sm outline-none focus-accent"
             />
             <p className="text-xs opacity-50">
               {linkType === 'passage'
@@ -115,7 +115,7 @@ export default function InsertLinkModal({ onInsert, onClose }: InsertLinkModalPr
               placeholder="Search..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:border-blue-500"
+              className="w-full rounded-md border px-3 py-2 text-sm outline-none focus-accent"
             />
             <div className="max-h-60 space-y-1 overflow-y-auto">
               {linkType === 'note' && filteredNotes.map((n) => (

@@ -61,7 +61,7 @@ export default function RichTextEditor({
   const minH = rows * 1.5;
 
   return (
-    <div className="rounded-md border transition-colors duration-150 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-200">
+    <div className="rounded-md border transition-colors duration-150 focus-within:border-[var(--accent)] focus-within:ring-[var(--accent-light)]">
       <div className="flex flex-wrap items-center gap-0.5 border-b bg-gray-50 px-1 py-1">
         <ToolBtn onClick={() => exec('bold')} title="Bold (Ctrl+B)">
           <strong>B</strong>

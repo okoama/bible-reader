@@ -15,7 +15,7 @@ const prayerRepository = new PrayerRepository();
 
 const CATEGORY_COLORS: Record<string, string> = {
   thanksgiving: 'bg-green-100 text-green-800',
-  petitions: 'bg-blue-100 text-blue-800',
+  petitions: 'bg-accent-light text-accent',
   intercession: 'bg-purple-100 text-purple-800',
   rosary: 'bg-indigo-100 text-indigo-800',
   novena: 'bg-pink-100 text-pink-800',
@@ -147,7 +147,7 @@ export default function PrayerLibrary({ filter, refreshKey, onRefresh }: PrayerL
         placeholder="Search prayers..."
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        className="mt-4 w-full rounded-md border px-3 py-2 text-sm outline-none transition-colors duration-150 focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
+        className="mt-4 w-full rounded-md border px-3 py-2 text-sm outline-none transition-colors duration-150 focus-accent"
       />
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -179,7 +179,7 @@ export default function PrayerLibrary({ filter, refreshKey, onRefresh }: PrayerL
                   </span>
                 )}
                 {trad && (
-                  <span className="text-[10px] text-blue-500 font-medium">Traditional</span>
+                  <span className="text-[10px] text-accent font-medium">Traditional</span>
                 )}
                 {!trad && prayer.lastPrayed && (
                   <span className="text-[10px] opacity-40">Prayed {formatDate(prayer.lastPrayed)}</span>

@@ -12,7 +12,7 @@ const prayerRepository = new PrayerRepository();
 
 const CATEGORY_COLORS: Record<PrayerCategory, string> = {
   thanksgiving: 'bg-green-100 text-green-800',
-  petitions: 'bg-blue-100 text-blue-800',
+  petitions: 'bg-accent-light text-accent',
   intercession: 'bg-purple-100 text-purple-800',
   rosary: 'bg-indigo-100 text-indigo-800',
   novena: 'bg-pink-100 text-pink-800',
@@ -20,7 +20,7 @@ const CATEGORY_COLORS: Record<PrayerCategory, string> = {
   work: 'bg-orange-100 text-orange-800',
   study: 'bg-cyan-100 text-cyan-800',
   custom: 'bg-gray-100 text-gray-800',
-  prayers: 'bg-blue-100 text-blue-800',
+  prayers: 'bg-accent-light text-accent',
 };
 
 type PrayerJournalProps = {
@@ -112,7 +112,7 @@ export default function PrayerJournal({ refreshKey, onRefresh }: PrayerJournalPr
         placeholder="Search prayers..."
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        className="mt-4 w-full rounded-md border px-3 py-2 text-sm outline-none transition-colors duration-150 focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
+        className="mt-4 w-full rounded-md border px-3 py-2 text-sm outline-none transition-colors duration-150 focus-accent"
       />
 
       <div className="mt-3 flex flex-wrap items-center gap-2">

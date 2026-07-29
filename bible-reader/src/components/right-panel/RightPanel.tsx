@@ -195,7 +195,7 @@ export default function RightPanel({
       style={{ width: panelWidth }}
     >
       <div
-        className="absolute left-0 top-0 z-10 h-full w-1 cursor-col-resize transition-colors duration-150 hover:bg-blue-300 active:bg-blue-400"
+        className="absolute left-0 top-0 z-10 h-full w-1 cursor-col-resize transition-colors duration-150 hover:bg-accent-light active:bg-accent-lighter"
         onMouseDown={handleDragStart}
         role="separator"
         aria-orientation="vertical"

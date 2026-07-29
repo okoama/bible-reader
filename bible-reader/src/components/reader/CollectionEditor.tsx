@@ -39,7 +39,7 @@ export default function CollectionEditor({ collection, onSave, onCancel }: Colle
           placeholder="Collection name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="rounded-md border px-3 py-2 text-sm outline-none transition-colors focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
+          className="rounded-md border px-3 py-2 text-sm outline-none transition-colors focus-accent"
         />
 
         <textarea
@@ -47,7 +47,7 @@ export default function CollectionEditor({ collection, onSave, onCancel }: Colle
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
-          className="rounded-md border px-3 py-2 text-sm outline-none transition-colors focus:border-blue-500 focus:ring-1 focus:ring-blue-200 resize-none"
+          className="rounded-md border px-3 py-2 text-sm outline-none transition-colors focus-accent resize-none"
         />
 
         <div className="flex justify-end gap-2">
