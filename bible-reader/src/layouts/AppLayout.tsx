@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Header from '../components/header/Header';
 import Sidebar from '../components/sidebar/Sidebar';
 import Reader from '../components/reader/Reader';
@@ -10,12 +10,27 @@ import { useNotes } from '../lib/hooks/useNotes';
 import { NoteRepository } from '../lib/repositories/NoteRepository';
 import type { BibleBook, Note, PrayerFilter, VerseRef } from '../types';
 import NoteViewer from '../components/reader/NoteViewer';
+import NoteEditor from '../features/notes/components/NoteEditor';
+import PrayerEditor from '../features/prayers/components/PrayerEditor';
+import CollectionEditor from '../components/reader/CollectionEditor';
 import Dashboard from '../components/dashboard/Dashboard';
 import { addRecentlyOpened } from '../lib/utils/recentlyOpened';
 import { TextService } from '../features/companion-texts/services/TextService';
 import { useStudySession } from '../lib/contexts/StudySessionContext';
+import GlobalSearchModal from '../components/search/GlobalSearchModal';
+import KeyboardShortcutsHelp from '../components/help/KeyboardShortcutsHelp';
 
 export type ActiveView = 'dashboard' | 'bible' | 'prayer-journal' | 'companion-text' | 'favorites' | 'collections';
+
+interface NavSnapshot {
+  activeView: ActiveView;
+  selectedBook: BibleBook | null;
+  selectedChapter: number | null;
+  selectedVerse: VerseRef | null;
+  selectedWorkId: string | null;
+  selectedSectionId: string | null;
+  prayerFilter: PrayerFilter;
+}
 
 const bibleService = new BibleService();
 const noteRepository = new NoteRepository();
@@ -54,28 +69,35 @@ export default function AppLayout() {
   const { session, logVisit } = useStudySession();
   const notes = useNotes(notesRefreshKey);
 
+  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
+  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
+  const [showNewNote, setShowNewNote] = useState(false);
+  const [showNewPrayer, setShowNewPrayer] = useState(false);
+  const [showNewCollection, setShowNewCollection] = useState(false);
+
+  const navBackStack = useRef<NavSnapshot[]>([]);
+  const navForwardStack = useRef<NavSnapshot[]>([]);
+  const navSnapshotRef = useRef<NavSnapshot>({
+    activeView: 'dashboard', selectedBook: null, selectedChapter: null,
+    selectedVerse: null, selectedWorkId: null, selectedSectionId: null, prayerFilter: { type: 'all' },
+  });
+
+  useEffect(() => {
+    navSnapshotRef.current = { activeView, selectedBook, selectedChapter, selectedVerse, selectedWorkId, selectedSectionId, prayerFilter };
+  }, [activeView, selectedBook, selectedChapter, selectedVerse, selectedWorkId, selectedSectionId, prayerFilter]);
+
   useEffect(() => {
     let isActive = true;
-
     const load = async () => {
       const loadedBooks = await bibleService.loadBooks();
-      if (isActive) {
-        setBooks(loadedBooks);
-      }
+      if (isActive) setBooks(loadedBooks);
     };
-
     void load();
-
-    return () => {
-      isActive = false;
-    };
+    return () => { isActive = false; };
   }, []);
 
   useEffect(() => {
-    if (!loaded || !lastPosition || books.length === 0 || selectedBook) {
-      return;
-    }
-
+    if (!loaded || !lastPosition || books.length === 0 || selectedBook) return;
     const book = books.find((b) => b.id === lastPosition.bookId);
     if (book) {
       setSelectedBook(book);
@@ -83,7 +105,39 @@ export default function AppLayout() {
     }
   }, [loaded, lastPosition, books, selectedBook]);
 
+  const pushNavSnapshot = useCallback(() => {
+    navBackStack.current.push({ ...navSnapshotRef.current });
+    navForwardStack.current = [];
+  }, []);
+
+  const navigateBack = useCallback(() => {
+    const s = navBackStack.current.pop();
+    if (!s) return;
+    navForwardStack.current.push({ ...navSnapshotRef.current });
+    setActiveView(s.activeView);
+    setSelectedBook(s.selectedBook);
+    setSelectedChapter(s.selectedChapter);
+    setSelectedVerse(s.selectedVerse);
+    setSelectedWorkId(s.selectedWorkId);
+    setSelectedSectionId(s.selectedSectionId);
+    setPrayerFilter(s.prayerFilter);
+  }, []);
+
+  const navigateForward = useCallback(() => {
+    const s = navForwardStack.current.pop();
+    if (!s) return;
+    navBackStack.current.push({ ...navSnapshotRef.current });
+    setActiveView(s.activeView);
+    setSelectedBook(s.selectedBook);
+    setSelectedChapter(s.selectedChapter);
+    setSelectedVerse(s.selectedVerse);
+    setSelectedWorkId(s.selectedWorkId);
+    setSelectedSectionId(s.selectedSectionId);
+    setPrayerFilter(s.prayerFilter);
+  }, []);
+
   const handleSelectBook = (book: BibleBook) => {
+    pushNavSnapshot();
     setActiveView('bible');
     setSelectedBook(book);
     setSelectedChapter(null);
@@ -92,6 +146,7 @@ export default function AppLayout() {
   };
 
   const handleSelectView = (view: ActiveView) => {
+    pushNavSnapshot();
     setActiveView(view);
     if (view === 'prayer-journal') {
       setSelectedBook(null);
@@ -106,6 +161,7 @@ export default function AppLayout() {
   };
 
   const handleSelectWork = (workId: string, sectionId?: string) => {
+    pushNavSnapshot();
     if (activeView === 'companion-text' && selectedWorkId && selectedSectionId) {
       setCompanionPositions((prev) => {
         const next = { ...prev, [selectedWorkId]: selectedSectionId };
@@ -113,22 +169,20 @@ export default function AppLayout() {
         return next;
       });
     }
-
     setActiveView('companion-text');
     setSelectedBook(null);
     setSelectedChapter(null);
     setSelectedVerse(null);
     setSelectedWorkId(workId);
-
     const targetSectionId = sectionId ?? companionPositions[workId] ?? null;
     setSelectedSectionId(targetSectionId);
-
     const textService = new TextService();
     const manifest = textService.getManifestEntry(workId);
     addRecentlyOpened({ id: `${workId}${targetSectionId ? `:${targetSectionId}` : ''}`, label: manifest?.name ?? workId, subtitle: targetSectionId ?? '', type: 'companion' });
   };
 
   const handleSelectChapter = (chapter: number) => {
+    pushNavSnapshot();
     setSelectedChapter(chapter);
     setSelectedVerse(null);
     if (selectedBook) {
@@ -153,17 +207,11 @@ export default function AppLayout() {
   const handleNavigateToBookmark = (sourceReference: string) => {
     const match = sourceReference.match(/^([^:]+):(\d+):(\d+)/);
     if (!match) return;
-
     const [, bookId, chapterStr, verseStr] = match;
     const book = books.find((b) => b.id === bookId);
     if (!book) return;
-
-    const target: VerseRef = {
-      bookId,
-      chapterNumber: Number.parseInt(chapterStr, 10),
-      verseNumber: Number.parseInt(verseStr, 10),
-    };
-
+    const target: VerseRef = { bookId, chapterNumber: Number.parseInt(chapterStr, 10), verseNumber: Number.parseInt(verseStr, 10) };
+    pushNavSnapshot();
     setSelectedBook(book);
     setSelectedChapter(target.chapterNumber);
     setSelectedVerse(target);
@@ -175,6 +223,7 @@ export default function AppLayout() {
   };
 
   const handleSelectSection = (sectionId: string) => {
+    pushNavSnapshot();
     setSelectedSectionId(sectionId);
     if (selectedWorkId) {
       setCompanionPositions((prev) => {
@@ -199,24 +248,22 @@ export default function AppLayout() {
         void noteRepository.findById(id).then((n) => { if (n) setViewingNote(n); });
         break;
       case 'prayer':
+        pushNavSnapshot();
         setPrayerFilter({ type: 'all' });
         handleSelectView('prayer-journal');
         break;
       case 'collection':
+        pushNavSnapshot();
         handleSelectView('collections');
         break;
       case 'passage': {
         const match = id.match(/^([^:]+):(\d+)/);
-        if (match) {
-          handleSelectWork(match[1], match[2]);
-        }
+        if (match) handleSelectWork(match[1], match[2]);
         break;
       }
       case 'article': {
         const parts = id.split(':');
-        if (parts.length >= 2) {
-          handleSelectWork(parts[0], parts[1]);
-        }
+        if (parts.length >= 2) handleSelectWork(parts[0], parts[1]);
         break;
       }
     }
@@ -228,6 +275,58 @@ export default function AppLayout() {
     setSelectedNoteId(null);
     setNotesRefreshKey((k) => k + 1);
   };
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName;
+      const isInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+
+      if (e.key === '?' && !isInput) {
+        setShowShortcutsHelp(true);
+        e.preventDefault();
+        return;
+      }
+
+      if ((e.altKey || e.metaKey) && e.key === 'ArrowLeft' && !isInput) {
+        e.preventDefault();
+        navigateBack();
+        return;
+      }
+
+      if ((e.altKey || e.metaKey) && e.key === 'ArrowRight' && !isInput) {
+        e.preventDefault();
+        navigateForward();
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key === 'k' && !isInput) {
+        e.preventDefault();
+        setShowGlobalSearch(true);
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'P' && !isInput) {
+        e.preventDefault();
+        setShowNewPrayer(true);
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'C' && !isInput) {
+        e.preventDefault();
+        setShowNewCollection(true);
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.altKey && e.key === 'n' && !isInput) {
+        e.preventDefault();
+        setShowNewNote(true);
+        return;
+      }
+    };
+
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [navigateBack, navigateForward]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -245,6 +344,7 @@ export default function AppLayout() {
           onSelectWork={handleSelectWork}
           prayerFilter={prayerFilter}
           onPrayerFilter={handlePrayerFilter}
+          onShowShortcuts={() => setShowShortcutsHelp(true)}
         />
         {activeView === 'dashboard' ? (
           <Dashboard
@@ -252,6 +352,7 @@ export default function AppLayout() {
             onNavigateToPassage={(bookId, chapter) => {
               const book = books.find((b) => b.id === bookId);
               if (book) {
+                pushNavSnapshot();
                 setActiveView('bible');
                 setSelectedBook(book);
                 setSelectedChapter(chapter);
@@ -311,6 +412,39 @@ export default function AppLayout() {
           note={viewingNote}
           onClose={() => setViewingNote(null)}
           onCrossLinkNavigate={handleCrossLinkNavigate}
+        />
+      )}
+
+      {showGlobalSearch && (
+        <GlobalSearchModal
+          onSelectNote={(noteId) => { setViewingNote(null); void noteRepository.findById(noteId).then((n) => { if (n) setViewingNote(n); }); }}
+          onClose={() => setShowGlobalSearch(false)}
+        />
+      )}
+
+      {showShortcutsHelp && (
+        <KeyboardShortcutsHelp onClose={() => setShowShortcutsHelp(false)} />
+      )}
+
+      {showNewNote && (
+        <NoteEditor
+          sourceReference=""
+          onSave={() => { setShowNewNote(false); handleNoteSaved(); }}
+          onCancel={() => setShowNewNote(false)}
+        />
+      )}
+
+      {showNewPrayer && (
+        <PrayerEditor
+          onSave={() => { setShowNewPrayer(false); handleNoteSaved(); }}
+          onCancel={() => setShowNewPrayer(false)}
+        />
+      )}
+
+      {showNewCollection && (
+        <CollectionEditor
+          onSave={(_name: string, _desc: string) => { setShowNewCollection(false); }}
+          onCancel={() => setShowNewCollection(false)}
         />
       )}
     </div>

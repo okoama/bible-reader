@@ -19,6 +19,7 @@ type SidebarProps = {
   onSelectWork: (workId: string, sectionId?: string) => void;
   prayerFilter: PrayerFilter;
   onPrayerFilter: (filter: PrayerFilter) => void;
+  onShowShortcuts?: () => void;
 };
 
 type CollapsibleGroupProps = {
@@ -58,6 +59,7 @@ export default function Sidebar({
   onSelectWork,
   prayerFilter,
   onPrayerFilter,
+  onShowShortcuts,
 }: SidebarProps) {
   const [bibleExpanded, setBibleExpanded] = useState(true);
   const [catechismExpanded, setCatechismExpanded] = useState(false);
@@ -79,9 +81,14 @@ export default function Sidebar({
     <aside className="shrink-0 overflow-y-auto border-r p-4" style={{ width: settings.sidebarWidth }}>
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold uppercase tracking-wide opacity-70">Library</h2>
-        <button type="button" onClick={() => setShowSettings(true)} className="text-sm opacity-60 hover:opacity-100" title="Workspace Settings">
-          {'\u2699'}
-        </button>
+        <div className="flex items-center gap-1">
+          <button type="button" onClick={() => onShowShortcuts?.()} className="text-xs opacity-40 hover:opacity-80" title="Keyboard Shortcuts">
+            ?
+          </button>
+          <button type="button" onClick={() => setShowSettings(true)} className="text-sm opacity-60 hover:opacity-100" title="Workspace Settings">
+            {'\u2699'}
+          </button>
+        </div>
       </div>
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
 
