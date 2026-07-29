@@ -78,6 +78,17 @@ export default function Sidebar({
       </h2>
 
       <div className="space-y-0.5">
+        {/* Dashboard */}
+        <button
+          type="button"
+          onClick={() => onSelectView('dashboard')}
+          className={`w-full rounded px-3 py-1.5 text-left text-sm transition-colors duration-150 ${
+            activeView === 'dashboard' ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-gray-100'
+          }`}
+        >
+          {'\u{1F3E0}'} Study Desk
+        </button>
+
         {/* Favorites */}
         <button
           type="button"

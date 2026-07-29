@@ -46,6 +46,10 @@ export class PrayerRepository {
     }
   }
 
+  async findRecentPrayed(limit = 10): Promise<Prayer[]> {
+    return this.database.prayers.orderBy('lastPrayed').reverse().filter((p) => p.lastPrayed != null).limit(limit).toArray();
+  }
+
   async delete(id: string): Promise<void> {
     await this.database.prayers.delete(id);
   }

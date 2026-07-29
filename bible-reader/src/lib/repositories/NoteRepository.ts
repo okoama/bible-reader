@@ -50,6 +50,10 @@ export class NoteRepository {
     return [...tags].sort();
   }
 
+  async findRecent(limit = 10): Promise<Note[]> {
+    return this.database.notes.orderBy('updatedAt').reverse().limit(limit).toArray();
+  }
+
   async delete(id: string): Promise<void> {
     await this.database.notes.delete(id);
   }
