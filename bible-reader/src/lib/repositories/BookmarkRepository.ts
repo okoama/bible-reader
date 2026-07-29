@@ -8,6 +8,10 @@ export class BookmarkRepository {
     return this.database.bookmarks.toArray();
   }
 
+  async count(): Promise<number> {
+    return this.database.bookmarks.count();
+  }
+
   async findFavorites(): Promise<Bookmark[]> {
     return this.database.bookmarks.toCollection().filter((b) => b.favorite).toArray();
   }

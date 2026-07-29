@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import type { BibleBook, Collection, Note, Prayer, ReadingProgress, ResearchProject } from '../../types';
 import type { ActiveView } from '../../layouts/AppLayout';
 import { NoteRepository } from '../../lib/repositories/NoteRepository';
+import { BookmarkRepository } from '../../lib/repositories/BookmarkRepository';
+import { HighlightRepository } from '../../lib/repositories/HighlightRepository';
 import { PrayerRepository } from '../../lib/repositories/PrayerRepository';
 import { CollectionRepository } from '../../lib/repositories/CollectionRepository';
 import { ReadingProgressRepository } from '../../lib/repositories/ReadingProgressRepository';
@@ -15,6 +17,8 @@ import { ResearchProjectRepository } from '../../lib/repositories/ResearchProjec
 import type { StudySession } from '../../types';
 
 const noteRepo = new NoteRepository();
+const bookmarkRepo = new BookmarkRepository();
+const highlightRepo = new HighlightRepository();
 const prayerRepo = new PrayerRepository();
 const collectionRepo = new CollectionRepository();
 const readingProgressRepo = new ReadingProgressRepository();
@@ -109,6 +113,11 @@ export default function Dashboard({ books, onNavigateToPassage, onSelectView, on
   const [recentlyOpened, setRecentlyOpened] = useState<RecentlyOpenedItem[]>([]);
   const [recentSessions, setRecentSessions] = useState<StudySession[]>([]);
   const [recentProjects, setRecentProjects] = useState<ResearchProject[]>([]);
+  const [totalNotes, setTotalNotes] = useState(0);
+  const [totalBookmarks, setTotalBookmarks] = useState(0);
+  const [totalHighlights, setTotalHighlights] = useState(0);
+  const [readingMinutes, setReadingMinutes] = useState(0);
+  const [mostStudiedBookName, setMostStudiedBookName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -120,8 +129,39 @@ export default function Dashboard({ books, onNavigateToPassage, onSelectView, on
       Promise.resolve(setRecentlyOpened(getRecentlyOpened().slice(0, 10))),
       sessionRepo.findAll().then((all) => setRecentSessions(all.filter((s) => s.endTime).slice(0, 5))),
       projectRepo.findAll().then((all) => setRecentProjects(all.slice(0, 5))),
+      Promise.all([
+        noteRepo.count(),
+        bookmarkRepo.count(),
+        highlightRepo.count(),
+        sessionRepo.findAll().then((all) => {
+          const completed = all.filter((s) => s.endTime != null && s.duration != null);
+          return completed.reduce((sum, s) => sum + (s.duration ?? 0), 0);
+        }),
+        noteRepo.findAll(),
+        bookmarkRepo.findAll(),
+        highlightRepo.findAll(),
+      ]).then(([nc, bc, hc, rm, notes, bookmarks, highlights]) => {
+        setTotalNotes(nc);
+        setTotalBookmarks(bc);
+        setTotalHighlights(hc);
+        setReadingMinutes(rm);
+        const bookCounts = new Map<string, number>();
+        const inc = (ref: string) => {
+          const bid = ref.split(':')[0];
+          if (bid) bookCounts.set(bid, (bookCounts.get(bid) ?? 0) + 1);
+        };
+        for (const n of notes) inc(n.sourceReference);
+        for (const b of bookmarks) inc(b.sourceReference);
+        for (const h of highlights) inc(h.sourceReference);
+        let bestBookId: string | null = null;
+        let bestCount = 0;
+        for (const [bid, count] of bookCounts) {
+          if (count > bestCount) { bestCount = count; bestBookId = bid; }
+        }
+        setMostStudiedBookName(bestBookId ? getBookName(books, bestBookId) : null);
+      }),
     ]).finally(() => setLoading(false));
-  }, []);
+  }, [books]);
 
   return (
     <div className="reading-text mx-auto max-w-4xl animate-fade-in p-6 space-y-8">
@@ -244,6 +284,21 @@ export default function Dashboard({ books, onNavigateToPassage, onSelectView, on
           )}
         </SectionCard>
 
+        <SectionCard title="All-Time Stats">
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <StatBox label="Notes" value={totalNotes} />
+            <StatBox label="Bookmarks" value={totalBookmarks} />
+            <StatBox label="Highlights" value={totalHighlights} />
+            <StatBox label="Reading Hours" value={readingMinutes < 60 ? `${readingMinutes}m` : `${Math.floor(readingMinutes / 60)}h ${readingMinutes % 60}m`} />
+            {mostStudiedBookName && (
+              <div className="col-span-2 mt-1 rounded-md bg-gray-50 p-2 text-center">
+                <span className="text-xs uppercase tracking-wide opacity-60">Most Studied</span>
+                <p className="font-semibold">{mostStudiedBookName}</p>
+              </div>
+            )}
+          </div>
+        </SectionCard>
+
         <SectionCard title="Reading History" actionLabel="">
           {history.length === 0 ? (
             <p className="text-sm italic opacity-50">No reading history yet</p>
@@ -259,6 +314,15 @@ export default function Dashboard({ books, onNavigateToPassage, onSelectView, on
         </SectionCard>
         </div>
       )}
+    </div>
+  );
+}
+
+function StatBox({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-md bg-gray-50 p-2 text-center">
+      <p className="text-lg font-bold">{value}</p>
+      <p className="text-xs uppercase tracking-wide opacity-60">{label}</p>
     </div>
   );
 }

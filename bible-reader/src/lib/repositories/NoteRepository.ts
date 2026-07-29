@@ -8,6 +8,10 @@ export class NoteRepository {
     return this.database.notes.toArray();
   }
 
+  async count(): Promise<number> {
+    return this.database.notes.count();
+  }
+
   async findById(id: string): Promise<Note | undefined> {
     return this.database.notes.get(id);
   }
