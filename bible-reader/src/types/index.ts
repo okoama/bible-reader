@@ -21,3 +21,4 @@ export type { ResearchProject, ProjectStatus } from './researchProject';
 export { PROJECT_STATUSES, PROJECT_DEFAULT_ICONS } from './researchProject';
 export type { GraphNode, GraphEdge, GraphNodeType, GraphEdgeType, GraphPosition, PositionedNode, GraphFilters } from './knowledgeGraph';
 export { NODE_COLORS, NODE_LABELS } from './knowledgeGraph';
+export type { Tab } from './tab';

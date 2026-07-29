@@ -8,7 +8,7 @@ import { BibleService } from '../features/bible/services/BibleService';
 import { useReadingProgress } from '../lib/hooks/useReadingProgress';
 import { useNotes } from '../lib/hooks/useNotes';
 import { NoteRepository } from '../lib/repositories/NoteRepository';
-import type { BibleBook, Note, PrayerFilter, VerseRef } from '../types';
+import type { BibleBook, Note, PrayerFilter, Tab, VerseRef } from '../types';
 import NoteViewer from '../components/reader/NoteViewer';
 import NoteEditor from '../features/notes/components/NoteEditor';
 import PrayerEditor from '../features/prayers/components/PrayerEditor';
@@ -23,6 +23,7 @@ import { ResearchProjectRepository } from '../lib/repositories/ResearchProjectRe
 import { createId } from '../lib/utils/id';
 import KeyboardShortcutsHelp from '../components/help/KeyboardShortcutsHelp';
 import KnowledgeGraphView from '../components/graph/KnowledgeGraphView';
+import TabBar from '../components/tabs/TabBar';
 import type { GraphNodeType } from '../types';
 
 export type ActiveView = 'dashboard' | 'bible' | 'prayer-journal' | 'companion-text' | 'favorites' | 'collections' | 'projects' | 'graph';
@@ -56,6 +57,33 @@ function persistCompanionPositions(positions: Record<string, string>): void {
   } catch {}
 }
 
+function loadTabs(): Tab[] {
+  try {
+    const stored = localStorage.getItem('workspace-tabs');
+    if (stored) return JSON.parse(stored);
+  } catch {}
+  return [{ id: 'dashboard', type: 'dashboard', label: 'Dashboard' }];
+}
+
+function persistTabs(tabs: Tab[]): void {
+  try {
+    localStorage.setItem('workspace-tabs', JSON.stringify(tabs));
+  } catch {}
+}
+
+function loadActiveTabId(): string {
+  try {
+    return localStorage.getItem('workspace-active-tab') ?? 'dashboard';
+  } catch {}
+  return 'dashboard';
+}
+
+function persistActiveTabId(id: string): void {
+  try {
+    localStorage.setItem('workspace-active-tab', id);
+  } catch {}
+}
+
 export default function AppLayout() {
   const [books, setBooks] = useState<BibleBook[]>([]);
   const [selectedBook, setSelectedBook] = useState<BibleBook | null>(null);
@@ -81,16 +109,66 @@ export default function AppLayout() {
   const [showNewCollection, setShowNewCollection] = useState(false);
   const [showNewProject, setShowNewProject] = useState(false);
 
+  const [tabs, setTabs] = useState<Tab[]>(loadTabs);
+  const [activeTabId, setActiveTabId] = useState<string>(loadActiveTabId);
+
   const navBackStack = useRef<NavSnapshot[]>([]);
   const navForwardStack = useRef<NavSnapshot[]>([]);
   const navSnapshotRef = useRef<NavSnapshot>({
     activeView: 'dashboard', selectedBook: null, selectedChapter: null,
     selectedVerse: null, selectedWorkId: null, selectedSectionId: null, prayerFilter: { type: 'all' },
   });
+  const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     navSnapshotRef.current = { activeView, selectedBook, selectedChapter, selectedVerse, selectedWorkId, selectedSectionId, prayerFilter };
   }, [activeView, selectedBook, selectedChapter, selectedVerse, selectedWorkId, selectedSectionId, prayerFilter]);
+
+  const syncTabState = useCallback(() => {
+    setTabs((prev) => {
+      const next = prev.map((t) =>
+        t.id === activeTabId
+          ? { ...t, bookId: selectedBook?.id, chapterNumber: selectedChapter ?? undefined, workId: selectedWorkId ?? undefined, sectionId: selectedSectionId ?? undefined }
+          : t,
+      );
+      return next;
+    });
+  }, [activeTabId, selectedBook, selectedChapter, selectedWorkId, selectedSectionId]);
+
+  const scheduleSync = useCallback(() => {
+    if (persistTimerRef.current) clearTimeout(persistTimerRef.current);
+    persistTimerRef.current = setTimeout(() => {
+      syncTabState();
+      persistTimerRef.current = null;
+    }, 300);
+  }, [syncTabState]);
+
+  useEffect(() => {
+    return () => { if (persistTimerRef.current) clearTimeout(persistTimerRef.current); };
+  }, []);
+
+  useEffect(() => {
+    persistTabs(tabs);
+  }, [tabs]);
+
+  useEffect(() => {
+    persistActiveTabId(activeTabId);
+  }, [activeTabId]);
+
+  const activateTab = useCallback((tab: Tab) => {
+    setActiveTabId(tab.id);
+    setActiveView(tab.type as ActiveView);
+    setSelectedBook((tab.type === 'bible' || tab.type === 'dashboard') && tab.bookId ? books.find((b) => b.id === tab.bookId) ?? null : null);
+    setSelectedChapter(tab.type === 'bible' ? (tab.chapterNumber ?? null) : null);
+    setSelectedVerse(null);
+    if (tab.type === 'companion-text') {
+      setSelectedWorkId(tab.workId ?? null);
+      setSelectedSectionId(tab.sectionId ?? null);
+    } else if (tab.type !== 'bible') {
+      setSelectedWorkId(null);
+      setSelectedSectionId(null);
+    }
+  }, [books]);
 
   useEffect(() => {
     let isActive = true;
@@ -101,6 +179,18 @@ export default function AppLayout() {
     void load();
     return () => { isActive = false; };
   }, []);
+
+  useEffect(() => {
+    if (books.length === 0) return;
+    const activeTab = tabs.find((t) => t.id === activeTabId);
+    if (activeTab && activeTab.type === 'bible' && activeTab.bookId && !selectedBook) {
+      const book = books.find((b) => b.id === activeTab.bookId);
+      if (book) {
+        setSelectedBook(book);
+        setSelectedChapter(activeTab.chapterNumber ?? null);
+      }
+    }
+  }, [books, tabs, activeTabId, selectedBook]);
 
   useEffect(() => {
     if (!loaded || !lastPosition || books.length === 0 || selectedBook) return;
@@ -142,17 +232,55 @@ export default function AppLayout() {
     setPrayerFilter(s.prayerFilter);
   }, []);
 
-  const handleSelectBook = (book: BibleBook) => {
+  const ensureTab = useCallback((type: Tab['type'], label: string, extra?: Partial<Tab>) => {
+    const tabId = extra?.id ?? type;
+    setTabs((prev) => {
+      const existing = prev.find((t) => t.id === tabId);
+      if (existing) return prev;
+      const newTab: Tab = { id: tabId, type, label, ...extra };
+      return [...prev, newTab];
+    });
+    setActiveTabId(tabId);
+  }, []);
+
+  const handleSelectTab = useCallback((tabId: string) => {
+    if (tabId === activeTabId) return;
+    const target = tabs.find((t) => t.id === tabId);
+    if (!target) return;
     pushNavSnapshot();
-    setActiveView('bible');
+    activateTab(target);
+  }, [activeTabId, tabs, pushNavSnapshot, activateTab]);
+
+  const handleCloseTab = useCallback((tabId: string) => {
+    setTabs((prev) => {
+      const idx = prev.findIndex((t) => t.id === tabId);
+      if (idx === -1 || prev.length <= 1) return prev;
+      const next = prev.filter((t) => t.id !== tabId);
+      if (tabId === activeTabId) {
+        const switchTo = next[Math.min(idx, next.length - 1)];
+        if (switchTo) {
+          setTimeout(() => activateTab(switchTo), 0);
+        }
+      }
+      return next;
+    });
+  }, [activeTabId, activateTab]);
+
+  const handleSelectBook = useCallback((book: BibleBook) => {
+    pushNavSnapshot();
+    const tabId = `bible:${book.id}`;
+    ensureTab('bible', book.name, { id: tabId, bookId: book.id });
     setSelectedBook(book);
     setSelectedChapter(null);
     setSelectedVerse(null);
+    setActiveView('bible');
     addRecentlyOpened({ id: `bible:${book.id}`, label: book.name, subtitle: book.testament, type: 'bible' });
-  };
+  }, [pushNavSnapshot, ensureTab]);
 
-  const handleSelectView = (view: ActiveView) => {
+  const handleSelectView = useCallback((view: ActiveView) => {
     pushNavSnapshot();
+    const tabId = view;
+    ensureTab(view, view.charAt(0).toUpperCase() + view.slice(1).replace(/-/g, ' '), { id: tabId });
     setActiveView(view);
     if (view === 'prayer-journal') {
       setSelectedBook(null);
@@ -160,13 +288,13 @@ export default function AppLayout() {
       setSelectedVerse(null);
       setSelectedWorkId(null);
     }
-  };
+  }, [pushNavSnapshot, ensureTab]);
 
   const handlePrayerFilter = (filter: PrayerFilter) => {
     setPrayerFilter(filter);
   };
 
-  const handleSelectWork = (workId: string, sectionId?: string) => {
+  const handleSelectWork = useCallback((workId: string, sectionId?: string) => {
     pushNavSnapshot();
     if (activeView === 'companion-text' && selectedWorkId && selectedSectionId) {
       setCompanionPositions((prev) => {
@@ -175,6 +303,10 @@ export default function AppLayout() {
         return next;
       });
     }
+    const textService = new TextService();
+    const manifest = textService.getManifestEntry(workId);
+    const tabId = `companion:${workId}`;
+    ensureTab('companion-text', manifest?.name ?? workId, { id: tabId, workId, sectionId });
     setActiveView('companion-text');
     setSelectedBook(null);
     setSelectedChapter(null);
@@ -182,10 +314,8 @@ export default function AppLayout() {
     setSelectedWorkId(workId);
     const targetSectionId = sectionId ?? companionPositions[workId] ?? null;
     setSelectedSectionId(targetSectionId);
-    const textService = new TextService();
-    const manifest = textService.getManifestEntry(workId);
     addRecentlyOpened({ id: `${workId}${targetSectionId ? `:${targetSectionId}` : ''}`, label: manifest?.name ?? workId, subtitle: targetSectionId ?? '', type: 'companion' });
-  };
+  }, [pushNavSnapshot, activeView, selectedWorkId, selectedSectionId, companionPositions, ensureTab]);
 
   const handleSelectChapter = (chapter: number) => {
     pushNavSnapshot();
@@ -196,6 +326,7 @@ export default function AppLayout() {
       addRecentlyOpened({ id: `bible:${selectedBook.id}:${chapter}`, label: selectedBook.name, subtitle: `Chapter ${chapter}`, type: 'bible' });
       if (session && !session.endTime) logVisit(selectedBook.id, String(chapter), `${selectedBook.name} ${chapter}`);
     }
+    scheduleSync();
   };
 
   const handleSelectVerse = (verse: VerseRef) => {
@@ -218,6 +349,8 @@ export default function AppLayout() {
     if (!book) return;
     const target: VerseRef = { bookId, chapterNumber: Number.parseInt(chapterStr, 10), verseNumber: Number.parseInt(verseStr, 10) };
     pushNavSnapshot();
+    const tabId = `bible:${bookId}`;
+    ensureTab('bible', book.name, { id: tabId, bookId, chapterNumber: target.chapterNumber });
     setSelectedBook(book);
     setSelectedChapter(target.chapterNumber);
     setSelectedVerse(target);
@@ -242,6 +375,7 @@ export default function AppLayout() {
       addRecentlyOpened({ id: `${selectedWorkId}:${sectionId}`, label: manifest?.name ?? selectedWorkId, subtitle: sectionId, type: 'companion' });
       if (session && !session.endTime) logVisit(selectedWorkId, sectionId, `${manifest?.name ?? selectedWorkId} - ${sectionId}`);
     }
+    scheduleSync();
   };
 
   const handleSelectNote = (noteId: string | null) => {
@@ -366,7 +500,6 @@ export default function AppLayout() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-
       <div className="flex flex-1 overflow-hidden">
         <Sidebar
           books={books}
@@ -381,65 +514,75 @@ export default function AppLayout() {
           onPrayerFilter={handlePrayerFilter}
           onShowShortcuts={() => setShowShortcutsHelp(true)}
         />
-        {activeView === 'dashboard' ? (
-          <Dashboard
-            books={books}
-            onNavigateToPassage={(bookId, chapter) => {
-              const book = books.find((b) => b.id === bookId);
-              if (book) {
-                pushNavSnapshot();
-                setActiveView('bible');
-                setSelectedBook(book);
-                setSelectedChapter(chapter);
-                setSelectedVerse(null);
-                void savePosition(bookId, chapter);
-              }
-            }}
-            onSelectView={handleSelectView}
-            onNavigateToWork={handleSelectWork}
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <TabBar
+            tabs={tabs}
+            activeTabId={activeTabId}
+            onSelectTab={handleSelectTab}
+            onCloseTab={handleCloseTab}
           />
-        ) : activeView === 'graph' ? (
-          <KnowledgeGraphView onNodeClick={handleGraphNodeClick} />
-        ) : (
-          <Reader
-            selectedBook={selectedBook}
-            selectedChapter={selectedChapter}
-            selectedVerse={selectedVerse}
-            onSelectChapter={handleSelectChapter}
-            onSelectVerse={handleSelectVerse}
-            onNoteSaved={handleNoteSaved}
-            pendingNavigation={pendingNavigation}
-            onPendingNavigationClear={handlePendingNavigationClear}
-            activeView={activeView}
-            selectedWorkId={selectedWorkId}
-            selectedSectionId={selectedSectionId}
-            onSelectWork={handleSelectWork}
-            onSelectSection={handleSelectSection}
-            prayerRefreshKey={notesRefreshKey}
-            prayerFilter={prayerFilter}
-            selectedNoteId={selectedNoteId}
-            onSelectNote={handleSelectNote}
-            onDeleteSelectedNote={handleDeleteSelectedNote}
-            onCrossLinkNavigate={handleCrossLinkNavigate}
-          />
-        )}
-        {(activeView === 'bible' || activeView === 'companion-text') && (
-          <RightPanel
-            selectedVerse={selectedVerse}
-            selectedBook={selectedBook}
-            selectedChapter={selectedChapter}
-            notes={notes}
-            books={books}
-            refreshKey={notesRefreshKey}
-            onNoteDeleted={handleNoteDeleted}
-            onNavigateToBookmark={handleNavigateToBookmark}
-            onNavigateToNote={handleNavigateToBookmark}
-            selectedNoteId={selectedNoteId}
-            onSelectNote={handleSelectNote}
-            workId={activeView === 'companion-text' ? selectedWorkId : null}
-            sectionId={activeView === 'companion-text' ? selectedSectionId : null}
-          />
-        )}
+          {activeView === 'dashboard' ? (
+            <Dashboard
+              books={books}
+              onNavigateToPassage={(bookId, chapter) => {
+                const book = books.find((b) => b.id === bookId);
+                if (book) {
+                  pushNavSnapshot();
+                  const tabId = `bible:${bookId}`;
+                  ensureTab('bible', book.name, { id: tabId, bookId, chapterNumber: chapter });
+                  setActiveView('bible');
+                  setSelectedBook(book);
+                  setSelectedChapter(chapter);
+                  setSelectedVerse(null);
+                  void savePosition(bookId, chapter);
+                }
+              }}
+              onSelectView={handleSelectView}
+              onNavigateToWork={handleSelectWork}
+            />
+          ) : activeView === 'graph' ? (
+            <KnowledgeGraphView onNodeClick={handleGraphNodeClick} />
+          ) : (
+            <Reader
+              selectedBook={selectedBook}
+              selectedChapter={selectedChapter}
+              selectedVerse={selectedVerse}
+              onSelectChapter={handleSelectChapter}
+              onSelectVerse={handleSelectVerse}
+              onNoteSaved={handleNoteSaved}
+              pendingNavigation={pendingNavigation}
+              onPendingNavigationClear={handlePendingNavigationClear}
+              activeView={activeView}
+              selectedWorkId={selectedWorkId}
+              selectedSectionId={selectedSectionId}
+              onSelectWork={handleSelectWork}
+              onSelectSection={handleSelectSection}
+              prayerRefreshKey={notesRefreshKey}
+              prayerFilter={prayerFilter}
+              selectedNoteId={selectedNoteId}
+              onSelectNote={handleSelectNote}
+              onDeleteSelectedNote={handleDeleteSelectedNote}
+              onCrossLinkNavigate={handleCrossLinkNavigate}
+            />
+          )}
+          {(activeView === 'bible' || activeView === 'companion-text') && (
+            <RightPanel
+              selectedVerse={selectedVerse}
+              selectedBook={selectedBook}
+              selectedChapter={selectedChapter}
+              notes={notes}
+              books={books}
+              refreshKey={notesRefreshKey}
+              onNoteDeleted={handleNoteDeleted}
+              onNavigateToBookmark={handleNavigateToBookmark}
+              onNavigateToNote={handleNavigateToBookmark}
+              selectedNoteId={selectedNoteId}
+              onSelectNote={handleSelectNote}
+              workId={activeView === 'companion-text' ? selectedWorkId : null}
+              sectionId={activeView === 'companion-text' ? selectedSectionId : null}
+            />
+          )}
+        </div>
       </div>
 
       <StatusBar />
