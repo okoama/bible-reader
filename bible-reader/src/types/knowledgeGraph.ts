@@ -7,6 +7,19 @@ export interface GraphNode {
   type: GraphNodeType;
   label: string;
   subtitle?: string;
+  createdAt?: string;
+  tags?: string[];
+}
+
+export interface GraphFilters {
+  nodeTypes: GraphNodeType[];
+  depth: 'all' | 1 | 2;
+  focusedNodeId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  tags: string[];
+  collectionId?: string;
+  projectId?: string;
 }
 
 export interface GraphEdge {
