@@ -126,6 +126,17 @@ export default function Sidebar({
           {'\u{1F4C1}'} Collections
         </button>
 
+        {/* Knowledge Graph */}
+        <button
+          type="button"
+          onClick={() => onSelectView('graph')}
+          className={`w-full rounded px-3 py-1.5 text-left text-sm transition-colors duration-150 ${
+            activeView === 'graph' ? 'bg-accent-light text-accent font-medium' : 'hover:bg-gray-100'
+          }`}
+        >
+          {'\u{1F578}'} Knowledge Graph
+        </button>
+
         {/* Projects */}
         <button
           type="button"

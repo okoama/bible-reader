@@ -19,3 +19,5 @@ export { ACCENT_NAMES } from './workspaceSettings';
 export type { WorkspaceBackup } from './workspaceBackup';
 export type { ResearchProject, ProjectStatus } from './researchProject';
 export { PROJECT_STATUSES, PROJECT_DEFAULT_ICONS } from './researchProject';
+export type { GraphNode, GraphEdge, GraphNodeType, GraphEdgeType, GraphPosition, PositionedNode } from './knowledgeGraph';
+export { NODE_COLORS, NODE_LABELS } from './knowledgeGraph';

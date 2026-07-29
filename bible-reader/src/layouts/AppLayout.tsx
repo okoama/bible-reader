@@ -22,8 +22,10 @@ import GlobalSearchModal from '../components/search/GlobalSearchModal';
 import { ResearchProjectRepository } from '../lib/repositories/ResearchProjectRepository';
 import { createId } from '../lib/utils/id';
 import KeyboardShortcutsHelp from '../components/help/KeyboardShortcutsHelp';
+import KnowledgeGraphView from '../components/graph/KnowledgeGraphView';
+import type { GraphNodeType } from '../types';
 
-export type ActiveView = 'dashboard' | 'bible' | 'prayer-journal' | 'companion-text' | 'favorites' | 'collections' | 'projects';
+export type ActiveView = 'dashboard' | 'bible' | 'prayer-journal' | 'companion-text' | 'favorites' | 'collections' | 'projects' | 'graph';
 
 interface NavSnapshot {
   activeView: ActiveView;
@@ -273,6 +275,35 @@ export default function AppLayout() {
     }
   };
 
+  const handleGraphNodeClick = useCallback((type: GraphNodeType, id: string) => {
+    const parts = id.split(':');
+    const entityId = parts.slice(1).join(':');
+    switch (type) {
+      case 'passage':
+        handleNavigateToBookmark(entityId);
+        break;
+      case 'note':
+        void noteRepository.findById(entityId).then((n) => { if (n) setViewingNote(n); });
+        break;
+      case 'bookmark':
+        handleNavigateToBookmark(entityId);
+        break;
+      case 'prayer':
+        pushNavSnapshot();
+        setPrayerFilter({ type: 'all' });
+        handleSelectView('prayer-journal');
+        break;
+      case 'collection':
+        pushNavSnapshot();
+        handleSelectView('collections');
+        break;
+      case 'project':
+        pushNavSnapshot();
+        handleSelectView('projects');
+        break;
+    }
+  }, [pushNavSnapshot, handleSelectView, handleNavigateToBookmark]);
+
   const handleDeleteSelectedNote = async () => {
     if (!selectedNoteId) return;
     await noteRepository.delete(selectedNoteId);
@@ -367,6 +398,8 @@ export default function AppLayout() {
             onSelectView={handleSelectView}
             onNavigateToWork={handleSelectWork}
           />
+        ) : activeView === 'graph' ? (
+          <KnowledgeGraphView onNodeClick={handleGraphNodeClick} />
         ) : (
           <Reader
             selectedBook={selectedBook}
