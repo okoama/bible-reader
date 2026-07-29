@@ -7,7 +7,8 @@ export type PrayerCategory =
   | 'family'
   | 'work'
   | 'study'
-  | 'custom';
+  | 'custom'
+  | 'prayers';
 
 export const PRAYER_CATEGORIES: { value: PrayerCategory; label: string }[] = [
   { value: 'thanksgiving', label: 'Thanksgiving' },

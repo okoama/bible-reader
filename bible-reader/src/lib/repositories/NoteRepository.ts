@@ -28,6 +28,10 @@ export class NoteRepository {
       .toArray();
   }
 
+  async findFavorites(): Promise<Note[]> {
+    return this.database.notes.toCollection().filter((n) => n.favorite).toArray();
+  }
+
   async findByBook(bookId: string): Promise<Note[]> {
     return this.database.notes
       .where('sourceReference')

@@ -64,7 +64,6 @@ function collectVerses(
 
     const chapterNumber = Number(chapterRaw);
     const verseNumber = Number(verseRaw);
-    const chapterKey = chapterNumber || 0;
 
     const key = `${bookId}:${chapterRaw}:${verseRaw}`;
     if (seen.has(key)) {

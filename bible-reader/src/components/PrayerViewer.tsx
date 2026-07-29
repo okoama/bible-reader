@@ -65,7 +65,9 @@ export default function PrayerViewer({ prayer, readOnly = false, onClose, onEdit
               <h2 className="text-xl font-semibold">{prayer.title}</h2>
             </div>
             <div className="mt-1 flex flex-wrap items-center gap-2 text-xs opacity-60">
-              <span className={`rounded-full px-2 py-0.5 font-medium ${catColor}`}>{catLabel}</span>
+              {!readOnly && (
+                <span className={`rounded-full px-2 py-0.5 font-medium ${catColor}`}>{catLabel}</span>
+              )}
               {prayer.lastPrayed && <span>Last prayed: {formatDate(prayer.lastPrayed)}</span>}
               {prayer.answered && <span className="text-green-600 font-medium">Answered</span>}
               {!readOnly && <span>Created: {formatDate(prayer.createdAt)}</span>}

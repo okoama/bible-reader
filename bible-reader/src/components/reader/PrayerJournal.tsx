@@ -20,6 +20,7 @@ const CATEGORY_COLORS: Record<PrayerCategory, string> = {
   work: 'bg-orange-100 text-orange-800',
   study: 'bg-cyan-100 text-cyan-800',
   custom: 'bg-gray-100 text-gray-800',
+  prayers: 'bg-blue-100 text-blue-800',
 };
 
 type PrayerJournalProps = {

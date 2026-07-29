@@ -168,9 +168,11 @@ export default function PrayerLibrary({ filter, refreshKey, onRefresh }: PrayerL
                 <p className="mt-1 text-sm leading-relaxed opacity-60 line-clamp-2">{preview}</p>
               )}
               <div className="mt-3 flex items-center gap-2">
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${catColor}`}>
-                  {catLabel}
-                </span>
+                {!trad && (
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${catColor}`}>
+                    {catLabel}
+                  </span>
+                )}
                 {trad && (
                   <span className="text-[10px] text-blue-500 font-medium">Traditional</span>
                 )}

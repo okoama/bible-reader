@@ -17,6 +17,7 @@ export default function BookmarkEditor({
   onCancel,
 }: BookmarkEditorProps) {
   const [title, setTitle] = useState('');
+  const [favorite, setFavorite] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
 
@@ -46,6 +47,7 @@ export default function BookmarkEditor({
       id: createId('bm'),
       sourceReference,
       title: title.trim() || undefined,
+      favorite,
       createdAt: new Date().toISOString(),
     };
 
@@ -79,6 +81,16 @@ export default function BookmarkEditor({
         <p className="text-xs opacity-60">
           Attached to: {sourceReference}
         </p>
+
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            checked={favorite}
+            onChange={(e) => setFavorite(e.target.checked)}
+            className="rounded border-gray-300 text-yellow-500 focus:ring-yellow-400"
+          />
+          Mark as favorite
+        </label>
 
         <div className="flex justify-end gap-2">
           <button

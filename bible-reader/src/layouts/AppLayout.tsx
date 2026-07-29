@@ -10,7 +10,7 @@ import { useNotes } from '../lib/hooks/useNotes';
 import { NoteRepository } from '../lib/repositories/NoteRepository';
 import type { BibleBook, PrayerFilter, VerseRef } from '../types';
 
-export type ActiveView = 'bible' | 'prayer-journal' | 'companion-text';
+export type ActiveView = 'bible' | 'prayer-journal' | 'companion-text' | 'favorites';
 
 const bibleService = new BibleService();
 const noteRepository = new NoteRepository();

@@ -8,11 +8,19 @@ export class BookmarkRepository {
     return this.database.bookmarks.toArray();
   }
 
+  async findFavorites(): Promise<Bookmark[]> {
+    return this.database.bookmarks.toCollection().filter((b) => b.favorite).toArray();
+  }
+
   async findByBook(bookId: string): Promise<Bookmark[]> {
     return this.database.bookmarks
       .where('sourceReference')
       .startsWith(`${bookId}:`)
       .toArray();
+  }
+
+  async update(bookmark: Bookmark): Promise<void> {
+    await this.database.bookmarks.put(bookmark);
   }
 
   async create(bookmark: Bookmark): Promise<string> {

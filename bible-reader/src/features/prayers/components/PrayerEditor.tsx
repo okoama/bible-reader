@@ -69,6 +69,7 @@ export default function PrayerEditor({ prayer, onSave, onCancel }: PrayerEditorP
       content,
       category,
       favorite,
+      answered: prayer?.answered ?? false,
       tags,
       createdAt: prayer?.createdAt ?? now,
       updatedAt: now,

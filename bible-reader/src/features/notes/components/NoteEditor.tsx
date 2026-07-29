@@ -26,6 +26,7 @@ export default function NoteEditor({
   const [title, setTitle] = useState(note?.title ?? '');
   const [content, setContent] = useState(note?.content ?? '');
   const [tags, setTags] = useState<string[]>(note?.tags ?? []);
+  const [favorite, setFavorite] = useState(note?.favorite ?? false);
   const [tagInput, setTagInput] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [allUsedTags, setAllUsedTags] = useState<string[]>([]);
@@ -130,6 +131,7 @@ export default function NoteEditor({
       title,
       content,
       tags,
+      favorite,
       createdAt: note?.createdAt ?? now,
       updatedAt: now,
     };
@@ -188,6 +190,16 @@ export default function NoteEditor({
           placeholder="Write your note here..."
           rows={6}
         />
+
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            checked={favorite}
+            onChange={(e) => setFavorite(e.target.checked)}
+            className="rounded border-gray-300 text-yellow-500 focus:ring-yellow-400"
+          />
+          Mark as favorite
+        </label>
 
         <div className="relative">
           <label className="mb-1 block text-xs font-medium opacity-70">Tags</label>

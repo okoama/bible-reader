@@ -17,7 +17,7 @@ export class PrayerRepository {
   }
 
   async findFavorites(): Promise<Prayer[]> {
-    return this.database.prayers.where('favorite').equals(1).toArray();
+    return this.database.prayers.toCollection().filter((p) => p.favorite).toArray();
   }
 
   async findAnswered(): Promise<Prayer[]> {

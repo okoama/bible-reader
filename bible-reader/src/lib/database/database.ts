@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import { DATABASE_NAME, DATABASE_VERSION } from '../constants';
+import { DATABASE_NAME } from '../constants';
 import type { Bookmark, Highlight, Note, Prayer, ReadingProgress } from '../../types';
 
 export class BibleReaderDatabase extends Dexie {
@@ -45,6 +45,17 @@ export class BibleReaderDatabase extends Dexie {
       await tx.table('prayers').toCollection().modify((prayer) => {
         prayer.answered = false;
       });
+    });
+
+    this.version(5).stores({
+      notes: 'id, sourceReference, title, favorite, createdAt, updatedAt',
+      highlights: 'id, sourceReference, color, createdAt',
+      bookmarks: 'id, sourceReference, favorite, createdAt',
+      prayers: 'id, title, category, favorite, answered, *tags, createdAt, updatedAt, lastPrayed',
+      readingProgress: 'id, sourceReference, updatedAt',
+    }).upgrade(async (tx) => {
+      await tx.table('notes').toCollection().modify((note) => { note.favorite = false; });
+      await tx.table('bookmarks').toCollection().modify((bm) => { bm.favorite = false; });
     });
   }
 }

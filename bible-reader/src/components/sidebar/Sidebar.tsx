@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { BibleBook, PrayerCategory, PrayerFilter } from '../../types';
+import type { BibleBook, PrayerFilter } from '../../types';
 import { PRAYER_CATEGORIES } from '../../types';
 import type { ActiveView } from '../../layouts/AppLayout';
 import { TextService } from '../../features/companion-texts/services/TextService';
@@ -78,6 +78,17 @@ export default function Sidebar({
       </h2>
 
       <div className="space-y-0.5">
+        {/* Favorites */}
+        <button
+          type="button"
+          onClick={() => onSelectView('favorites')}
+          className={`w-full rounded px-3 py-1.5 text-left text-sm transition-colors duration-150 ${
+            activeView === 'favorites' ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-gray-100'
+          }`}
+        >
+          {'\u2605'} Favorites
+        </button>
+
         {/* Bible */}
         <CollapsibleGroup
           label="Bible"

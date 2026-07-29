@@ -12,6 +12,7 @@ import { createId } from '../../lib/utils/id';
 import AnnotationToolbar from '../AnnotationToolbar';
 import NoteEditor from '../../features/notes/components/NoteEditor';
 import PrayerLibrary from './PrayerLibrary';
+import FavoritesPage from './FavoritesPage';
 import ContentReader from './ContentReader';
 
 import CompanionTextReader from './CompanionTextReader';
@@ -348,7 +349,11 @@ export default function Reader({
 
   return (
     <main ref={mainRef} className="flex-1 overflow-y-auto p-6">
-      {activeView === 'prayer-journal' ? (
+      {activeView === 'favorites' ? (
+        <div className="mx-auto max-w-3xl animate-fade-in">
+          <FavoritesPage refreshKey={prayerRefreshKey} onRefresh={handlePrayerRefresh} />
+        </div>
+      ) : activeView === 'prayer-journal' ? (
         <div className="mx-auto max-w-3xl rounded-lg border p-6 animate-fade-in">
           <PrayerLibrary filter={prayerFilter} refreshKey={prayerRefreshKey} onRefresh={handlePrayerRefresh} />
         </div>

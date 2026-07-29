@@ -4,6 +4,7 @@ import { useHighlights } from '../../lib/hooks/useHighlights';
 import { useWorkHighlights } from '../../lib/hooks/useWorkHighlights';
 import { useBookmarks } from '../../lib/hooks/useBookmarks';
 import { HighlightRepository } from '../../lib/repositories/HighlightRepository';
+import { NoteRepository } from '../../lib/repositories/NoteRepository';
 import { BookmarkRepository } from '../../lib/repositories/BookmarkRepository';
 import { HIGHLIGHT_COLORS } from '../../lib/constants';
 import { formatDate } from '../../lib/utils/date';
@@ -12,6 +13,7 @@ import ConfirmDialog from '../ConfirmDialog';
 import NoteSearch from '../sidebar/NoteSearch';
 
 const highlightRepository = new HighlightRepository();
+const noteRepository = new NoteRepository();
 const bookmarkRepository = new BookmarkRepository();
 
 const MIN_WIDTH = 200;
@@ -169,6 +171,16 @@ export default function RightPanel({
     onNoteDeleted();
   }
 
+  const handleToggleNoteFavorite = useCallback(async (note: Note) => {
+    await noteRepository.update({ ...note, favorite: !note.favorite });
+    onNoteDeleted(); // re-trigger refresh
+  }, [onNoteDeleted]);
+
+  const handleToggleBookmarkFavorite = useCallback(async (b: Bookmark) => {
+    await bookmarkRepository.update({ ...b, favorite: !b.favorite });
+    onNoteDeleted(); // re-trigger refresh
+  }, [onNoteDeleted]);
+
   async function handleConfirmDeleteBookmark() {
     if (!deletingBookmark) return;
     await bookmarkRepository.delete(deletingBookmark.id);
@@ -267,7 +279,7 @@ export default function RightPanel({
           onToggle={() => toggleSection('notes')}
           count={notes.length}
         >
-          <NoteSearch notes={notes} books={books} onNavigate={onNavigateToNote} onSelectNote={onSelectNote} selectedNoteId={selectedNoteId} />
+          <NoteSearch notes={notes} books={books} onNavigate={onNavigateToNote} onSelectNote={onSelectNote} onToggleFavorite={handleToggleNoteFavorite} selectedNoteId={selectedNoteId} />
         </Section>
 
         <Section
@@ -282,7 +294,7 @@ export default function RightPanel({
               {bookmarks.map((b) => (
                 <div
                   key={b.id}
-                  className="cursor-pointer rounded border p-2 hover:bg-gray-50"
+                  className="group cursor-pointer rounded border p-2 hover:bg-gray-50"
                   onClick={() => onNavigateToBookmark(b.sourceReference)}
                   role="button"
                   tabIndex={0}
@@ -298,16 +310,31 @@ export default function RightPanel({
                       <p className="mt-1 text-xs opacity-60">{b.sourceReference}</p>
                       <p className="mt-1 text-xs opacity-60">{formatDate(b.createdAt)}</p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeletingBookmark(b);
-                      }}
-                      className="ml-2 shrink-0 text-xs text-red-500 hover:text-red-700"
-                    >
-                      Delete
-                    </button>
+                    <div className="ml-2 flex shrink-0 items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleBookmarkFavorite(b);
+                        }}
+                        className={`text-lg leading-none transition-colors ${
+                          b.favorite ? 'text-yellow-500' : 'text-gray-300 hover:text-yellow-400'
+                        }`}
+                        title={b.favorite ? 'Remove from favorites' : 'Add to favorites'}
+                      >
+                        {b.favorite ? '\u2605' : '\u2606'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeletingBookmark(b);
+                        }}
+                        className="text-xs text-red-500 hover:text-red-700"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
