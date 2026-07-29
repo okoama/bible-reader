@@ -11,6 +11,7 @@ type NoteSearchProps = {
   onNavigate: (sourceReference: string) => void;
   onSelectNote?: (noteId: string) => void;
   onToggleFavorite?: (note: Note) => void;
+  onAddToCollection?: (type: 'note', label: string, sourceReference: string, itemId: string) => void;
   selectedNoteId?: string | null;
 };
 
@@ -51,7 +52,7 @@ function matchesDateFilter(note: Note, filter: DateFilter): boolean {
   }
 }
 
-export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onToggleFavorite, selectedNoteId }: NoteSearchProps) {
+export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onToggleFavorite, onAddToCollection, selectedNoteId }: NoteSearchProps) {
   const [query, setQuery] = useState('');
   const [filterBook, setFilterBook] = useState('');
   const [filterTag, setFilterTag] = useState('');
@@ -256,18 +257,30 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onT
               </div>
             )}
             </button>
-            {onToggleFavorite && (
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); onToggleFavorite(note); }}
-                className={`absolute right-1.5 top-1.5 text-lg leading-none transition-colors ${
-                  note.favorite ? 'text-yellow-500' : 'text-gray-300 hover:text-yellow-400'
-                }`}
-                title={note.favorite ? 'Remove from favorites' : 'Add to favorites'}
-              >
-                {note.favorite ? '\u2605' : '\u2606'}
-              </button>
-            )}
+            <div className="absolute right-1.5 top-1.5 flex gap-1">
+              {onAddToCollection && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onAddToCollection('note', note.title || 'Untitled', note.sourceReference, note.id); }}
+                  className="text-sm leading-none text-gray-400 hover:text-green-600 transition-colors"
+                  title="Add to collection"
+                >
+                  {'\u{1F4C1}'}
+                </button>
+              )}
+              {onToggleFavorite && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onToggleFavorite(note); }}
+                  className={`text-lg leading-none transition-colors ${
+                    note.favorite ? 'text-yellow-500' : 'text-gray-300 hover:text-yellow-400'
+                  }`}
+                  title={note.favorite ? 'Remove from favorites' : 'Add to favorites'}
+                >
+                  {note.favorite ? '\u2605' : '\u2606'}
+                </button>
+              )}
+            </div>
           </div>
         ))}
 

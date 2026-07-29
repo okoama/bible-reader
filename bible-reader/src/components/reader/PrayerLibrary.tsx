@@ -7,6 +7,7 @@ import { stripHtml } from '../../lib/utils/text';
 import { formatDate } from '../../lib/utils/date';
 import PrayerEditor from '../../features/prayers/components/PrayerEditor';
 import PrayerViewer from '../PrayerViewer';
+import AddToCollectionModal from './AddToCollectionModal';
 import ConfirmDialog from '../ConfirmDialog';
 
 const prayerRepository = new PrayerRepository();
@@ -36,6 +37,7 @@ export default function PrayerLibrary({ filter, refreshKey, onRefresh }: PrayerL
   const [editingPrayer, setEditingPrayer] = useState<Prayer | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [deletingPrayer, setDeletingPrayer] = useState<Prayer | null>(null);
+  const [addToCollectionPrayer, setAddToCollectionPrayer] = useState<Prayer | null>(null);
 
   const isTraditional = filter.type === 'traditional';
 
@@ -179,6 +181,14 @@ export default function PrayerLibrary({ filter, refreshKey, onRefresh }: PrayerL
                 {!trad && prayer.lastPrayed && (
                   <span className="text-[10px] opacity-40">Prayed {formatDate(prayer.lastPrayed)}</span>
                 )}
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setAddToCollectionPrayer(prayer); }}
+                  className="ml-auto text-xs text-gray-400 hover:text-green-600 transition-colors"
+                  title="Add to collection"
+                >
+                  {'\u{1F4C1}'}
+                </button>
               </div>
             </button>
           );
@@ -220,6 +230,17 @@ export default function PrayerLibrary({ filter, refreshKey, onRefresh }: PrayerL
           message={`Delete prayer "${deletingPrayer.title}"?`}
           onConfirm={handleConfirmDelete}
           onCancel={() => setDeletingPrayer(null)}
+        />
+      )}
+
+      {addToCollectionPrayer && (
+        <AddToCollectionModal
+          itemType="prayer"
+          itemLabel={addToCollectionPrayer.title}
+          sourceReference={undefined}
+          itemId={addToCollectionPrayer.id}
+          onClose={() => setAddToCollectionPrayer(null)}
+          onAdded={onRefresh}
         />
       )}
     </div>

@@ -89,6 +89,17 @@ export default function Sidebar({
           {'\u2605'} Favorites
         </button>
 
+        {/* Collections */}
+        <button
+          type="button"
+          onClick={() => onSelectView('collections')}
+          className={`w-full rounded px-3 py-1.5 text-left text-sm transition-colors duration-150 ${
+            activeView === 'collections' ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-gray-100'
+          }`}
+        >
+          {'\u{1F4C1}'} Collections
+        </button>
+
         {/* Bible */}
         <CollapsibleGroup
           label="Bible"

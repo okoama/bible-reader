@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { BibleBook, Highlight, Bookmark, Note, VerseRef } from '../../types';
+import type { BibleBook, CollectionItemType, Highlight, Bookmark, Note, VerseRef } from '../../types';
 import { useHighlights } from '../../lib/hooks/useHighlights';
 import { useWorkHighlights } from '../../lib/hooks/useWorkHighlights';
 import { useBookmarks } from '../../lib/hooks/useBookmarks';
@@ -11,6 +11,7 @@ import { formatDate } from '../../lib/utils/date';
 import { TextService } from '../../features/companion-texts/services/TextService';
 import ConfirmDialog from '../ConfirmDialog';
 import NoteSearch from '../sidebar/NoteSearch';
+import AddToCollectionModal from '../reader/AddToCollectionModal';
 
 const highlightRepository = new HighlightRepository();
 const noteRepository = new NoteRepository();
@@ -74,6 +75,7 @@ export default function RightPanel({
   const [deletingHighlight, setDeletingHighlight] = useState<Highlight | null>(null);
   const [deletingBookmark, setDeletingBookmark] = useState<Bookmark | null>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [addToCollectionTarget, setAddToCollectionTarget] = useState<{ type: CollectionItemType; label: string; sourceReference?: string; itemId?: string } | null>(null);
   const dragRef = useRef<{ startX: number; startWidth: number } | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const textServiceRef = useRef(new TextService());
@@ -279,7 +281,7 @@ export default function RightPanel({
           onToggle={() => toggleSection('notes')}
           count={notes.length}
         >
-          <NoteSearch notes={notes} books={books} onNavigate={onNavigateToNote} onSelectNote={onSelectNote} onToggleFavorite={handleToggleNoteFavorite} selectedNoteId={selectedNoteId} />
+          <NoteSearch notes={notes} books={books} onNavigate={onNavigateToNote} onSelectNote={onSelectNote} onToggleFavorite={handleToggleNoteFavorite} onAddToCollection={(type, label, ref, id) => setAddToCollectionTarget({ type, label, sourceReference: ref, itemId: id })} selectedNoteId={selectedNoteId} />
         </Section>
 
         <Section
@@ -311,6 +313,17 @@ export default function RightPanel({
                       <p className="mt-1 text-xs opacity-60">{formatDate(b.createdAt)}</p>
                     </div>
                     <div className="ml-2 flex shrink-0 items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setAddToCollectionTarget({ type: 'bookmark', label: b.title ?? 'Bookmark', sourceReference: b.sourceReference, itemId: b.id });
+                        }}
+                        className="text-sm text-gray-400 hover:text-green-600 transition-colors"
+                        title="Add to collection"
+                      >
+                        {'\u{1F4C1}'}
+                      </button>
                       <button
                         type="button"
                         onClick={(e) => {
@@ -357,6 +370,17 @@ export default function RightPanel({
           message={`Delete bookmark "${deletingBookmark.title ?? 'Bookmark'}"?`}
           onConfirm={handleConfirmDeleteBookmark}
           onCancel={() => setDeletingBookmark(null)}
+        />
+      )}
+
+      {addToCollectionTarget && (
+        <AddToCollectionModal
+          itemType={addToCollectionTarget.type}
+          itemLabel={addToCollectionTarget.label}
+          sourceReference={addToCollectionTarget.sourceReference}
+          itemId={addToCollectionTarget.itemId}
+          onClose={() => setAddToCollectionTarget(null)}
+          onAdded={() => onNoteDeleted()}
         />
       )}
     </aside>

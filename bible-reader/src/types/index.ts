@@ -11,3 +11,4 @@ export type { ReadingProgress } from './readingProgress';
 export type { SourceReference, WorkType } from './sourceReference';
 export type { TextBlock, TextSection, TextWork } from './textWork';
 export type { VerseRef } from './verseRef';
+export type { Collection, CollectionItem, CollectionItemType } from './collection';

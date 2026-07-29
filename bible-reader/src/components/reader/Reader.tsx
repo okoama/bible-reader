@@ -2,8 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { BibleService } from '../../features/bible/services/BibleService';
 import { useTextSelection } from '../../features/annotations/hooks/useTextSelection';
 import type { SelectedVerse } from '../../features/annotations/hooks/useTextSelection';
-import type { BibleBook, BibleVerse, Highlight, Note, PrayerFilter, VerseRef } from '../../types';
+import type { BibleBook, BibleVerse, Collection, CollectionItem, Highlight, Note, PrayerFilter, VerseRef } from '../../types';
 import type { ActiveView } from '../../layouts/AppLayout';
+import { CollectionRepository } from '../../lib/repositories/CollectionRepository';
 import { HighlightRepository } from '../../lib/repositories/HighlightRepository';
 import { BookmarkEditor } from '../../features/bookmarks';
 import { useHighlights } from '../../lib/hooks/useHighlights';
@@ -13,6 +14,9 @@ import AnnotationToolbar from '../AnnotationToolbar';
 import NoteEditor from '../../features/notes/components/NoteEditor';
 import PrayerLibrary from './PrayerLibrary';
 import FavoritesPage from './FavoritesPage';
+import CollectionsPage from './CollectionsPage';
+import CollectionViewer from './CollectionViewer';
+import CollectionEditor from './CollectionEditor';
 import ContentReader from './ContentReader';
 
 import CompanionTextReader from './CompanionTextReader';
@@ -109,6 +113,10 @@ export default function Reader({
   const mainRef = useRef<HTMLElement>(null);
   const verseRefs = useRef<Map<string, HTMLParagraphElement>>(new Map());
   const [refreshKey, setRefreshKey] = useState(0);
+  const [collectionsRefreshKey, setCollectionsRefreshKey] = useState(0);
+  const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
+  const [showCollectionEditor, setShowCollectionEditor] = useState(false);
+  const [editingCollection, setEditingCollection] = useState<Collection | null>(null);
   const [modalSourceRef, setModalSourceRef] = useState<string | null>(null);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [bookmarkModalSourceRef, setBookmarkModalSourceRef] = useState<string | null>(null);
@@ -208,6 +216,61 @@ export default function Reader({
 
   const handlePrayerRefresh = () => {
     onNoteSaved?.();
+  };
+
+  const collectionRepo = new CollectionRepository();
+
+  const handleSelectCollection = (id: string) => {
+    setSelectedCollectionId(id);
+  };
+
+  const handleBackToCollections = () => {
+    setSelectedCollectionId(null);
+  };
+
+  const handleNewCollection = () => {
+    setEditingCollection(null);
+    setShowCollectionEditor(true);
+  };
+
+  const handleEditCollection = (col: Collection) => {
+    setEditingCollection(col);
+    setShowCollectionEditor(true);
+  };
+
+  const handleSaveCollection = async (name: string, description: string) => {
+    if (editingCollection) {
+      await collectionRepo.update({ ...editingCollection, name, description });
+    } else {
+      await collectionRepo.create(name, description || undefined);
+    }
+    setShowCollectionEditor(false);
+    setEditingCollection(null);
+    setCollectionsRefreshKey((k) => k + 1);
+  };
+
+  const handleDeleteCollection = async (id: string) => {
+    await collectionRepo.delete(id);
+    setSelectedCollectionId(null);
+    setCollectionsRefreshKey((k) => k + 1);
+  };
+
+  const handleNavigateToCollectionItem = (item: CollectionItem) => {
+    if (item.type === 'passage' && item.sourceReference) {
+      const match = item.sourceReference.match(/^([^:]+):(\d+)/);
+      if (match && match[1] && match[2]) {
+        setSelectedCollectionId(null);
+        _onSelectWork(match[1], match[2]);
+      }
+    }
+  };
+
+  const handleNavigateToPassage = (sourceReference: string) => {
+    const match = sourceReference.match(/^([^:]+):(\d+)/);
+    if (match && match[1] && match[2]) {
+      setSelectedCollectionId(null);
+      _onSelectWork(match[1], match[2]);
+    }
   };
 
   useEffect(() => {
@@ -361,6 +424,22 @@ export default function Reader({
         <div className="animate-fade-in">
           <CompanionTextReader workId={selectedWorkId} initialSectionId={selectedSectionId} onSectionChange={onSelectSection} />
         </div>
+      ) : activeView === 'collections' && selectedCollectionId ? (
+        <CollectionViewer
+          collectionId={selectedCollectionId}
+          refreshKey={collectionsRefreshKey}
+          onNavigateToItem={handleNavigateToCollectionItem}
+          onNavigateToPassage={handleNavigateToPassage}
+          onBack={handleBackToCollections}
+          onEdit={handleEditCollection}
+          onDelete={handleDeleteCollection}
+        />
+      ) : activeView === 'collections' ? (
+        <CollectionsPage
+          refreshKey={collectionsRefreshKey}
+          onSelectCollection={handleSelectCollection}
+          onNewCollection={handleNewCollection}
+        />
       ) : selectedBook ? (
         <ContentReader
           title={selectedBook.name}
@@ -446,6 +525,14 @@ export default function Reader({
           sourceReference={bookmarkModalSourceRef}
           onSave={handleBookmarkSave}
           onCancel={handleBookmarkCancel}
+        />
+      )}
+
+      {showCollectionEditor && (
+        <CollectionEditor
+          collection={editingCollection ?? undefined}
+          onSave={handleSaveCollection}
+          onCancel={() => { setShowCollectionEditor(false); setEditingCollection(null); }}
         />
       )}
     </main>
