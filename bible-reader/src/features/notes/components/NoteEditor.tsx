@@ -207,13 +207,13 @@ export default function NoteEditor({
             {tags.map((tag) => (
               <span
                 key={tag}
-                className="inline-flex items-center gap-1 rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-800"
+                className="inline-flex items-center gap-1 rounded bg-accent-lighter px-2 py-0.5 text-xs text-accent"
               >
                 {tag}
                 <button
                   type="button"
                   onClick={() => removeTag(tag)}
-                  className="text-blue-500 hover:text-blue-700"
+                  className="text-accent hover:text-accent-hover"
                 >
                   &times;
                 </button>
@@ -244,7 +244,7 @@ export default function NoteEditor({
                   key={s}
                   type="button"
                   onClick={() => addTag(s)}
-                  className="w-full px-3 py-1.5 text-left text-sm hover:bg-blue-50"
+                  className="w-full px-3 py-1.5 text-left text-sm hover:bg-accent-light"
                 >
                   <span>{s}</span>
                   {PRESET_TAGS.includes(s) && (
@@ -272,7 +272,7 @@ export default function NoteEditor({
             type="button"
             onClick={handleSave}
             disabled={!title.trim()}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-md bg-accent px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
           >
             Save
           </button>

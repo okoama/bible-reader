@@ -36,7 +36,7 @@ export default function SessionSummary({ session, onClose }: { session: StudySes
         )}
 
         <div className="mt-6 flex justify-end">
-          <button type="button" onClick={onClose} className="rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700">
+          <button type="button" onClick={onClose} className="rounded bg-accent px-4 py-2 text-sm text-white hover:bg-accent-hover">
             Close
           </button>
         </div>

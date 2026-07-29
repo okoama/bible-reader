@@ -420,13 +420,13 @@ export default function Reader({
   const isLoading = selectedBook && selectedChapter && verses.length === 0;
 
   return (
-    <main ref={mainRef} className="flex-1 overflow-y-auto p-6">
+    <main ref={mainRef} className="reading-text flex-1 overflow-y-auto p-6">
       {activeView === 'favorites' ? (
-        <div className="mx-auto max-w-3xl animate-fade-in">
+        <div className="mx-auto reading-width animate-fade-in">
           <FavoritesPage refreshKey={prayerRefreshKey} onRefresh={handlePrayerRefresh} onCrossLinkNavigate={onCrossLinkNavigate} />
         </div>
       ) : activeView === 'prayer-journal' ? (
-        <div className="mx-auto max-w-3xl rounded-lg border p-6 animate-fade-in">
+        <div className="mx-auto reading-width rounded-lg border p-6 animate-fade-in">
           <PrayerLibrary filter={prayerFilter} refreshKey={prayerRefreshKey} onRefresh={handlePrayerRefresh} />
         </div>
       ) : activeView === 'companion-text' && selectedWorkId ? (
@@ -469,7 +469,7 @@ export default function Reader({
                   ref={verseRefCallback(`${selectedBook.id}:${selectedChapter}:${verse.verseNumber}`)}
                   className={`cursor-pointer leading-relaxed rounded px-1 -mx-1 transition-colors duration-100 ${
                     selectedVerse?.verseNumber === verse.verseNumber
-                      ? 'bg-blue-50'
+                      ? 'bg-accent-light'
                       : 'hover:bg-gray-50'
                   }`}
                   data-book={selectedBook.id}
@@ -482,7 +482,7 @@ export default function Reader({
                     if (e.key === 'Enter' || e.key === ' ') handleVerseClick(verse.verseNumber);
                   }}
                 >
-                  <span className="mr-1 text-xs font-semibold align-super text-blue-600">
+                  <span className="mr-1 text-xs font-semibold align-super text-accent">
                     {verse.verseNumber}
                   </span>
                   {getVerseNotes(verse.verseNumber).map((note) => (
@@ -501,7 +501,7 @@ export default function Reader({
           </div>
         </ContentReader>
       ) : (
-        <div className="mx-auto max-w-3xl rounded-lg border p-6">
+        <div className="mx-auto reading-width rounded-lg border p-6">
           <div className="py-12 text-center">
             <h2 className="text-2xl font-semibold">Welcome to Catholic Study Desk</h2>
             <p className="mt-3 opacity-60">

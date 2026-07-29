@@ -62,7 +62,7 @@ export default function CollectionEditor({ collection, onSave, onCancel }: Colle
             type="button"
             disabled={!name.trim()}
             onClick={() => onSave(name.trim(), description.trim())}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+            className="rounded-md bg-accent px-4 py-2 text-sm text-white transition-colors hover:bg-accent-hover disabled:opacity-50"
           >
             {collection ? 'Save' : 'Create'}
           </button>

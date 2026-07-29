@@ -3,6 +3,8 @@ import type { BibleBook, PrayerFilter } from '../../types';
 import { PRAYER_CATEGORIES } from '../../types';
 import type { ActiveView } from '../../layouts/AppLayout';
 import { TextService } from '../../features/companion-texts/services/TextService';
+import { useWorkspaceSettings } from '../../lib/contexts/WorkspaceSettingsContext';
+import SettingsModal from '../settings/SettingsModal';
 
 const textService = new TextService();
 
@@ -70,12 +72,18 @@ export default function Sidebar({
   const confessionsEntry = textService.getManifestEntry('confessions');
   const imitationWorks = textService.getWorksByGroup('Imitation of Christ');
   const devoutLifeWorks = textService.getWorksByGroup('Devout Life');
+  const { settings } = useWorkspaceSettings();
+  const [showSettings, setShowSettings] = useState(false);
 
   return (
-    <aside className="w-64 shrink-0 overflow-y-auto border-r p-4">
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide opacity-70">
-        Library
-      </h2>
+    <aside className="shrink-0 overflow-y-auto border-r p-4" style={{ width: settings.sidebarWidth }}>
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-sm font-semibold uppercase tracking-wide opacity-70">Library</h2>
+        <button type="button" onClick={() => setShowSettings(true)} className="text-sm opacity-60 hover:opacity-100" title="Workspace Settings">
+          {'\u2699'}
+        </button>
+      </div>
+      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
 
       <div className="space-y-0.5">
         {/* Dashboard */}
@@ -83,7 +91,7 @@ export default function Sidebar({
           type="button"
           onClick={() => onSelectView('dashboard')}
           className={`w-full rounded px-3 py-1.5 text-left text-sm transition-colors duration-150 ${
-            activeView === 'dashboard' ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-gray-100'
+            activeView === 'dashboard' ? 'bg-accent-light text-accent font-medium' : 'hover:bg-gray-100'
           }`}
         >
           {'\u{1F3E0}'} Study Desk
@@ -94,7 +102,7 @@ export default function Sidebar({
           type="button"
           onClick={() => onSelectView('favorites')}
           className={`w-full rounded px-3 py-1.5 text-left text-sm transition-colors duration-150 ${
-            activeView === 'favorites' ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-gray-100'
+            activeView === 'favorites' ? 'bg-accent-light text-accent font-medium' : 'hover:bg-gray-100'
           }`}
         >
           {'\u2605'} Favorites
@@ -105,7 +113,7 @@ export default function Sidebar({
           type="button"
           onClick={() => onSelectView('collections')}
           className={`w-full rounded px-3 py-1.5 text-left text-sm transition-colors duration-150 ${
-            activeView === 'collections' ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-gray-100'
+            activeView === 'collections' ? 'bg-accent-light text-accent font-medium' : 'hover:bg-gray-100'
           }`}
         >
           {'\u{1F4C1}'} Collections
@@ -125,7 +133,7 @@ export default function Sidebar({
                 type="button"
                 onClick={() => onSelectBook(book)}
                 className={`w-full rounded px-3 py-1 text-left text-sm transition-colors duration-150 ${
-                  isSelected ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-100'
+                  isSelected ? 'bg-accent-light text-accent' : 'hover:bg-gray-100'
                 }`}
               >
                 {book.name}
@@ -148,7 +156,7 @@ export default function Sidebar({
                 onClick={() => onSelectWork('catechism', section.id)}
                 className={`w-full rounded px-3 py-1 text-left text-xs transition-colors duration-150 ${
                   activeView === 'companion-text' && selectedWorkId === 'catechism' && selectedSectionId === section.id
-                    ? 'bg-blue-50 text-blue-700'
+                    ? 'bg-accent-light text-accent'
                     : 'hover:bg-gray-100'
                 }`}
               >
@@ -171,7 +179,7 @@ export default function Sidebar({
               onClick={() => onSelectWork(work.id)}
               className={`w-full rounded px-3 py-1 text-left text-xs transition-colors duration-150 ${
                 activeView === 'companion-text' && selectedWorkId === work.id
-                  ? 'bg-blue-50 text-blue-700'
+                  ? 'bg-accent-light text-accent'
                   : 'hover:bg-gray-100'
               }`}
             >
@@ -194,7 +202,7 @@ export default function Sidebar({
                 onClick={() => onSelectWork('confessions', section.id)}
                 className={`w-full rounded px-3 py-1 text-left text-xs transition-colors duration-150 ${
                   activeView === 'companion-text' && selectedWorkId === 'confessions' && selectedSectionId === section.id
-                    ? 'bg-blue-50 text-blue-700'
+                    ? 'bg-accent-light text-accent'
                     : 'hover:bg-gray-100'
                 }`}
               >
@@ -217,7 +225,7 @@ export default function Sidebar({
               onClick={() => onSelectWork(work.id)}
               className={`w-full rounded px-3 py-1 text-left text-xs transition-colors duration-150 ${
                 activeView === 'companion-text' && selectedWorkId === work.id
-                  ? 'bg-blue-50 text-blue-700'
+                  ? 'bg-accent-light text-accent'
                   : 'hover:bg-gray-100'
               }`}
             >
@@ -239,7 +247,7 @@ export default function Sidebar({
               onClick={() => onSelectWork(work.id)}
               className={`w-full rounded px-3 py-1 text-left text-xs transition-colors duration-150 ${
                 activeView === 'companion-text' && selectedWorkId === work.id
-                  ? 'bg-blue-50 text-blue-700'
+                  ? 'bg-accent-light text-accent'
                   : 'hover:bg-gray-100'
               }`}
             >
@@ -259,7 +267,7 @@ export default function Sidebar({
             onClick={() => { onPrayerFilter({ type: 'all' }); onSelectView('prayer-journal'); }}
             className={`w-full rounded px-3 py-1 text-left text-xs transition-colors duration-150 ${
               activeView === 'prayer-journal' && prayerFilter.type === 'all'
-                ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-100'
+                ? 'bg-accent-light text-accent' : 'hover:bg-gray-100'
             }`}
           >
             All Prayers
@@ -269,7 +277,7 @@ export default function Sidebar({
             onClick={() => { onPrayerFilter({ type: 'favorites' }); onSelectView('prayer-journal'); }}
             className={`w-full rounded px-3 py-1 text-left text-xs transition-colors duration-150 ${
               activeView === 'prayer-journal' && prayerFilter.type === 'favorites'
-                ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-100'
+                ? 'bg-accent-light text-accent' : 'hover:bg-gray-100'
             }`}
           >
             Favorites
@@ -279,7 +287,7 @@ export default function Sidebar({
             onClick={() => { onPrayerFilter({ type: 'answered' }); onSelectView('prayer-journal'); }}
             className={`w-full rounded px-3 py-1 text-left text-xs transition-colors duration-150 ${
               activeView === 'prayer-journal' && prayerFilter.type === 'answered'
-                ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-100'
+                ? 'bg-accent-light text-accent' : 'hover:bg-gray-100'
             }`}
           >
             Answered
@@ -292,7 +300,7 @@ export default function Sidebar({
                 onClick={() => { onPrayerFilter({ type: 'category', category: cat.value }); onSelectView('prayer-journal'); }}
                 className={`w-full rounded px-3 py-1 text-left text-[11px] transition-colors duration-150 ${
                   activeView === 'prayer-journal' && prayerFilter.type === 'category' && prayerFilter.category === cat.value
-                    ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-100'
+                    ? 'bg-accent-light text-accent' : 'hover:bg-gray-100'
                 }`}
               >
                 {cat.label}
@@ -304,7 +312,7 @@ export default function Sidebar({
             onClick={() => { onPrayerFilter({ type: 'recent' }); onSelectView('prayer-journal'); }}
             className={`w-full rounded px-3 py-1 text-left text-xs transition-colors duration-150 ${
               activeView === 'prayer-journal' && prayerFilter.type === 'recent'
-                ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-100'
+                ? 'bg-accent-light text-accent' : 'hover:bg-gray-100'
             }`}
           >
             Recent
@@ -315,7 +323,7 @@ export default function Sidebar({
               onClick={() => { onPrayerFilter({ type: 'traditional' }); onSelectView('prayer-journal'); }}
               className={`w-full rounded px-3 py-1 text-left text-xs transition-colors duration-150 ${
                 activeView === 'prayer-journal' && prayerFilter.type === 'traditional'
-                  ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-100'
+                  ? 'bg-accent-light text-accent' : 'hover:bg-gray-100'
               }`}
             >
               Traditional

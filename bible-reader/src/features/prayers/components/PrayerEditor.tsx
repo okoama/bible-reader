@@ -177,7 +177,7 @@ export default function PrayerEditor({ prayer, onSave, onCancel }: PrayerEditorP
             type="button"
             onClick={handleSave}
             disabled={!title.trim()}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-md bg-accent px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
           >
             Save
           </button>

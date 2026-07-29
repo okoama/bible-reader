@@ -23,13 +23,13 @@ export default function CollectionsPage({ refreshKey, onSelectCollection, onNewC
 
   if (collections.length === 0) {
     return (
-      <div className="mx-auto max-w-3xl animate-fade-in">
+      <div className="mx-auto reading-width animate-fade-in">
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-2xl font-semibold">Collections</h2>
           <button
             type="button"
             onClick={onNewCollection}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white transition-colors hover:bg-blue-700"
+            className="rounded-md bg-accent px-4 py-2 text-sm text-white transition-colors hover:bg-accent-hover"
           >
             + New Collection
           </button>
@@ -42,13 +42,13 @@ export default function CollectionsPage({ refreshKey, onSelectCollection, onNewC
   }
 
   return (
-    <div className="mx-auto max-w-3xl animate-fade-in">
+    <div className="mx-auto reading-width animate-fade-in">
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-2xl font-semibold">Collections</h2>
         <button
           type="button"
           onClick={onNewCollection}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white transition-colors hover:bg-blue-700"
+          className="rounded-md bg-accent px-4 py-2 text-sm text-white transition-colors hover:bg-accent-hover"
         >
           + New Collection
         </button>

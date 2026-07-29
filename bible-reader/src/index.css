@@ -1,5 +1,29 @@
 @import "tailwindcss";
 
+:root {
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-light: #eff6ff;
+  --accent-lighter: #dbeafe;
+  --accent-ring: #3b82f6;
+  --font-size: 16px;
+  --reading-width: 768px;
+}
+
+.bg-accent { background-color: var(--accent); }
+.hover\:bg-accent-hover:hover { background-color: var(--accent-hover); }
+.bg-accent-light { background-color: var(--accent-light); }
+.hover\:bg-accent-light:hover { background-color: var(--accent-light); }
+.bg-accent-lighter { background-color: var(--accent-lighter); }
+.hover\:bg-accent-lighter:hover { background-color: var(--accent-lighter); }
+.text-accent { color: var(--accent); }
+.hover\:text-accent:hover { color: var(--accent); }
+.hover\:text-accent-hover:hover { color: var(--accent); }
+.border-accent { border-color: var(--accent); }
+
+.reading-width { max-width: var(--reading-width); }
+.reading-text { font-size: var(--font-size); }
+
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -27,7 +51,7 @@
 }
 
 *:focus-visible {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid var(--accent-ring);
   outline-offset: 2px;
 }
 

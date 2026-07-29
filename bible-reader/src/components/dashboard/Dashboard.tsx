@@ -67,7 +67,7 @@ export default function Dashboard({ books, onNavigateToPassage, onSelectView, on
   }, []);
 
   return (
-    <div className="mx-auto max-w-4xl animate-fade-in p-6 space-y-8">
+    <div className="reading-text mx-auto max-w-4xl animate-fade-in p-6 space-y-8">
       <header>
         <h1 className="text-3xl font-bold">Study Desk</h1>
         <p className="mt-1 opacity-60">Your Catholic study workspace</p>
@@ -94,7 +94,7 @@ export default function Dashboard({ books, onNavigateToPassage, onSelectView, on
                   <button
                     type="button"
                     onClick={() => onNavigateToPassage(note.sourceReference.split(':')[0], Number(note.sourceReference.split(':')[1]))}
-                    className="shrink-0 text-xs text-blue-600 hover:underline"
+                    className="shrink-0 text-xs text-accent hover:underline"
                   >
                     {getPassageLabel(books, note.sourceReference)}
                   </button>
@@ -130,7 +130,7 @@ export default function Dashboard({ books, onNavigateToPassage, onSelectView, on
                         onNavigateToWork(parts[0], parts[1]);
                       }
                     }}
-                    className="w-full text-left text-sm hover:text-blue-600"
+                    className="w-full text-left text-sm hover:text-accent"
                   >
                     <span className="font-medium">{item.label}</span>
                     <span className="ml-2 text-xs opacity-50">{item.subtitle}</span>
@@ -187,7 +187,7 @@ export default function Dashboard({ books, onNavigateToPassage, onSelectView, on
                           }
                         }
                       }}
-                      className="w-full text-left text-sm hover:text-blue-600"
+                      className="w-full text-left text-sm hover:text-accent"
                     >
                       <span className="font-medium">{label}</span>
                       <span className="ml-2 text-xs opacity-50">{formatDate(r.updatedAt)}</span>
@@ -214,7 +214,7 @@ function SectionCard({ title, children, onAction, actionLabel }: {
       <div className="mb-2 flex items-center justify-between">
         <h2 className="text-sm font-semibold uppercase tracking-wide opacity-70">{title}</h2>
         {onAction && actionLabel && (
-          <button type="button" onClick={onAction} className="text-xs text-blue-600 hover:underline">{actionLabel}</button>
+          <button type="button" onClick={onAction} className="text-xs text-accent hover:underline">{actionLabel}</button>
         )}
       </div>
       {children}

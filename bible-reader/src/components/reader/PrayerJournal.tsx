@@ -101,7 +101,7 @@ export default function PrayerJournal({ refreshKey, onRefresh }: PrayerJournalPr
         <button
           type="button"
           onClick={handleNew}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-blue-700"
+          className="rounded-md bg-accent px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-accent-hover"
         >
           New Prayer
         </button>
@@ -120,7 +120,7 @@ export default function PrayerJournal({ refreshKey, onRefresh }: PrayerJournalPr
           type="button"
           onClick={() => setCategoryFilter('all')}
           className={`rounded-full px-3 py-1 text-xs font-medium transition-colors duration-150 ${
-            categoryFilter === 'all' ? 'bg-blue-600 text-white' : 'border hover:bg-gray-100'
+            categoryFilter === 'all' ? 'bg-accent text-white' : 'border hover:bg-gray-100'
           }`}
         >
           All
@@ -132,7 +132,7 @@ export default function PrayerJournal({ refreshKey, onRefresh }: PrayerJournalPr
             onClick={() => setCategoryFilter(c.value)}
             className={`rounded-full px-3 py-1 text-xs font-medium transition-colors duration-150 ${
               categoryFilter === c.value
-                ? 'bg-blue-600 text-white'
+                ? 'bg-accent text-white'
                 : `${CATEGORY_COLORS[c.value]} border border-transparent hover:opacity-80`
             }`}
           >
@@ -181,7 +181,7 @@ export default function PrayerJournal({ refreshKey, onRefresh }: PrayerJournalPr
                   )}
                   {prayer.content && (
                     <div
-                      className="mt-2 text-sm leading-relaxed opacity-80 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-1 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-2 [&_li]:mb-0.5 [&_blockquote]:border-l-4 [&_blockquote]:border-gray-300 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:opacity-70 [&_blockquote]:my-2 [&_.scripture-ref]:text-blue-600 [&_.scripture-ref]:italic"
+                      className="mt-2 text-sm leading-relaxed opacity-80 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-1 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-2 [&_li]:mb-0.5 [&_blockquote]:border-l-4 [&_blockquote]:border-gray-300 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:opacity-70 [&_blockquote]:my-2 [&_.scripture-ref]:text-accent [&_.scripture-ref]:italic"
                       dangerouslySetInnerHTML={{ __html: prayer.content }}
                     />
                   )}
@@ -190,7 +190,7 @@ export default function PrayerJournal({ refreshKey, onRefresh }: PrayerJournalPr
                   <button
                     type="button"
                     onClick={() => handleEdit(prayer)}
-                    className="text-xs text-blue-600 transition-colors duration-150 hover:text-blue-800"
+                    className="text-xs text-accent transition-colors duration-150 hover:text-accent-hover"
                   >
                     Edit
                   </button>

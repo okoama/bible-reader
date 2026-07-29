@@ -40,7 +40,7 @@ export default function StatusBar() {
           <button
             type="button"
             onClick={() => startSession()}
-            className="rounded bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700"
+            className="rounded bg-accent px-3 py-1 text-xs text-white hover:bg-accent-hover"
           >
             Start Session
           </button>

@@ -135,7 +135,7 @@ export default function PrayerLibrary({ filter, refreshKey, onRefresh }: PrayerL
           <button
             type="button"
             onClick={handleNew}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-blue-700"
+            className="rounded-md bg-accent px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-accent-hover"
           >
             New Prayer
           </button>

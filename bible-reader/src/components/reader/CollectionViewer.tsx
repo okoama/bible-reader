@@ -52,20 +52,20 @@ export default function CollectionViewer({
 
   if (!collection) {
     return (
-      <div className="mx-auto max-w-3xl animate-fade-in">
+      <div className="mx-auto reading-width animate-fade-in">
         <p className="mt-12 text-center text-sm opacity-50 italic">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-3xl animate-fade-in">
+    <div className="mx-auto reading-width animate-fade-in">
       <div className="mb-6 flex items-start justify-between">
         <div>
           <button
             type="button"
             onClick={onBack}
-            className="mb-2 text-sm text-blue-600 hover:text-blue-800"
+            className="mb-2 text-sm text-accent hover:text-accent-hover"
           >
             &larr; Collections
           </button>

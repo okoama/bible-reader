@@ -137,7 +137,7 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onT
       >
         <span>{showFilters ? 'Hide' : 'Show'} filters</span>
         {hasActiveFilters && (
-          <span className="inline-block h-1.5 w-1.5 rounded-full bg-blue-500" />
+          <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent" />
         )}
       </button>
 
@@ -205,21 +205,21 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onT
       {hasActiveFilters && (
         <div className="mb-2 flex flex-wrap gap-1">
           {filterBook && (
-            <span className="inline-flex items-center gap-1 rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">
+            <span className="inline-flex items-center gap-1 rounded bg-accent-lighter px-1.5 py-0.5 text-xs text-accent">
               {bookIdToName.get(filterBook) ?? filterBook}
-              <button type="button" onClick={() => setFilterBook('')} className="hover:text-blue-900">&times;</button>
+              <button type="button" onClick={() => setFilterBook('')} className="hover:text-accent-hover">&times;</button>
             </span>
           )}
           {filterTag && (
-            <span className="inline-flex items-center gap-1 rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">
+            <span className="inline-flex items-center gap-1 rounded bg-accent-lighter px-1.5 py-0.5 text-xs text-accent">
               {filterTag}
-              <button type="button" onClick={() => setFilterTag('')} className="hover:text-blue-900">&times;</button>
+              <button type="button" onClick={() => setFilterTag('')} className="hover:text-accent-hover">&times;</button>
             </span>
           )}
           {filterDate !== 'all' && (
-            <span className="inline-flex items-center gap-1 rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">
+            <span className="inline-flex items-center gap-1 rounded bg-accent-lighter px-1.5 py-0.5 text-xs text-accent">
               {filterDate === 'week' ? 'Last 7 days' : filterDate === 'month' ? 'Last 30 days' : filterDate === 'year' ? 'Last year' : 'Today'}
-              <button type="button" onClick={() => setFilterDate('all')} className="hover:text-blue-900">&times;</button>
+              <button type="button" onClick={() => setFilterDate('all')} className="hover:text-accent-hover">&times;</button>
             </span>
           )}
         </div>
@@ -230,7 +230,7 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onT
           <div
             key={note.id}
             className={`relative rounded-md border px-3 py-2 text-left text-sm transition-colors duration-150 hover:bg-gray-50 ${
-              selectedNoteId === note.id ? 'border-blue-500 bg-blue-50' : ''
+              selectedNoteId === note.id ? 'border-accent bg-accent-light' : ''
             }`}
           >
             <button
@@ -250,7 +250,7 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onT
             {note.tags.length > 0 && (
               <div className="mt-1 flex flex-wrap gap-1">
                 {note.tags.map((tag) => (
-                  <span key={tag} className="rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">
+                  <span key={tag} className="rounded bg-accent-lighter px-1.5 py-0.5 text-xs text-accent">
                     {tag}
                   </span>
                 ))}

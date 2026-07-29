@@ -103,7 +103,7 @@ export default function InsertLinkModal({ onInsert, onClose }: InsertLinkModalPr
               type="button"
               disabled={!manualId.trim()}
               onClick={() => handleInsert(manualId.trim(), manualId.trim())}
-              className="self-end rounded-md bg-blue-600 px-4 py-2 text-sm text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+              className="self-end rounded-md bg-accent px-4 py-2 text-sm text-white transition-colors hover:bg-accent-hover disabled:opacity-50"
             >
               Insert
             </button>

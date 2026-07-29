@@ -14,3 +14,5 @@ export type { VerseRef } from './verseRef';
 export type { Collection, CollectionItem, CollectionItemType } from './collection';
 export type { CrossLink, CrossLinkType } from './crossLink';
 export type { StudySession, SessionVisit, SessionNote, SessionPrayer, SessionBookmark, SessionCollectionEvent } from './studySession';
+export type { WorkspaceSettings, AccentName } from './workspaceSettings';
+export { ACCENT_NAMES } from './workspaceSettings';
