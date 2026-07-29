@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
-import type { Collection, CollectionItem } from '../../types';
+import type { Collection, CollectionItem, Note, CrossLinkType } from '../../types';
 import { CollectionRepository } from '../../lib/repositories/CollectionRepository';
+import { NoteRepository } from '../../lib/repositories/NoteRepository';
 import { formatDate } from '../../lib/utils/date';
+import NoteViewer from './NoteViewer';
 
 const repo = new CollectionRepository();
+const noteRepo = new NoteRepository();
 
 type CollectionViewerProps = {
   collectionId: string;
@@ -13,6 +16,7 @@ type CollectionViewerProps = {
   onBack: () => void;
   onEdit: (collection: Collection) => void;
   onDelete: (id: string) => void;
+  onCrossLinkNavigate?: (type: CrossLinkType, id: string) => void;
 };
 
 function typeIcon(type: string): string {
@@ -33,8 +37,10 @@ export default function CollectionViewer({
   onBack,
   onEdit,
   onDelete,
+  onCrossLinkNavigate,
 }: CollectionViewerProps) {
   const [collection, setCollection] = useState<Collection | null>(null);
+  const [viewingNote, setViewingNote] = useState<Note | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -102,7 +108,9 @@ export default function CollectionViewer({
             key={item.id}
             type="button"
             onClick={() => {
-              if (item.type === 'passage' && item.sourceReference) {
+              if (item.type === 'note' && item.itemId) {
+                void noteRepo.findById(item.itemId).then((n) => { if (n) setViewingNote(n); });
+              } else if (item.type === 'passage' && item.sourceReference) {
                 onNavigateToPassage(item.sourceReference);
               } else {
                 onNavigateToItem(item);
@@ -122,6 +130,14 @@ export default function CollectionViewer({
           </button>
         ))}
       </div>
+
+      {viewingNote && (
+        <NoteViewer
+          note={viewingNote}
+          onClose={() => setViewingNote(null)}
+          onCrossLinkNavigate={onCrossLinkNavigate}
+        />
+      )}
     </div>
   );
 }

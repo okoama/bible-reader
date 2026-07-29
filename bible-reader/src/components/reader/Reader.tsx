@@ -85,6 +85,7 @@ type ReaderProps = {
   onSelectNote: (noteId: string | null) => void;
   onDeleteSelectedNote: () => void;
   prayerFilter: PrayerFilter;
+  onCrossLinkNavigate?: (type: string, id: string) => void;
 };
 
 export default function Reader({
@@ -106,6 +107,7 @@ export default function Reader({
   onSelectNote,
   onDeleteSelectedNote,
   prayerFilter,
+  onCrossLinkNavigate,
 }: ReaderProps) {
   const [chapterNumbers, setChapterNumbers] = useState<number[]>([]);
   const [verses, setVerses] = useState<BibleVerse[]>([]);
@@ -414,7 +416,7 @@ export default function Reader({
     <main ref={mainRef} className="flex-1 overflow-y-auto p-6">
       {activeView === 'favorites' ? (
         <div className="mx-auto max-w-3xl animate-fade-in">
-          <FavoritesPage refreshKey={prayerRefreshKey} onRefresh={handlePrayerRefresh} />
+          <FavoritesPage refreshKey={prayerRefreshKey} onRefresh={handlePrayerRefresh} onCrossLinkNavigate={onCrossLinkNavigate} />
         </div>
       ) : activeView === 'prayer-journal' ? (
         <div className="mx-auto max-w-3xl rounded-lg border p-6 animate-fade-in">
@@ -433,6 +435,7 @@ export default function Reader({
           onBack={handleBackToCollections}
           onEdit={handleEditCollection}
           onDelete={handleDeleteCollection}
+          onCrossLinkNavigate={onCrossLinkNavigate}
         />
       ) : activeView === 'collections' ? (
         <CollectionsPage

@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import InsertLinkModal from './reader/InsertLinkModal';
 
 type RichTextEditorProps = {
   value: string;
@@ -19,6 +20,7 @@ export default function RichTextEditor({
 }: RichTextEditorProps) {
   const ref = useRef<HTMLDivElement>(null);
   const skipNextSync = useRef(false);
+  const [showLinkModal, setShowLinkModal] = useState(false);
 
   useEffect(() => {
     if (ref.current && ref.current.innerHTML !== value) {
@@ -48,6 +50,13 @@ export default function RichTextEditor({
       exec('insertHTML', '&emsp;');
     }
   }, []);
+
+  const handleInsertLink = useCallback((syntax: string) => {
+    if (!ref.current) return;
+    ref.current.focus();
+    exec('insertText', syntax);
+    handleInput();
+  }, [handleInput]);
 
   const minH = rows * 1.5;
 
@@ -89,6 +98,9 @@ export default function RichTextEditor({
         }} title="Scripture reference">
           &#x2710;
         </ToolBtn>
+        <ToolBtn onClick={() => setShowLinkModal(true)} title="Insert cross-link">
+          &#x1F517;
+        </ToolBtn>
         <ToolBtn onClick={() => exec('removeFormat')} title="Clear formatting">
           &#x2717;
         </ToolBtn>
@@ -102,6 +114,13 @@ export default function RichTextEditor({
         className="p-3 text-sm outline-none empty:before:pointer-events-none empty:before:text-gray-400 empty:before:content-[attr(data-placeholder)] [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-1 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-2 [&_li]:mb-0.5 [&_blockquote]:border-l-4 [&_blockquote]:border-gray-300 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:opacity-70 [&_blockquote]:my-2"
         style={{ minHeight: `${minH}rem` }}
       />
+
+      {showLinkModal && (
+        <InsertLinkModal
+          onInsert={handleInsertLink}
+          onClose={() => setShowLinkModal(false)}
+        />
+      )}
     </div>
   );
 }

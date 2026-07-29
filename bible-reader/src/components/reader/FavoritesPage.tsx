@@ -7,20 +7,25 @@ import { BookmarkRepository } from '../../lib/repositories/BookmarkRepository';
 import { formatDate } from '../../lib/utils/date';
 import PrayerViewer from '../PrayerViewer';
 import { stripHtml } from '../../lib/utils/text';
+import NoteViewer from './NoteViewer';
 
 const noteRepo = new NoteRepository();
 const bookmarkRepo = new BookmarkRepository();
 
+import type { CrossLinkType } from '../../types';
+
 type FavoritesPageProps = {
   refreshKey: number;
   onRefresh: () => void;
+  onCrossLinkNavigate?: (type: CrossLinkType, id: string) => void;
 };
 
-export default function FavoritesPage({ refreshKey, onRefresh }: FavoritesPageProps) {
+export default function FavoritesPage({ refreshKey, onRefresh, onCrossLinkNavigate }: FavoritesPageProps) {
   const userPrayers = usePrayers(refreshKey);
   const [notes, setNotes] = useState<Note[]>([]);
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [viewingPrayer, setViewingPrayer] = useState<Prayer | null>(null);
+  const [viewingNote, setViewingNote] = useState<Note | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -74,11 +79,16 @@ export default function FavoritesPage({ refreshKey, onRefresh }: FavoritesPagePr
           <h3 className="text-sm font-semibold uppercase tracking-wide opacity-60">Notes</h3>
           <div className="mt-2 space-y-2">
             {notes.map((n) => (
-              <div key={n.id} className="rounded-lg border p-4">
+              <button
+                key={n.id}
+                type="button"
+                onClick={() => setViewingNote(n)}
+                className="w-full rounded-lg border p-4 text-left transition-colors hover:bg-gray-50"
+              >
                 <p className="font-semibold">{n.title || 'Untitled'}</p>
                 <p className="mt-0.5 text-xs opacity-40">{n.sourceReference}</p>
                 {n.content && <p className="mt-1 text-sm opacity-60 line-clamp-2">{stripHtml(n.content).slice(0, 120)}</p>}
-              </div>
+              </button>
             ))}
           </div>
         </section>
@@ -105,6 +115,14 @@ export default function FavoritesPage({ refreshKey, onRefresh }: FavoritesPagePr
           onClose={() => setViewingPrayer(null)}
           onEdit={() => {}}
           onRefresh={onRefresh}
+        />
+      )}
+
+      {viewingNote && (
+        <NoteViewer
+          note={viewingNote}
+          onClose={() => setViewingNote(null)}
+          onCrossLinkNavigate={onCrossLinkNavigate}
         />
       )}
     </div>

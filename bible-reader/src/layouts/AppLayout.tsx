@@ -175,6 +175,34 @@ export default function AppLayout() {
     setSelectedNoteId(noteId);
   };
 
+  const handleCrossLinkNavigate = (type: string, id: string) => {
+    switch (type) {
+      case 'note':
+        break;
+      case 'prayer':
+        setPrayerFilter({ type: 'all' });
+        handleSelectView('prayer-journal');
+        break;
+      case 'collection':
+        handleSelectView('collections');
+        break;
+      case 'passage': {
+        const match = id.match(/^([^:]+):(\d+)/);
+        if (match) {
+          handleSelectWork(match[1], match[2]);
+        }
+        break;
+      }
+      case 'article': {
+        const parts = id.split(':');
+        if (parts.length >= 2) {
+          handleSelectWork(parts[0], parts[1]);
+        }
+        break;
+      }
+    }
+  };
+
   const handleDeleteSelectedNote = async () => {
     if (!selectedNoteId) return;
     await noteRepository.delete(selectedNoteId);
@@ -218,6 +246,7 @@ export default function AppLayout() {
           selectedNoteId={selectedNoteId}
           onSelectNote={handleSelectNote}
           onDeleteSelectedNote={handleDeleteSelectedNote}
+          onCrossLinkNavigate={handleCrossLinkNavigate}
         />
         {(activeView === 'bible' || activeView === 'companion-text') && (
           <RightPanel
