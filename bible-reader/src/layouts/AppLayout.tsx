@@ -8,7 +8,8 @@ import { BibleService } from '../features/bible/services/BibleService';
 import { useReadingProgress } from '../lib/hooks/useReadingProgress';
 import { useNotes } from '../lib/hooks/useNotes';
 import { NoteRepository } from '../lib/repositories/NoteRepository';
-import type { BibleBook, PrayerFilter, VerseRef } from '../types';
+import type { BibleBook, Note, PrayerFilter, VerseRef } from '../types';
+import NoteViewer from '../components/reader/NoteViewer';
 
 export type ActiveView = 'bible' | 'prayer-journal' | 'companion-text' | 'favorites' | 'collections';
 
@@ -44,6 +45,7 @@ export default function AppLayout() {
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [companionPositions, setCompanionPositions] = useState<Record<string, string>>(loadCompanionPositions);
   const [prayerFilter, setPrayerFilter] = useState<PrayerFilter>({ type: 'all' });
+  const [viewingNote, setViewingNote] = useState<Note | null>(null);
   const { lastPosition, loaded, savePosition } = useReadingProgress();
   const notes = useNotes(notesRefreshKey);
 
@@ -178,6 +180,7 @@ export default function AppLayout() {
   const handleCrossLinkNavigate = (type: string, id: string) => {
     switch (type) {
       case 'note':
+        void noteRepository.findById(id).then((n) => { if (n) setViewingNote(n); });
         break;
       case 'prayer':
         setPrayerFilter({ type: 'all' });
@@ -268,6 +271,14 @@ export default function AppLayout() {
       </div>
 
       <StatusBar />
+
+      {viewingNote && (
+        <NoteViewer
+          note={viewingNote}
+          onClose={() => setViewingNote(null)}
+          onCrossLinkNavigate={handleCrossLinkNavigate}
+        />
+      )}
     </div>
   );
 }
