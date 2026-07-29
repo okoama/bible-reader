@@ -6,6 +6,7 @@ export type { Highlight } from './highlight';
 export type { Note } from './note';
 export type { Prayer, PrayerCategory, PrayerFilter, PrayerFilterType } from './prayer';
 export { PRAYER_CATEGORIES, PRAYER_FILTER_LABELS } from './prayer';
+export { TRADITIONAL_PRAYERS, isTraditionalPrayer } from '../data/traditionalPrayers';
 export type { ReadingProgress } from './readingProgress';
 export type { SourceReference, WorkType } from './sourceReference';
 export type { TextBlock, TextSection, TextWork } from './textWork';

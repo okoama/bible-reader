@@ -276,6 +276,18 @@ export default function Sidebar({
           >
             Recent
           </button>
+          <div className="mt-1 border-t pt-1">
+            <button
+              type="button"
+              onClick={() => { onPrayerFilter({ type: 'traditional' }); onSelectView('prayer-journal'); }}
+              className={`w-full rounded px-3 py-1 text-left text-xs transition-colors duration-150 ${
+                activeView === 'prayer-journal' && prayerFilter.type === 'traditional'
+                  ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-100'
+              }`}
+            >
+              Traditional
+            </button>
+          </div>
         </CollapsibleGroup>
       </div>
     </aside>

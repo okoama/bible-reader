@@ -7,8 +7,9 @@ const prayerRepository = new PrayerRepository();
 
 type PrayerViewerProps = {
   prayer: Prayer;
+  readOnly?: boolean;
   onClose: () => void;
-  onEdit: (prayer: Prayer) => void;
+  onEdit?: (prayer: Prayer) => void;
   onRefresh: () => void;
 };
 
@@ -24,7 +25,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   custom: 'bg-gray-100 text-gray-800',
 };
 
-export default function PrayerViewer({ prayer, onClose, onEdit, onRefresh }: PrayerViewerProps) {
+export default function PrayerViewer({ prayer, readOnly = false, onClose, onEdit, onRefresh }: PrayerViewerProps) {
   const catLabel = PRAYER_CATEGORIES.find((c) => c.value === prayer.category)?.label ?? prayer.category;
   const catColor = CATEGORY_COLORS[prayer.category] ?? 'bg-gray-100 text-gray-800';
 
@@ -67,7 +68,7 @@ export default function PrayerViewer({ prayer, onClose, onEdit, onRefresh }: Pra
               <span className={`rounded-full px-2 py-0.5 font-medium ${catColor}`}>{catLabel}</span>
               {prayer.lastPrayed && <span>Last prayed: {formatDate(prayer.lastPrayed)}</span>}
               {prayer.answered && <span className="text-green-600 font-medium">Answered</span>}
-              <span>Created: {formatDate(prayer.createdAt)}</span>
+              {!readOnly && <span>Created: {formatDate(prayer.createdAt)}</span>}
             </div>
             {prayer.tags.length > 0 && (
               <div className="mt-1 flex flex-wrap gap-1">
@@ -81,41 +82,48 @@ export default function PrayerViewer({ prayer, onClose, onEdit, onRefresh }: Pra
         </div>
 
         <div
-          className="prose prose-sm max-w-none [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:mt-4 [&_h2]:mb-2 [&_h3]:text-base [&_h3]:font-semibold [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-3 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-3 [&_li]:mb-1 [&_blockquote]:border-l-4 [&_blockquote]:border-blue-300 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-3 [&_blockquote]:text-gray-600"
+          className="prose prose-sm max-w-none [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:mt-4 [&_h2]:mb-2 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-3 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-3 [&_li]:mb-1 [&_blockquote]:border-l-4 [&_blockquote]:border-blue-300 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-3 [&_blockquote]:text-gray-600"
           dangerouslySetInnerHTML={{ __html: prayer.content }}
         />
 
         <div className="flex flex-wrap items-center gap-2 border-t pt-4">
-          <button
-            type="button"
-            onClick={() => onEdit(prayer)}
-            className="rounded-md border px-3 py-1.5 text-sm transition-colors duration-150 hover:bg-gray-100"
-          >
-            Edit
-          </button>
-          <button
-            type="button"
-            onClick={handleMarkPrayed}
-            className="rounded-md bg-green-600 px-3 py-1.5 text-sm text-white transition-colors duration-150 hover:bg-green-700"
-          >
-            {prayer.lastPrayed ? 'Prayed Again' : 'Mark Prayed'}
-          </button>
-          <button
-            type="button"
-            onClick={handleMarkAnswered}
-            className={`rounded-md border px-3 py-1.5 text-sm transition-colors duration-150 ${
-              prayer.answered ? 'bg-green-50 text-green-700 hover:bg-green-100' : 'hover:bg-gray-100'
-            }`}
-          >
-            {prayer.answered ? '✓ Answered' : 'Mark Answered'}
-          </button>
-          <button
-            type="button"
-            onClick={handleDelete}
-            className="ml-auto rounded-md border border-red-200 px-3 py-1.5 text-sm text-red-600 transition-colors duration-150 hover:bg-red-50"
-          >
-            Delete
-          </button>
+          {!readOnly && (
+            <>
+              <button
+                type="button"
+                onClick={() => onEdit?.(prayer)}
+                className="rounded-md border px-3 py-1.5 text-sm transition-colors duration-150 hover:bg-gray-100"
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                onClick={handleMarkPrayed}
+                className="rounded-md bg-green-600 px-3 py-1.5 text-sm text-white transition-colors duration-150 hover:bg-green-700"
+              >
+                {prayer.lastPrayed ? 'Prayed Again' : 'Mark Prayed'}
+              </button>
+              <button
+                type="button"
+                onClick={handleMarkAnswered}
+                className={`rounded-md border px-3 py-1.5 text-sm transition-colors duration-150 ${
+                  prayer.answered ? 'bg-green-50 text-green-700 hover:bg-green-100' : 'hover:bg-gray-100'
+                }`}
+              >
+                {prayer.answered ? '✓ Answered' : 'Mark Answered'}
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="ml-auto rounded-md border border-red-200 px-3 py-1.5 text-sm text-red-600 transition-colors duration-150 hover:bg-red-50"
+              >
+                Delete
+              </button>
+            </>
+          )}
+          {readOnly && (
+            <p className="text-xs opacity-40 italic">Traditional prayer</p>
+          )}
         </div>
       </div>
     </div>

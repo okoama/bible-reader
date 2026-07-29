@@ -34,7 +34,7 @@ export interface Prayer {
   tags: string[];
 }
 
-export type PrayerFilterType = 'all' | 'favorites' | 'answered' | 'recent';
+export type PrayerFilterType = 'all' | 'favorites' | 'answered' | 'recent' | 'traditional';
 
 export type PrayerFilter =
   | { type: PrayerFilterType }
@@ -45,4 +45,5 @@ export const PRAYER_FILTER_LABELS: Record<PrayerFilterType, string> = {
   favorites: 'Favorites',
   answered: 'Answered',
   recent: 'Recent',
+  traditional: 'Traditional',
 };
