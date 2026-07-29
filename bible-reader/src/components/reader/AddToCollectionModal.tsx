@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Collection, CollectionItem, CollectionItemType } from '../../types';
 import { CollectionRepository } from '../../lib/repositories/CollectionRepository';
 import { createId } from '../../lib/utils/id';
+import { useStudySession } from '../../lib/contexts/StudySessionContext';
 
 const repo = new CollectionRepository();
 
@@ -23,6 +24,7 @@ export default function AddToCollectionModal({
   onAdded,
 }: AddToCollectionModalProps) {
   const [collections, setCollections] = useState<Collection[]>([]);
+  const { session, logCollectionEvent } = useStudySession();
 
   useEffect(() => {
     let active = true;
@@ -42,6 +44,8 @@ export default function AddToCollectionModal({
       addedAt: new Date().toISOString(),
     };
     await repo.addItem(collectionId, item);
+    const col = collections.find((c) => c.id === collectionId);
+    if (session && !session.endTime && col) logCollectionEvent(collectionId, col.name, 'add_item');
     onAdded();
     onClose();
   };

@@ -13,6 +13,7 @@ import NoteViewer from '../components/reader/NoteViewer';
 import Dashboard from '../components/dashboard/Dashboard';
 import { addRecentlyOpened } from '../lib/utils/recentlyOpened';
 import { TextService } from '../features/companion-texts/services/TextService';
+import { useStudySession } from '../lib/contexts/StudySessionContext';
 
 export type ActiveView = 'dashboard' | 'bible' | 'prayer-journal' | 'companion-text' | 'favorites' | 'collections';
 
@@ -50,6 +51,7 @@ export default function AppLayout() {
   const [prayerFilter, setPrayerFilter] = useState<PrayerFilter>({ type: 'all' });
   const [viewingNote, setViewingNote] = useState<Note | null>(null);
   const { lastPosition, loaded, savePosition } = useReadingProgress();
+  const { session, logVisit } = useStudySession();
   const notes = useNotes(notesRefreshKey);
 
   useEffect(() => {
@@ -132,6 +134,7 @@ export default function AppLayout() {
     if (selectedBook) {
       void savePosition(selectedBook.id, chapter);
       addRecentlyOpened({ id: `bible:${selectedBook.id}:${chapter}`, label: selectedBook.name, subtitle: `Chapter ${chapter}`, type: 'bible' });
+      if (session && !session.endTime) logVisit(selectedBook.id, String(chapter), `${selectedBook.name} ${chapter}`);
     }
   };
 
@@ -182,6 +185,7 @@ export default function AppLayout() {
       const textService = new TextService();
       const manifest = textService.getManifestEntry(selectedWorkId);
       addRecentlyOpened({ id: `${selectedWorkId}:${sectionId}`, label: manifest?.name ?? selectedWorkId, subtitle: sectionId, type: 'companion' });
+      if (session && !session.endTime) logVisit(selectedWorkId, sectionId, `${manifest?.name ?? selectedWorkId} - ${sectionId}`);
     }
   };
 

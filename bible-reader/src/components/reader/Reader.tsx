@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { BibleService } from '../../features/bible/services/BibleService';
 import { useTextSelection } from '../../features/annotations/hooks/useTextSelection';
 import type { SelectedVerse } from '../../features/annotations/hooks/useTextSelection';
-import type { BibleBook, BibleVerse, Collection, CollectionItem, Highlight, Note, PrayerFilter, VerseRef } from '../../types';
+import type { BibleBook, BibleVerse, Bookmark, Collection, CollectionItem, Highlight, Note, PrayerFilter, VerseRef } from '../../types';
 import type { ActiveView } from '../../layouts/AppLayout';
 import { CollectionRepository } from '../../lib/repositories/CollectionRepository';
 import { HighlightRepository } from '../../lib/repositories/HighlightRepository';
@@ -10,6 +10,7 @@ import { BookmarkEditor } from '../../features/bookmarks';
 import { useHighlights } from '../../lib/hooks/useHighlights';
 import { useChapterNotes } from '../../lib/hooks/useChapterNotes';
 import { createId } from '../../lib/utils/id';
+import { useStudySession } from '../../lib/contexts/StudySessionContext';
 import AnnotationToolbar from '../AnnotationToolbar';
 import NoteEditor from '../../features/notes/components/NoteEditor';
 import PrayerLibrary from './PrayerLibrary';
@@ -125,6 +126,7 @@ export default function Reader({
   const { selection, clearSelection } = useTextSelection(containerElement);
   const highlights = useHighlights(selectedBook?.id ?? null, selectedChapter, refreshKey);
   const chapterNotes = useChapterNotes(selectedBook?.id ?? null, selectedChapter, refreshKey);
+  const { session, logNote, logBookmark, logCollectionEvent } = useStudySession();
 
   const verseRefCallback = useCallback((key: string) => {
     return (node: HTMLParagraphElement | null) => {
@@ -185,11 +187,12 @@ export default function Reader({
     clearSelection();
   };
 
-  const handleNoteSave = () => {
+  const handleNoteSave = (savedNote?: Note) => {
     setEditingNote(null);
     setModalSourceRef(null);
     setRefreshKey((k) => k + 1);
     onNoteSaved?.();
+    if (savedNote && session && !session.endTime) logNote(savedNote.id, savedNote.title, savedNote.sourceReference);
   };
 
   const handleNoteCancel = () => {
@@ -206,10 +209,11 @@ export default function Reader({
     clearSelection();
   };
 
-  const handleBookmarkSave = () => {
+  const handleBookmarkSave = (savedBookmark?: Bookmark) => {
     setBookmarkModalSourceRef(null);
     setRefreshKey((k) => k + 1);
     onNoteSaved?.();
+    if (savedBookmark && session && !session.endTime) logBookmark(savedBookmark.id, savedBookmark.sourceReference, savedBookmark.title ?? savedBookmark.sourceReference);
   };
 
   const handleBookmarkCancel = () => {
@@ -243,11 +247,14 @@ export default function Reader({
   const handleSaveCollection = async (name: string, description: string) => {
     if (editingCollection) {
       await collectionRepo.update({ ...editingCollection, name, description });
+      setShowCollectionEditor(false);
+      setEditingCollection(null);
+      if (session && !session.endTime) logCollectionEvent(editingCollection.id, name, 'update');
     } else {
-      await collectionRepo.create(name, description || undefined);
+      const id = await collectionRepo.create(name, description || undefined);
+      setShowCollectionEditor(false);
+      if (session && !session.endTime) logCollectionEvent(id, name, 'create');
     }
-    setShowCollectionEditor(false);
-    setEditingCollection(null);
     setCollectionsRefreshKey((k) => k + 1);
   };
 

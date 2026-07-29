@@ -13,3 +13,4 @@ export type { TextBlock, TextSection, TextWork } from './textWork';
 export type { VerseRef } from './verseRef';
 export type { Collection, CollectionItem, CollectionItemType } from './collection';
 export type { CrossLink, CrossLinkType } from './crossLink';
+export type { StudySession, SessionVisit, SessionNote, SessionPrayer, SessionBookmark, SessionCollectionEvent } from './studySession';

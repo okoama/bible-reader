@@ -10,11 +10,14 @@ import { getRecentlyOpened, type RecentlyOpenedItem } from '../../lib/utils/rece
 import { formatDate } from '../../lib/utils/date';
 import { stripHtml } from '../../lib/utils/text';
 import { TextService } from '../../features/companion-texts/services/TextService';
+import { StudySessionRepository } from '../../lib/repositories/StudySessionRepository';
+import type { StudySession } from '../../types';
 
 const noteRepo = new NoteRepository();
 const prayerRepo = new PrayerRepository();
 const collectionRepo = new CollectionRepository();
 const readingProgressRepo = new ReadingProgressRepository();
+const sessionRepo = new StudySessionRepository();
 const textService = new TextService();
 
 type DashboardProps = {
@@ -52,6 +55,7 @@ export default function Dashboard({ books, onNavigateToPassage, onSelectView, on
   const [collections, setCollections] = useState<Collection[]>([]);
   const [history, setHistory] = useState<ReadingProgress[]>([]);
   const [recentlyOpened, setRecentlyOpened] = useState<RecentlyOpenedItem[]>([]);
+  const [recentSessions, setRecentSessions] = useState<StudySession[]>([]);
 
   useEffect(() => {
     void noteRepo.findRecent(5).then(setRecentNotes);
@@ -59,6 +63,7 @@ export default function Dashboard({ books, onNavigateToPassage, onSelectView, on
     void collectionRepo.findAll().then((all) => setCollections(all.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 5)));
     void readingProgressRepo.findAll().then((all) => setHistory(all.filter((r) => !r.id.startsWith('last:')).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 10)));
     setRecentlyOpened(getRecentlyOpened().slice(0, 10));
+    void sessionRepo.findAll().then((all) => setRecentSessions(all.filter((s) => s.endTime).slice(0, 5)));
   }, []);
 
   return (
@@ -143,6 +148,19 @@ export default function Dashboard({ books, onNavigateToPassage, onSelectView, on
                 <li key={c.id} className="truncate text-sm">
                   {c.name}
                   <span className="ml-2 text-xs opacity-50">({c.items.length} items)</span>
+                </li>
+              ))}
+            </ul>
+          </SectionCard>
+        )}
+
+        {recentSessions.length > 0 && (
+          <SectionCard title="Recent Sessions" actionLabel="">
+            <ul className="space-y-1">
+              {recentSessions.map((s) => (
+                <li key={s.id} className="flex items-center justify-between text-sm">
+                  <span className="truncate">{s.title}</span>
+                  <span className="shrink-0 text-xs opacity-50">{formatDate(s.startTime)}</span>
                 </li>
               ))}
             </ul>

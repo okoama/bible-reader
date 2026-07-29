@@ -1,6 +1,6 @@
 import Dexie, { type Table } from 'dexie';
 import { DATABASE_NAME } from '../constants';
-import type { Bookmark, Collection, Highlight, Note, Prayer, ReadingProgress } from '../../types';
+import type { Bookmark, Collection, Highlight, Note, Prayer, ReadingProgress, StudySession } from '../../types';
 
 export class BibleReaderDatabase extends Dexie {
   notes!: Table<Note, string>;
@@ -9,6 +9,7 @@ export class BibleReaderDatabase extends Dexie {
   prayers!: Table<Prayer, string>;
   readingProgress!: Table<ReadingProgress, string>;
   collections!: Table<Collection, string>;
+  sessions!: Table<StudySession, string>;
 
   constructor() {
     super(DATABASE_NAME);
@@ -66,6 +67,16 @@ export class BibleReaderDatabase extends Dexie {
       prayers: 'id, title, category, favorite, answered, *tags, createdAt, updatedAt, lastPrayed',
       readingProgress: 'id, sourceReference, updatedAt',
       collections: 'id, name, createdAt, updatedAt',
+    });
+
+    this.version(7).stores({
+      notes: 'id, sourceReference, title, favorite, createdAt, updatedAt',
+      highlights: 'id, sourceReference, color, createdAt',
+      bookmarks: 'id, sourceReference, favorite, createdAt',
+      prayers: 'id, title, category, favorite, answered, *tags, createdAt, updatedAt, lastPrayed',
+      readingProgress: 'id, sourceReference, updatedAt',
+      collections: 'id, name, createdAt, updatedAt',
+      sessions: 'id, startTime, endTime',
     });
   }
 }

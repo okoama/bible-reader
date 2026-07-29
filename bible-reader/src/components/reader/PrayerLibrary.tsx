@@ -5,6 +5,7 @@ import { usePrayers } from '../../lib/hooks/usePrayers';
 import { PrayerRepository } from '../../lib/repositories/PrayerRepository';
 import { stripHtml } from '../../lib/utils/text';
 import { formatDate } from '../../lib/utils/date';
+import { useStudySession } from '../../lib/contexts/StudySessionContext';
 import PrayerEditor from '../../features/prayers/components/PrayerEditor';
 import PrayerViewer from '../PrayerViewer';
 import AddToCollectionModal from './AddToCollectionModal';
@@ -38,6 +39,7 @@ export default function PrayerLibrary({ filter, refreshKey, onRefresh }: PrayerL
   const [editorOpen, setEditorOpen] = useState(false);
   const [deletingPrayer, setDeletingPrayer] = useState<Prayer | null>(null);
   const [addToCollectionPrayer, setAddToCollectionPrayer] = useState<Prayer | null>(null);
+  const { session, logPrayer } = useStudySession();
 
   const isTraditional = filter.type === 'traditional';
 
@@ -94,10 +96,11 @@ export default function PrayerLibrary({ filter, refreshKey, onRefresh }: PrayerL
     setEditorOpen(true);
   }
 
-  function handleSave() {
+  function handleSave(savedPrayer?: Prayer) {
     setEditorOpen(false);
     setEditingPrayer(null);
     onRefresh();
+    if (savedPrayer && session && !session.endTime) logPrayer(savedPrayer.id, savedPrayer.title);
   }
 
   function handleCancel() {
