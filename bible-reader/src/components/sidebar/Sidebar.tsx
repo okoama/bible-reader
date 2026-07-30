@@ -4,7 +4,7 @@ import { PRAYER_CATEGORIES } from '../../types';
 import type { ActiveView } from '../../layouts/AppLayout';
 import { TextService } from '../../features/companion-texts/services/TextService';
 import { useWorkspaceSettings } from '../../lib/contexts/WorkspaceSettingsContext';
-import SettingsModal from '../settings/SettingsModal';
+import SettingsModal from '../../features/settings/components/SettingsModal';
 
 const textService = new TextService();
 

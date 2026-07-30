@@ -9,9 +9,9 @@ import { BookmarkRepository } from '../../lib/repositories/BookmarkRepository';
 import { HIGHLIGHT_COLORS } from '../../lib/constants';
 import { formatDate } from '../../lib/utils/date';
 import { TextService } from '../../features/companion-texts/services/TextService';
-import ConfirmDialog from '../ConfirmDialog';
+import ConfirmDialog from '../../features/shared/components/ConfirmDialog';
 import NoteSearch from '../sidebar/NoteSearch';
-import AddToCollectionModal from '../reader/AddToCollectionModal';
+import AddToCollectionModal from '../../features/collections/components/AddToCollectionModal';
 import { useWorkspaceSettings } from '../../lib/contexts/WorkspaceSettingsContext';
 
 const highlightRepository = new HighlightRepository();

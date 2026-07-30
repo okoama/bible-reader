@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStudySession } from '../../lib/contexts/StudySessionContext';
-import SessionSummary from '../sessions/SessionSummary';
+import SessionSummary from '../../features/study-sessions/components/SessionSummary';
 
 function formatElapsed(ms: number): string {
   const total = Math.floor(ms / 1000);

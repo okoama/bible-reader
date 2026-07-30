@@ -8,7 +8,6 @@ export type { Prayer, PrayerCategory, PrayerFilter, PrayerFilterType } from './p
 export { PRAYER_CATEGORIES, PRAYER_FILTER_LABELS } from './prayer';
 export { TRADITIONAL_PRAYERS, isTraditionalPrayer } from '../data/traditionalPrayers';
 export type { ReadingProgress } from './readingProgress';
-export type { SourceReference, WorkType } from './sourceReference';
 export type { TextBlock, TextSection, TextWork } from './textWork';
 export type { VerseRef } from './verseRef';
 export type { Collection, CollectionItem, CollectionItemType } from './collection';
