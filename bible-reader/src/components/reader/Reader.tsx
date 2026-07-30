@@ -513,6 +513,7 @@ export default function Reader({
           onEdit={handleEditProject}
           onDelete={handleDeleteProject}
           onStatusChange={handleProjectStatusChange}
+          onNavigateToReference={(ref) => onCrossLinkNavigate?.('bible-passage', ref)}
         />
       ) : activeView === 'projects' ? (
         <ProjectsPage

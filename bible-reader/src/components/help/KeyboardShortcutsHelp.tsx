@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 type ShortcutEntry = { keys: string; label: string };
 
@@ -7,15 +7,20 @@ const SHORTCUTS: ShortcutEntry[] = [
   { keys: 'Ctrl+Shift+P', label: 'New prayer' },
   { keys: 'Ctrl+Shift+C', label: 'New collection' },
   { keys: 'Ctrl+Alt+N', label: 'New note' },
-  { keys: 'Alt+Left', label: 'Go back' },
-  { keys: 'Alt+Right', label: 'Go forward' },
+  { keys: 'Alt+\u2190', label: 'Go back' },
+  { keys: 'Alt+\u2192', label: 'Go forward' },
+  { keys: 'Escape', label: 'Close modals / Cancel forms' },
+  { keys: 'Tab, \u2190 \u2192', label: 'Navigate tabs' },
   { keys: '?', label: 'Show this help' },
 ];
 
 type Props = { onClose: () => void };
 
 export default function KeyboardShortcutsHelp({ onClose }: Props) {
+  const doneRef = useRef<HTMLButtonElement>(null);
+
   useEffect(() => {
+    doneRef.current?.focus();
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
@@ -25,6 +30,9 @@ export default function KeyboardShortcutsHelp({ onClose }: Props) {
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Keyboard shortcuts"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/30"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
@@ -39,7 +47,7 @@ export default function KeyboardShortcutsHelp({ onClose }: Props) {
           ))}
         </div>
         <div className="mt-6 flex justify-end">
-          <button type="button" onClick={onClose} className="rounded bg-accent px-4 py-2 text-sm text-white hover:bg-accent-hover">Done</button>
+          <button ref={doneRef} type="button" onClick={onClose} className="rounded bg-accent px-4 py-2 text-sm text-white hover:bg-accent-hover">Done</button>
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { ResearchProject } from '../../types';
 import { ResearchProjectRepository } from '../../lib/repositories/ResearchProjectRepository';
 
@@ -30,17 +30,17 @@ export default function ProjectsPage({ refreshKey, onSelectProject, onNewProject
     <div className="mx-auto reading-width animate-fade-in">
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-2xl font-semibold">Research Projects</h2>
-        <button type="button" onClick={onNewProject} className="rounded-md bg-accent px-4 py-2 text-sm text-white transition-colors hover:bg-accent-hover">+ New Project</button>
+        <button type="button" onClick={onNewProject} className="rounded-md bg-accent px-4 py-2 text-sm text-white transition-colors hover:bg-accent-hover focus-visible:ring-2 focus-visible:ring-accent">+ New Project</button>
       </div>
 
       {projects.length === 0 ? (
         <p className="mt-12 text-center text-sm italic opacity-50">Research projects help you organize study around a theme or question.</p>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2" role="list" aria-label="Research projects">
           {projects.map((p) => (
-            <button key={p.id} type="button" onClick={() => onSelectProject(p.id)} className="rounded-lg border p-5 text-left transition-colors hover:bg-gray-50">
+            <button key={p.id} type="button" role="listitem" onClick={() => onSelectProject(p.id)} aria-label={`Open project: ${p.title}`} className="rounded-lg border p-5 text-left transition-colors hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-accent">
               <div className="flex items-center gap-3">
-                <span className="text-2xl">{p.icon}</span>
+                <span className="text-2xl" aria-hidden="true">{p.icon}</span>
                 <div className="min-w-0 flex-1">
                   <p className="text-lg font-semibold truncate">{p.title}</p>
                   {p.description && <p className="mt-0.5 text-sm opacity-60 line-clamp-2">{p.description}</p>}

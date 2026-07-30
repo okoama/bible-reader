@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Bookmark, Collection, Note, Prayer, ResearchProject, ProjectStatus } from '../../types';
 import { ResearchProjectRepository } from '../../lib/repositories/ResearchProjectRepository';
 import { NoteRepository } from '../../lib/repositories/NoteRepository';
@@ -22,6 +22,7 @@ type Props = {
   onEdit: (project: ResearchProject) => void;
   onDelete: (id: string) => void;
   onStatusChange: (id: string, status: ProjectStatus) => void;
+  onNavigateToReference?: (sourceReference: string) => void;
 };
 
 function SectionCard({ title, children, className = '' }: { title: string; children: React.ReactNode; className?: string }) {
@@ -47,7 +48,7 @@ function ItemList<T>({ items, render }: { items: T[]; render: (item: T) => React
   return <ul className="space-y-1">{items.map((item, i) => <li key={i}>{render(item)}</li>)}</ul>;
 }
 
-export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, onDelete, onStatusChange }: Props) {
+export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, onDelete, onStatusChange, onNavigateToReference }: Props) {
   const [project, setProject] = useState<ResearchProject | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
@@ -209,7 +210,7 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
             <>
               <ItemList items={notes} render={(n) => (
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="flex-1 truncate">{n.title || 'Untitled'}</span>
+                  <button type="button" onClick={() => onNavigateToReference?.(n.sourceReference)} className="flex-1 truncate text-left hover:text-accent focus-visible:ring-2 focus-visible:ring-accent rounded" title={n.sourceReference}>{n.title || 'Untitled'}</button>
                   <span className="text-xs opacity-40">{n.sourceReference}</span>
                   <button type="button" onClick={() => handleDeleteLink('note', n.id)} className="text-xs text-red-400 hover:text-red-600">&times;</button>
                 </div>
@@ -227,7 +228,7 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
             <>
               <ItemList items={bookmarks} render={(b) => (
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="flex-1 truncate">{b.title ?? b.sourceReference}</span>
+                  <button type="button" onClick={() => onNavigateToReference?.(b.sourceReference)} className="flex-1 truncate text-left hover:text-accent focus-visible:ring-2 focus-visible:ring-accent rounded" title={b.sourceReference}>{b.title ?? b.sourceReference}</button>
                   <span className="text-xs opacity-40">{b.sourceReference}</span>
                   <button type="button" onClick={() => handleDeleteLink('bookmark', b.id)} className="text-xs text-red-400 hover:text-red-600">&times;</button>
                 </div>
@@ -260,7 +261,7 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
             <ul className="space-y-1">
               {bookmarks.map((b) => (
                 <li key={b.id} className="flex items-center gap-2 text-sm">
-                  <span className="flex-1 truncate">{b.sourceReference}</span>
+                  <button type="button" onClick={() => onNavigateToReference?.(b.sourceReference)} className="flex-1 truncate text-left hover:text-accent focus-visible:ring-2 focus-visible:ring-accent rounded" title={b.sourceReference}>{b.sourceReference}</button>
                   {b.title && <span className="text-xs opacity-40">{b.title}</span>}
                 </li>
               ))}
@@ -321,15 +322,27 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
   );
 }
 
+function FormKeyHandler({ onCancel }: { onCancel: () => void }) {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onCancel(); };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [onCancel]);
+  return null;
+}
+
 function NewNoteForm({ onSubmit, onCancel }: { onSubmit: (title: string, content: string, sourceReference: string) => void; onCancel: () => void }) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [sourceReference, setSourceReference] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => { inputRef.current?.focus(); }, []);
   return (
     <div className="flex flex-col gap-2">
-      <input type="text" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} className="rounded border px-2 py-1 text-sm focus-accent" />
-      <input type="text" placeholder="Source (e.g. GEN:1)" value={sourceReference} onChange={(e) => setSourceReference(e.target.value)} className="rounded border px-2 py-1 text-sm focus-accent" />
-      <textarea placeholder="Content" value={content} onChange={(e) => setContent(e.target.value)} rows={3} className="rounded border px-2 py-1 text-sm focus-accent resize-none" />
+      <FormKeyHandler onCancel={onCancel} />
+      <input ref={inputRef} type="text" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} className="rounded border px-2 py-1 text-sm focus-accent" aria-label="Note title" />
+      <input type="text" placeholder="Source (e.g. GEN:1)" value={sourceReference} onChange={(e) => setSourceReference(e.target.value)} className="rounded border px-2 py-1 text-sm focus-accent" aria-label="Source reference" />
+      <textarea placeholder="Content" value={content} onChange={(e) => setContent(e.target.value)} rows={3} className="rounded border px-2 py-1 text-sm focus-accent resize-none" aria-label="Note content" />
       <div className="flex gap-2">
         <button type="button" onClick={() => onSubmit(title, content, sourceReference)} disabled={!title.trim()} className="rounded bg-accent px-3 py-1 text-xs text-white disabled:opacity-40">Create</button>
         <button type="button" onClick={onCancel} className="rounded border px-3 py-1 text-xs">Cancel</button>
@@ -341,10 +354,13 @@ function NewNoteForm({ onSubmit, onCancel }: { onSubmit: (title: string, content
 function NewBookmarkForm({ onSubmit, onCancel }: { onSubmit: (sourceReference: string, title: string) => void; onCancel: () => void }) {
   const [sourceReference, setSourceReference] = useState('');
   const [title, setTitle] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => { inputRef.current?.focus(); }, []);
   return (
     <div className="flex flex-col gap-2">
-      <input type="text" placeholder="Reference (e.g. GEN:1-5)" value={sourceReference} onChange={(e) => setSourceReference(e.target.value)} className="rounded border px-2 py-1 text-sm focus-accent" />
-      <input type="text" placeholder="Label (optional)" value={title} onChange={(e) => setTitle(e.target.value)} className="rounded border px-2 py-1 text-sm focus-accent" />
+      <FormKeyHandler onCancel={onCancel} />
+      <input ref={inputRef} type="text" placeholder="Reference (e.g. GEN:1-5)" value={sourceReference} onChange={(e) => setSourceReference(e.target.value)} className="rounded border px-2 py-1 text-sm focus-accent" aria-label="Reference" />
+      <input type="text" placeholder="Label (optional)" value={title} onChange={(e) => setTitle(e.target.value)} className="rounded border px-2 py-1 text-sm focus-accent" aria-label="Label" />
       <div className="flex gap-2">
         <button type="button" onClick={() => onSubmit(sourceReference, title)} disabled={!sourceReference.trim()} className="rounded bg-accent px-3 py-1 text-xs text-white disabled:opacity-40">Create</button>
         <button type="button" onClick={onCancel} className="rounded border px-3 py-1 text-xs">Cancel</button>
@@ -356,10 +372,13 @@ function NewBookmarkForm({ onSubmit, onCancel }: { onSubmit: (sourceReference: s
 function NewPrayerForm({ onSubmit, onCancel }: { onSubmit: (title: string, content: string) => void; onCancel: () => void }) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => { inputRef.current?.focus(); }, []);
   return (
     <div className="flex flex-col gap-2">
-      <input type="text" placeholder="Prayer title" value={title} onChange={(e) => setTitle(e.target.value)} className="rounded border px-2 py-1 text-sm focus-accent" />
-      <textarea placeholder="Prayer text" value={content} onChange={(e) => setContent(e.target.value)} rows={3} className="rounded border px-2 py-1 text-sm focus-accent resize-none" />
+      <FormKeyHandler onCancel={onCancel} />
+      <input ref={inputRef} type="text" placeholder="Prayer title" value={title} onChange={(e) => setTitle(e.target.value)} className="rounded border px-2 py-1 text-sm focus-accent" aria-label="Prayer title" />
+      <textarea placeholder="Prayer text" value={content} onChange={(e) => setContent(e.target.value)} rows={3} className="rounded border px-2 py-1 text-sm focus-accent resize-none" aria-label="Prayer text" />
       <div className="flex gap-2">
         <button type="button" onClick={() => onSubmit(title, content)} disabled={!title.trim() || !content.trim()} className="rounded bg-accent px-3 py-1 text-xs text-white disabled:opacity-40">Create</button>
         <button type="button" onClick={onCancel} className="rounded border px-3 py-1 text-xs">Cancel</button>

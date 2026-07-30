@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Note } from '../../types';
 import { NoteRepository } from '../../lib/repositories/NoteRepository';
 import { stripHtml } from '../../lib/utils/text';
 
 const noteRepository = new NoteRepository();
+const DEBOUNCE_MS = 200;
 
 type Props = {
   onSelectNote: (noteId: string) => void;
@@ -12,31 +13,45 @@ type Props = {
 
 export default function GlobalSearchModal({ onSelectNote, onClose }: Props) {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<Note[]>([]);
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [allNotes, setAllNotes] = useState<Note[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
     noteRepository.findAll().then(setAllNotes);
   }, []);
 
   useEffect(() => {
-    const q = query.toLowerCase().trim();
-    if (!q) {
-      setResults([]);
-      setActiveIndex(-1);
-      return;
-    }
-    const filtered = allNotes.filter((n) => {
-      const title = n.title.toLowerCase();
-      const content = stripHtml(n.content).toLowerCase();
-      const tags = n.tags.some((t) => t.toLowerCase().includes(q));
-      return title.includes(q) || content.includes(q) || tags;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setDebouncedQuery(query.toLowerCase().trim());
+    }, DEBOUNCE_MS);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [query]);
+
+  const strippedCache = useMemo(() => {
+    const cache = new Map<string, string>();
+    for (const n of allNotes) cache.set(n.id, stripHtml(n.content).toLowerCase());
+    return cache;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allNotes]);
+
+  const results = useMemo(() => {
+    const q = debouncedQuery;
+    if (!q) return [];
+    return allNotes.filter((n) => {
+      if (n.title.toLowerCase().includes(q)) return true;
+      if (strippedCache.get(n.id)?.includes(q)) return true;
+      if (n.tags.some((t) => t.toLowerCase().includes(q))) return true;
+      return false;
     }).slice(0, 50);
-    setResults(filtered);
+  }, [debouncedQuery, allNotes, strippedCache]);
+
+  useEffect(() => {
     setActiveIndex(-1);
-  }, [query, allNotes]);
+  }, [debouncedQuery]);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -75,16 +90,20 @@ export default function GlobalSearchModal({ onSelectNote, onClose }: Props) {
             placeholder="Search notes..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            aria-label="Search query"
             className="w-full text-sm outline-none placeholder:opacity-40"
           />
         </div>
-        <div className="max-h-80 overflow-y-auto">
-          {query && results.length === 0 && (
-            <p className="p-4 text-center text-xs opacity-40">No matching notes found</p>
+        <div className="max-h-80 overflow-y-auto" role="listbox" aria-label="Search results">
+          {debouncedQuery && results.length === 0 && (
+            <p className="p-4 text-center text-xs opacity-40" role="status">No matching notes found</p>
           )}
           {results.map((note, i) => (
             <button
               key={note.id}
+              id={`search-result-${i}`}
+              role="option"
+              aria-selected={i === activeIndex}
               type="button"
               className={`flex w-full flex-col gap-0.5 px-4 py-2.5 text-left text-sm transition-colors ${i === activeIndex ? 'bg-accent-light' : 'hover:bg-accent-lighter'}`}
               onClick={() => { onSelectNote(note.id); onClose(); }}

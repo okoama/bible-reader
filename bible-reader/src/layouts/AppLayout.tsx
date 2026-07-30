@@ -401,6 +401,10 @@ export default function AppLayout() {
         if (match) handleSelectWork(match[1], match[2]);
         break;
       }
+      case 'bible-passage': {
+        handleNavigateToBookmark(id);
+        break;
+      }
       case 'article': {
         const parts = id.split(':');
         if (parts.length >= 2) handleSelectWork(parts[0], parts[1]);
