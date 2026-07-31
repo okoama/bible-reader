@@ -20,14 +20,7 @@ export function useHighlights(
         return;
       }
 
-      const all = await repo.findByBook(bookId);
-      const sectionHighlights = all.filter((h) => {
-        const match = h.sourceReference.match(/^[^:]+:([^:]+):(\d+)(?:-(\d+))?$/);
-        if (!match) return false;
-        const refSection = match[1];
-        return refSection === String(section);
-      });
-
+      const sectionHighlights = await repo.findBySection(bookId, String(section));
       if (isActive) setHighlights(sectionHighlights);
     };
 

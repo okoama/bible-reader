@@ -21,6 +21,15 @@ export class ReadingProgressRepository {
     return progress.id;
   }
 
+  async findRecentHistory(limit: number): Promise<ReadingProgress[]> {
+    return this.database.readingProgress
+      .orderBy('updatedAt')
+      .reverse()
+      .filter((r) => !r.id.startsWith('last:'))
+      .limit(limit)
+      .toArray();
+  }
+
   async delete(id: string): Promise<void> {
     await this.database.readingProgress.delete(id);
   }

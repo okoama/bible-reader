@@ -124,11 +124,11 @@ export default function Dashboard({ books, onNavigateToPassage, onSelectView, on
     Promise.allSettled([
       noteRepo.findRecent(5).then(setRecentNotes),
       prayerRepo.findRecentPrayed(50).then((prayers) => setTodayPrayers(prayers.filter((p) => p.lastPrayed && isToday(p.lastPrayed)))),
-      collectionRepo.findAll().then((all) => setCollections(all.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 5))),
-      readingProgressRepo.findAll().then((all) => setHistory(all.filter((r) => !r.id.startsWith('last:')).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 10))),
+      collectionRepo.findRecent(5).then(setCollections),
+      readingProgressRepo.findRecentHistory(10).then(setHistory),
       Promise.resolve(setRecentlyOpened(getRecentlyOpened().slice(0, 10))),
-      sessionRepo.findAll().then((all) => setRecentSessions(all.filter((s) => s.endTime).slice(0, 5))),
-      projectRepo.findAll().then((all) => setRecentProjects(all.slice(0, 5))),
+      sessionRepo.findRecentCompleted(5).then(setRecentSessions),
+      projectRepo.findAll(5).then(setRecentProjects),
       Promise.all([
         noteRepo.count(),
         bookmarkRepo.count(),

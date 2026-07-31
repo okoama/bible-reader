@@ -8,10 +8,6 @@ export class VerseFavoriteRepository {
     return this.database.verseFavorites.orderBy('createdAt').reverse().toArray();
   }
 
-  async findByBook(bookId: string): Promise<VerseFavorite[]> {
-    return this.database.verseFavorites.where('bookId').equals(bookId).toArray();
-  }
-
   async findBySourceReference(sourceReference: string): Promise<VerseFavorite | undefined> {
     return this.database.verseFavorites.where('sourceReference').equals(sourceReference).first();
   }

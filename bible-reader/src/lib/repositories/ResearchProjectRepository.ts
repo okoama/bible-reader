@@ -2,8 +2,10 @@ import type { ResearchProject } from '../../types';
 import { db } from '../database/database';
 
 export class ResearchProjectRepository {
-  async findAll(): Promise<ResearchProject[]> {
-    return db.projects.orderBy('updatedAt').reverse().toArray();
+  async findAll(limit?: number): Promise<ResearchProject[]> {
+    let collection = db.projects.orderBy('updatedAt').reverse();
+    if (limit !== undefined) collection = collection.limit(limit);
+    return collection.toArray();
   }
 
   async findById(id: string): Promise<ResearchProject | undefined> {

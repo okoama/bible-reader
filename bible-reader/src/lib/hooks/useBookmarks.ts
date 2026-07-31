@@ -20,14 +20,7 @@ export function useBookmarks(
         return;
       }
 
-      const all = await repo.findByBook(bookId);
-      const sectionBookmarks = all.filter((b) => {
-        const match = b.sourceReference.match(/^[^:]+:([^:]+):(\d+)(?:-(\d+))?$/);
-        if (!match) return false;
-        const refSection = match[1];
-        return refSection === String(section);
-      });
-
+      const sectionBookmarks = await repo.findBySection(bookId, String(section));
       if (isActive) setBookmarks(sectionBookmarks);
     };
 

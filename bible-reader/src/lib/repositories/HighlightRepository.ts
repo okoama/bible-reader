@@ -12,10 +12,10 @@ export class HighlightRepository {
     return this.database.highlights.count();
   }
 
-  async findByBook(bookId: string): Promise<Highlight[]> {
+  async findBySection(bookId: string, section: string): Promise<Highlight[]> {
     return this.database.highlights
       .where('sourceReference')
-      .startsWith(`${bookId}:`)
+      .startsWith(`${bookId}:${section}:`)
       .toArray();
   }
 

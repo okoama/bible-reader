@@ -20,14 +20,7 @@ export function useRefNotes(
         return;
       }
 
-      const all = await repo.findByBook(bookId);
-      const sectionNotes = all.filter((n) => {
-        const match = n.sourceReference.match(/^[^:]+:([^:]+):(\d+)(?:-(\d+))?$/);
-        if (!match) return false;
-        const refSection = match[1];
-        return refSection === String(section);
-      });
-
+      const sectionNotes = await repo.findBySection(bookId, String(section));
       if (isActive) setNotes(sectionNotes);
     };
 
