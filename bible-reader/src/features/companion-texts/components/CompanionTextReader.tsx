@@ -102,9 +102,8 @@ export default function CompanionTextReader({ workId, sectionId, onSectionChange
         }
       }
     }).catch((err) => {
-      console.error(`Failed to load work "${workId}":`, err);
       if (isActive) {
-        setError(`Failed to load "${workId}". Check the console for details.`);
+        setError(`Failed to load "${workId}": ${err instanceof Error ? err.message : 'Unknown error'}`);
         setLoading(false);
       }
     });
@@ -125,13 +124,12 @@ export default function CompanionTextReader({ workId, sectionId, onSectionChange
       if (isActive) {
         setSection(loaded ?? null);
         setSectionLoading(false);
-        if (!loaded) {
-          console.warn(`[CompanionText] Section "${selectedSection}" not found in "${workId}"`);
-        }
       }
     }).catch((err) => {
-      console.error(`[CompanionText] Failed to load section "${selectedSection}" in "${workId}":`, err);
-      if (isActive) setSectionLoading(false);
+      if (isActive) {
+        setError(`Failed to load section "${selectedSection}" in "${workId}": ${err instanceof Error ? err.message : 'Unknown error'}`);
+        setSectionLoading(false);
+      }
     });
 
     return () => { isActive = false; };
