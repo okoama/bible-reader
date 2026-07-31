@@ -1,8 +1,8 @@
-import type { WorkspaceSettings, Theme, ThemeId } from '../../types';
+import type { WorkspaceSettings, Theme, ThemeName } from '../../types';
 
 const STORAGE_KEY = 'workspace-settings';
 
-export const THEMES: Record<ThemeId, Theme> = {
+export const THEMES: Record<ThemeName, Theme> = {
   scriptorium: {
     id: 'scriptorium',
     label: 'Scriptorium',

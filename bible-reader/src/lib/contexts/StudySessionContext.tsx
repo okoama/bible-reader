@@ -42,7 +42,7 @@ export function StudySessionProvider({ children }: { children: React.ReactNode }
     setSession((prev) => {
       if (!prev) return prev;
       const next = update(prev);
-      void repo.save(next);
+      void repo.create(next);
       return next;
     });
   }, []);
@@ -61,7 +61,7 @@ export function StudySessionProvider({ children }: { children: React.ReactNode }
     };
     setSession(newSession);
     setElapsed(0);
-    void repo.save(newSession);
+    void repo.create(newSession);
   }, []);
 
   const endSession = useCallback(() => {
@@ -74,7 +74,7 @@ export function StudySessionProvider({ children }: { children: React.ReactNode }
         endTime: now,
         duration: Math.round((Date.now() - new Date(prev.startTime).getTime()) / 60000),
       };
-      void repo.save(finalized);
+      void repo.create(finalized);
       return finalized;
     });
     return finalized;

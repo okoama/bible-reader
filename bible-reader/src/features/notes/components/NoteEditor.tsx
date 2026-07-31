@@ -4,7 +4,7 @@ import { NoteRepository } from '../../../lib/repositories/NoteRepository';
 import { createId } from '../../../lib/utils/id';
 import { useDraft } from '../../../lib/hooks/useDraft';
 import RichTextEditor from './RichTextEditor';
-import ProjectPicker from '../../../components/projects/ProjectPicker';
+import ProjectPicker from '../../projects/components/ProjectPicker';
 
 const noteRepository = new NoteRepository();
 

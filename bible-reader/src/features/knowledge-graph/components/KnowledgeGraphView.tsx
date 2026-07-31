@@ -11,7 +11,7 @@ const ALL_TYPES: GraphNodeType[] = ['passage', 'note', 'bookmark', 'prayer', 'co
 const EDGE_COLORS: Record<string, string> = { references: '#5f7fb0', linked_to: '#8b7bb0', part_of: '#6d9e76', mentions: '#b08a5f', contains: '#b09a5f' };
 const BATCH_INTERVAL = 80;
 
-type Props = { onNodeClick: (type: GraphNodeType, id: string) => void };
+type KnowledgeGraphViewProps = { onNodeClick: (type: GraphNodeType, id: string) => void };
 
 function initPositions(nodes: GraphNode[], cache: Map<string, { x: number; y: number }>): PositionedNode[] {
   return nodes.map((n) => {
@@ -52,7 +52,7 @@ function tickForce(nodes: PositionedNode[], edges: GraphEdge[], w: number, h: nu
   }
 }
 
-export default function KnowledgeGraphView({ onNodeClick }: Props) {
+export default function KnowledgeGraphView({ onNodeClick }: KnowledgeGraphViewProps) {
   const [graphData, setGraphData] = useState<GraphData | null>(null);
   const [positionedNodes, setPositionedNodes] = useState<PositionedNode[]>([]);
   const [filteredEdges, setFilteredEdges] = useState<GraphEdge[]>([]);

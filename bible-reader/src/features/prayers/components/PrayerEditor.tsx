@@ -5,7 +5,7 @@ import { PrayerRepository } from '../../../lib/repositories/PrayerRepository';
 import { createId } from '../../../lib/utils/id';
 import { useDraft } from '../../../lib/hooks/useDraft';
 import RichTextEditor from '../../notes/components/RichTextEditor';
-import ProjectPicker from '../../../components/projects/ProjectPicker';
+import ProjectPicker from '../../projects/components/ProjectPicker';
 
 const prayerRepository = new PrayerRepository();
 

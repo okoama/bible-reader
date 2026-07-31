@@ -4,7 +4,7 @@ import { NODE_COLORS, NODE_LABELS } from '../../../types';
 
 const ALL_TYPES: GraphNodeType[] = ['passage', 'note', 'bookmark', 'prayer', 'collection', 'project', 'catechism', 'summa'];
 
-type Props = {
+type GraphFilterPanelProps = {
   filters: GraphFilters;
   onChange: (filters: GraphFilters) => void;
   allTags: string[];
@@ -12,7 +12,7 @@ type Props = {
   projects: ResearchProject[];
 };
 
-export default function GraphFilterPanel({ filters, onChange, allTags, collections, projects }: Props) {
+export default function GraphFilterPanel({ filters, onChange, allTags, collections, projects }: GraphFilterPanelProps) {
   const [tagInput, setTagInput] = useState('');
   const tagInputRef = useRef<HTMLInputElement>(null);
 

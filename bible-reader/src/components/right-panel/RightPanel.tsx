@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { BibleBook, CollectionItemType, Highlight, Bookmark, Note, VerseRef } from '../../types';
 import { useHighlights } from '../../lib/hooks/useHighlights';
-import { useWorkHighlights } from '../../lib/hooks/useWorkHighlights';
 import { useBookmarks } from '../../lib/hooks/useBookmarks';
 import { HighlightRepository } from '../../lib/repositories/HighlightRepository';
 import { NoteRepository } from '../../lib/repositories/NoteRepository';
@@ -10,7 +9,7 @@ import { HIGHLIGHT_COLORS } from '../../lib/constants';
 import { formatDate } from '../../lib/utils/date';
 import { TextService } from '../../features/companion-texts/services/TextService';
 import ConfirmDialog from '../../features/shared/components/ConfirmDialog';
-import NoteSearch from '../sidebar/NoteSearch';
+import NoteSearch from '../../features/notes/components/NoteSearch';
 import AddToCollectionModal from '../../features/collections/components/AddToCollectionModal';
 import { useWorkspaceSettings } from '../../lib/contexts/WorkspaceSettingsContext';
 
@@ -97,10 +96,16 @@ export default function RightPanel({
     });
   }, [workId, sectionId, isCompanion]);
 
-  const highlights = isCompanion
-    ? useWorkHighlights(workId, sectionId, refreshKey)
-    : useHighlights(selectedBook?.id ?? null, selectedChapter, refreshKey);
-  const bookmarks = useBookmarks(isCompanion ? workId : selectedBook?.id ?? null, null, refreshKey);
+  const highlights = useHighlights(
+    isCompanion ? workId : selectedBook?.id ?? null,
+    isCompanion ? sectionId : selectedChapter,
+    refreshKey,
+  );
+  const bookmarks = useBookmarks(
+    isCompanion ? workId : selectedBook?.id ?? null,
+    isCompanion ? sectionId : selectedChapter,
+    refreshKey,
+  );
 
   const verseNumber = selectedVerse?.verseNumber ?? null;
 

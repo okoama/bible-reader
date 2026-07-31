@@ -14,8 +14,9 @@ export class ResearchProjectRepository {
     return db.projects.where('status').equals('active').toArray();
   }
 
-  async save(project: ResearchProject): Promise<void> {
+  async create(project: ResearchProject): Promise<string> {
     await db.projects.put(project);
+    return project.id;
   }
 
   async delete(id: string): Promise<void> {

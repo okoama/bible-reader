@@ -23,13 +23,13 @@ export class BookmarkRepository {
       .toArray();
   }
 
-  async update(bookmark: Bookmark): Promise<void> {
-    await this.database.bookmarks.put(bookmark);
-  }
-
   async create(bookmark: Bookmark): Promise<string> {
     await this.database.bookmarks.put(bookmark);
     return bookmark.id;
+  }
+
+  async update(bookmark: Bookmark): Promise<void> {
+    await this.database.bookmarks.put(bookmark);
   }
 
   async delete(id: string): Promise<void> {

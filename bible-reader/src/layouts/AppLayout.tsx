@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Header from '../components/header/Header';
 import Sidebar from '../components/sidebar/Sidebar';
-import Reader from '../components/reader/Reader';
+import Reader from '../features/reader/components/Reader';
 import RightPanel from '../components/right-panel/RightPanel';
 import StatusBar from '../components/status-bar/StatusBar';
 import { BibleService } from '../features/bible/services/BibleService';
@@ -13,7 +13,7 @@ import NoteViewer from '../features/notes/components/NoteViewer';
 import NoteEditor from '../features/notes/components/NoteEditor';
 import PrayerEditor from '../features/prayers/components/PrayerEditor';
 import CollectionEditor from '../features/collections/components/CollectionEditor';
-import ProjectEditor from '../components/projects/ProjectEditor';
+import ProjectEditor from '../features/projects/components/ProjectEditor';
 import Dashboard from '../features/dashboard/components/Dashboard';
 import { addRecentlyOpened } from '../lib/utils/recentlyOpened';
 import { TextService } from '../features/companion-texts/services/TextService';
@@ -680,7 +680,7 @@ export default function AppLayout() {
         <ProjectEditor
           onSave={(title, description, status, icon, color) => {
             const repo = new ResearchProjectRepository();
-            void repo.save({ id: createId('project'), title, description, status, icon, color, notes: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+            void repo.create({ id: createId('project'), title, description, status, icon, color, notes: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
             setShowNewProject(false);
           }}
           onCancel={() => setShowNewProject(false)}

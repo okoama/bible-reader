@@ -3,7 +3,7 @@ import type { CrossLinkType, Note, Prayer, Collection } from '../../../types';
 import { NoteRepository } from '../../../lib/repositories/NoteRepository';
 import { PrayerRepository } from '../../../lib/repositories/PrayerRepository';
 import { CollectionRepository } from '../../../lib/repositories/CollectionRepository';
-import { formatCrossLink } from '../../../lib/utils/crossLinkParser';
+import { formatCrossLink } from '../../../lib/utils/crossLinks';
 
 const noteRepo = new NoteRepository();
 const prayerRepo = new PrayerRepository();

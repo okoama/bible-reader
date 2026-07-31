@@ -5,7 +5,7 @@ import { ACCENT_COLORS } from '../../../lib/utils/accent';
 import { BackupService } from '../../backup/services/BackupService';
 import type { WorkspaceSettings, WorkspaceBackup } from '../../../types';
 
-type Props = { onClose: () => void };
+type SettingsModalProps = { onClose: () => void };
 
 function Slider({ label, value, min, max, step, onChange }: {
   label: string; value: number; min: number; max: number; step: number; onChange: (v: number) => void;
@@ -23,7 +23,7 @@ function Slider({ label, value, min, max, step, onChange }: {
 
 const backupService = new BackupService();
 
-export default function SettingsModal({ onClose }: Props) {
+export default function SettingsModal({ onClose }: SettingsModalProps) {
   const { settings, updateSettings, resetSettings } = useWorkspaceSettings();
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);

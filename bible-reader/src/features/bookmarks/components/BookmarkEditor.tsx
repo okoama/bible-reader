@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { Bookmark } from '../../../types';
 import { BookmarkRepository } from '../../../lib/repositories/BookmarkRepository';
 import { createId } from '../../../lib/utils/id';
-import ProjectPicker from '../../../components/projects/ProjectPicker';
+import ProjectPicker from '../../projects/components/ProjectPicker';
 
 const bookmarkRepository = new BookmarkRepository();
 

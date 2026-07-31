@@ -7,7 +7,12 @@ function formatDuration(minutes: number): string {
   return m > 0 ? `${h}h ${m}m` : `${h}h`;
 }
 
-export default function SessionSummary({ session, onClose }: { session: StudySession; onClose: () => void }) {
+type SessionSummaryProps = {
+  session: StudySession;
+  onClose: () => void;
+};
+
+export default function SessionSummary({ session, onClose }: SessionSummaryProps) {
   const duration = session.duration ?? Math.round((Date.now() - new Date(session.startTime).getTime()) / 60000);
 
   return (

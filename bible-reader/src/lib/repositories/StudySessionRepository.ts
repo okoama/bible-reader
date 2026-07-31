@@ -17,8 +17,9 @@ export class StudySessionRepository {
     return all.find((s) => !s.endTime);
   }
 
-  async save(session: StudySession): Promise<void> {
+  async create(session: StudySession): Promise<string> {
     await this.database.sessions.put(session);
+    return session.id;
   }
 
   async delete(id: string): Promise<void> {

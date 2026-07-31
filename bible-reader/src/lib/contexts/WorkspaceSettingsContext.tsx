@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import type { WorkspaceSettings, AccentName, ThemeId } from '../../types';
+import type { WorkspaceSettings, AccentName, ThemeName } from '../../types';
 import { loadSettings, saveSettings, DEFAULT_SETTINGS, THEMES } from '../utils/workspaceSettings';
 import { ACCENT_COLORS } from '../utils/accent';
 
@@ -29,8 +29,8 @@ function applyReadingWidth(width: number): void {
   document.documentElement.style.setProperty('--reading-width', `${width}px`);
 }
 
-function applyTheme(themeId: ThemeId): void {
-  const theme = THEMES[themeId];
+function applyTheme(themeName: ThemeName): void {
+  const theme = THEMES[themeName];
   if (!theme) return;
   const root = document.documentElement;
   root.style.setProperty('--bg', theme.bg);

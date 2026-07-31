@@ -24,9 +24,3 @@ export function addRecentlyOpened(item: Omit<RecentlyOpenedItem, 'timestamp'>): 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items.slice(0, MAX_ITEMS)));
   } catch {}
 }
-
-export function clearRecentlyOpened(): void {
-  try {
-    localStorage.removeItem(STORAGE_KEY);
-  } catch {}
-}

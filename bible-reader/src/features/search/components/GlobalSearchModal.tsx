@@ -6,12 +6,12 @@ import { stripHtml } from '../../../lib/utils/text';
 const noteRepository = new NoteRepository();
 const DEBOUNCE_MS = 200;
 
-type Props = {
+type GlobalSearchModalProps = {
   onSelectNote: (noteId: string) => void;
   onClose: () => void;
 };
 
-export default function GlobalSearchModal({ onSelectNote, onClose }: Props) {
+export default function GlobalSearchModal({ onSelectNote, onClose }: GlobalSearchModalProps) {
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [allNotes, setAllNotes] = useState<Note[]>([]);

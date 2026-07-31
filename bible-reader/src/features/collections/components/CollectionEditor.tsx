@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Collection } from '../../../types';
-import ProjectPicker from '../../../components/projects/ProjectPicker';
+import ProjectPicker from '../../projects/components/ProjectPicker';
 
 type CollectionEditorProps = {
   collection?: Collection;

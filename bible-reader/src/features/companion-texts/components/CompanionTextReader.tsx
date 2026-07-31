@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import ContentReader from '../../../components/reader/ContentReader';
+import ContentReader from '../../reader/components/ContentReader';
 import { TextService } from '../services/TextService';
 import { useTextSelection, COMPANION_TEXT_SELECTION_CONFIG } from '../../annotations/hooks/useTextSelection';
 import type { SelectedVerse } from '../../annotations/hooks/useTextSelection';
@@ -8,8 +8,8 @@ import NoteEditor from '../../notes/components/NoteEditor';
 import { BookmarkEditor } from '../../bookmarks';
 import { VerseFavoriteRepository } from '../../../lib/repositories/VerseFavoriteRepository';
 import { HighlightRepository } from '../../../lib/repositories/HighlightRepository';
-import { useWorkHighlights } from '../../../lib/hooks/useWorkHighlights';
-import { useWorkNotes } from '../../../lib/hooks/useWorkNotes';
+import { useHighlights } from '../../../lib/hooks/useHighlights';
+import { useRefNotes } from '../../../lib/hooks/useRefNotes';
 import { createId } from '../../../lib/utils/id';
 import type { TextWork, TextSection, Highlight, Note } from '../../../types';
 
@@ -83,8 +83,8 @@ export default function CompanionTextReader({ workId, sectionId, onSectionChange
   }, [onSectionChange]);
 
   const { selection, clearSelection } = useTextSelection(containerElement, COMPANION_TEXT_SELECTION_CONFIG);
-  const highlights = useWorkHighlights(workId, selectedSection, refreshKey);
-  const chapterNotes = useWorkNotes(workId, selectedSection, refreshKey);
+  const highlights = useHighlights(workId, selectedSection, refreshKey);
+  const chapterNotes = useRefNotes(workId, selectedSection, refreshKey);
 
   useEffect(() => {
     let isActive = true;

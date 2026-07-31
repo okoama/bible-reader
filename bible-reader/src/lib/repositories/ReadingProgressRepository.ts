@@ -16,7 +16,7 @@ export class ReadingProgressRepository {
     return this.database.readingProgress.get(`last:${workId}`);
   }
 
-  async save(progress: ReadingProgress): Promise<string> {
+  async create(progress: ReadingProgress): Promise<string> {
     await this.database.readingProgress.put(progress);
     return progress.id;
   }

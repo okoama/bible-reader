@@ -65,10 +65,6 @@ body {
   background-color: var(--reader-bg);
   background-image: radial-gradient(ellipse at 40% 20%, rgba(185,150,46,0.06) 0%, rgba(63,114,175,0.04) 40%, transparent 70%);
 }
-.bg-panel {
-  background-repeat: repeat;
-  background-size: 200px 200px;
-}
 .bg-card {
   background-color: var(--card-bg);
   background-image: linear-gradient(180deg, color-mix(in srgb, var(--card-bg) 90%, white) 0%, var(--card-bg) 40%, color-mix(in srgb, var(--card-bg) 97%, black) 100%);
@@ -124,11 +120,6 @@ body {
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
 }
 .text-muted { color: var(--muted); }
-.text-secondary { color: var(--secondary); }
-.text-danger { color: var(--danger); }
-.bg-danger { background-color: var(--danger); }
-.hover\:bg-danger:hover { background-color: var(--danger); }
-.border-danger { border-color: var(--danger); }
 .border-theme { border-color: var(--border); }
 .hover-bg {
   transition: all 0.15s ease-out;
@@ -190,10 +181,6 @@ button:not([class*="btn-stained"]):not([class*="btn-stone"]):not(.tab-active):ac
 
 .animate-slide-in {
   animation: slide-in 0.3s ease-out;
-}
-
-.animate-glow-pulse {
-  animation: glow-pulse 3s ease-in-out infinite;
 }
 
 .animate-spin-slow {

@@ -10,17 +10,6 @@ function Icon({ size = 16, children, ...props }: IconProps) {
   );
 }
 
-export function QuillIcon(props: IconProps) {
-  return (
-    <Icon {...props}>
-      <path d="M18 4c-1.5 2-3 5-3.5 7.5-.5 2.5-1 4.5-3.5 6.5" />
-      <path d="M5 20c2-1 4.5-2 6.5-4" />
-      <path d="M14 14l3-3" />
-      <path d="M17 11l3-3c1-1 1-2 0-3" />
-    </Icon>
-  );
-}
-
 export function BibleIcon(props: IconProps) {
   return (
     <Icon {...props}>
@@ -54,39 +43,10 @@ export function CandleIcon(props: IconProps) {
   );
 }
 
-export function ScrollIcon(props: IconProps) {
-  return (
-    <Icon {...props}>
-      <path d="M8 21h12a2 2 0 002-2v-2H10v2a2 2 0 01-4 0V5a2 2 0 012-2h10a2 2 0 012 2v12" />
-      <path d="M10 7h6" />
-      <path d="M10 11h4" />
-    </Icon>
-  );
-}
-
 export function StarIcon(props: IconProps) {
   return (
     <Icon {...props}>
       <path d="M12 2l1.5 5 5-1.5-2 4.5 4.5 2-4.5 2 2 4.5-5-1.5L12 22l-1.5-5-5 1.5 2-4.5L3 12l4.5-2-2-4.5 5 1.5z" />
-    </Icon>
-  );
-}
-
-export function CrossIcon(props: IconProps) {
-  return (
-    <Icon {...props}>
-      <path d="M8 2v6H2v4h6v10h4V12h6V8h-6V2z" />
-    </Icon>
-  );
-}
-
-export function BookIcon(props: IconProps) {
-  return (
-    <Icon {...props}>
-      <path d="M4 6v16h16V6" />
-      <path d="M4 6a2 2 0 012-2h12a2 2 0 012 2v2H4z" />
-      <path d="M8 11h8" />
-      <path d="M8 15h6" />
     </Icon>
   );
 }

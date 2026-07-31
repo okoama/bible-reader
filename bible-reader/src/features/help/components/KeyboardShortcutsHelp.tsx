@@ -14,9 +14,9 @@ const SHORTCUTS: ShortcutEntry[] = [
   { keys: '?', label: 'Show this help' },
 ];
 
-type Props = { onClose: () => void };
+type KeyboardShortcutsHelpProps = { onClose: () => void };
 
-export default function KeyboardShortcutsHelp({ onClose }: Props) {
+export default function KeyboardShortcutsHelp({ onClose }: KeyboardShortcutsHelpProps) {
   const doneRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
