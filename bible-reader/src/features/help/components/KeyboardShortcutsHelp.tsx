@@ -33,16 +33,16 @@ export default function KeyboardShortcutsHelp({ onClose }: KeyboardShortcutsHelp
       role="dialog"
       aria-modal="true"
       aria-label="Keyboard shortcuts"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-fade-in"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="mx-4 w-full max-w-sm rounded-lg border bg-white p-6 shadow-lg">
+      <div className="mx-4 w-full max-w-sm rounded-lg bg-card border border-theme p-6 shadow-xl animate-slide-up">
         <h2 className="text-lg font-bold">Keyboard Shortcuts</h2>
         <div className="mt-4 space-y-2">
           {SHORTCUTS.map(({ keys, label }) => (
             <div key={keys} className="flex items-center justify-between text-sm">
               <span className="opacity-70">{label}</span>
-              <kbd className="rounded border bg-gray-50 px-2 py-0.5 font-mono text-xs">{keys}</kbd>
+              <kbd className="rounded border border-theme bg-panel px-2 py-0.5 font-mono text-xs">{keys}</kbd>
             </div>
           ))}
         </div>
