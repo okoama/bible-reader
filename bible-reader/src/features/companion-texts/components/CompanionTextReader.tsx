@@ -6,6 +6,7 @@ import type { SelectedVerse } from '../../annotations/hooks/useTextSelection';
 import AnnotationToolbar from '../../annotations/components/AnnotationToolbar';
 import NoteEditor from '../../notes/components/NoteEditor';
 import { BookmarkEditor } from '../../bookmarks';
+import { VerseFavoriteRepository } from '../../../lib/repositories/VerseFavoriteRepository';
 import { HighlightRepository } from '../../../lib/repositories/HighlightRepository';
 import { useWorkHighlights } from '../../../lib/hooks/useWorkHighlights';
 import { useWorkNotes } from '../../../lib/hooks/useWorkNotes';
@@ -17,7 +18,7 @@ const highlightRepository = new HighlightRepository();
 
 type CompanionTextReaderProps = {
   workId: string;
-  initialSectionId?: string | null;
+  sectionId?: string | null;
   onSectionChange?: (sectionId: string) => void;
 };
 
@@ -63,9 +64,9 @@ function renderBlockText(text: string, blockHighlights: Highlight[]): React.Reac
   return segments.length > 0 ? segments : text;
 }
 
-export default function CompanionTextReader({ workId, initialSectionId, onSectionChange }: CompanionTextReaderProps) {
+export default function CompanionTextReader({ workId, sectionId, onSectionChange }: CompanionTextReaderProps) {
   const [work, setWork] = useState<TextWork | null>(null);
-  const [selectedSection, setSelectedSection] = useState<string | null>(initialSectionId ?? null);
+  const selectedSection = sectionId ?? null;
   const [section, setSection] = useState<TextSection | null>(null);
   const [loading, setLoading] = useState(true);
   const [sectionLoading, setSectionLoading] = useState(false);
@@ -76,6 +77,10 @@ export default function CompanionTextReader({ workId, initialSectionId, onSectio
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [bookmarkModalSourceRef, setBookmarkModalSourceRef] = useState<string | null>(null);
   const topRef = useRef<HTMLDivElement>(null);
+  const onSectionChangeRef = useRef(onSectionChange);
+  useEffect(() => {
+    onSectionChangeRef.current = onSectionChange;
+  }, [onSectionChange]);
 
   const { selection, clearSelection } = useTextSelection(containerElement, COMPANION_TEXT_SELECTION_CONFIG);
   const highlights = useWorkHighlights(workId, selectedSection, refreshKey);
@@ -86,16 +91,14 @@ export default function CompanionTextReader({ workId, initialSectionId, onSectio
     setLoading(true);
     setError(null);
     setWork(null);
-    setSelectedSection(initialSectionId ?? null);
     setSection(null);
 
     textService.loadWork(workId).then((loaded) => {
       if (isActive) {
-        console.log(`[CompanionText] Loaded "${loaded.name}": ${loaded.sections.length} sections`);
         setWork(loaded);
         setLoading(false);
-        if (!initialSectionId && loaded.sections.length > 0) {
-          setSelectedSection(loaded.sections[0].id);
+        if (!sectionId && loaded.sections.length > 0) {
+          onSectionChangeRef.current?.(loaded.sections[0].id);
         }
       }
     }).catch((err) => {
@@ -107,7 +110,7 @@ export default function CompanionTextReader({ workId, initialSectionId, onSectio
     });
 
     return () => { isActive = false; };
-  }, [workId, initialSectionId]);
+  }, [workId, sectionId]);
 
   useEffect(() => {
     if (!work || !selectedSection) {
@@ -122,19 +125,17 @@ export default function CompanionTextReader({ workId, initialSectionId, onSectio
       if (isActive) {
         setSection(loaded ?? null);
         setSectionLoading(false);
+        if (!loaded) {
+          console.warn(`[CompanionText] Section "${selectedSection}" not found in "${workId}"`);
+        }
       }
-    }).catch(() => {
+    }).catch((err) => {
+      console.error(`[CompanionText] Failed to load section "${selectedSection}" in "${workId}":`, err);
       if (isActive) setSectionLoading(false);
     });
 
     return () => { isActive = false; };
   }, [workId, work, selectedSection]);
-
-  useEffect(() => {
-    if (selectedSection) {
-      onSectionChange?.(selectedSection);
-    }
-  }, [selectedSection, onSectionChange]);
 
   useEffect(() => {
     if (section && topRef.current) {
@@ -198,6 +199,29 @@ export default function CompanionTextReader({ workId, initialSectionId, onSectio
 
   const handleBookmarkCancel = () => {
     setBookmarkModalSourceRef(null);
+  };
+
+  const verseFavRepo = new VerseFavoriteRepository();
+
+  const handleAddFavorite = async (text: string, verses: SelectedVerse[]) => {
+    const first = verses[0];
+    const last = verses[verses.length - 1];
+    const sourceReference = `${first.bookId}:${selectedSection}:${first.verseNumber}-${last.verseNumber}`;
+    const existing = await verseFavRepo.findBySourceReference(sourceReference);
+    if (existing) {
+      await verseFavRepo.delete(existing.id);
+    } else {
+      await verseFavRepo.create({
+        id: createId(),
+        sourceReference,
+        selectedText: text.length > 120 ? text.slice(0, 120) + '...' : text,
+        bookId: first.bookId,
+        chapterNumber: first.chapterNumber,
+        createdAt: new Date().toISOString(),
+      });
+    }
+    setRefreshKey((k) => k + 1);
+    clearSelection();
   };
 
   useEffect(() => {
@@ -273,8 +297,9 @@ export default function CompanionTextReader({ workId, initialSectionId, onSectio
       subtitle={work?.author}
       sections={sections}
       currentSectionId={selectedSection}
-      onSelectSection={setSelectedSection}
+      onSelectSection={(id) => onSectionChange?.(id)}
       loading={loading}
+      showSections={workId !== 'catechism' && workId !== 'confessions'}
       emptyMessage="Select a section to begin reading."
     >
       {sectionLoading ? (
@@ -284,7 +309,7 @@ export default function CompanionTextReader({ workId, initialSectionId, onSectio
           </svg>
           Loading...
         </div>
-      ) : section ? (
+      ) : section && section.content.length > 0 ? (
         <div ref={setContainerElement} className="space-y-4">
           <div ref={topRef} />
           {section.content.map((block) => {
@@ -300,7 +325,7 @@ export default function CompanionTextReader({ workId, initialSectionId, onSectio
                 className="text-sm leading-relaxed"
               >
                 {(block.label || block.number != null) && (
-                  <span className="mr-2 font-semibold text-xs uppercase tracking-wide opacity-60">
+                  <span className="mr-2 font-semibold text-xs small-caps tracking-wider opacity-50">
                     {block.label ?? block.number}
                   </span>
                 )}
@@ -318,7 +343,9 @@ export default function CompanionTextReader({ workId, initialSectionId, onSectio
             );
           })}
         </div>
-      ) : null}
+      ) : (<p className="py-12 text-center opacity-60 text-sm italic">
+      {selectedSection ? `Section "${selectedSection}" has no content.` : 'Select a section to begin reading.'}
+      </p>)}
 
       {selection && (
         <AnnotationToolbar
@@ -326,6 +353,7 @@ export default function CompanionTextReader({ workId, initialSectionId, onSectio
           onHighlight={handleHighlight}
           onNote={handleNote}
           onBookmark={handleBookmark}
+          onAddFavorite={handleAddFavorite}
         />
       )}
 

@@ -229,7 +229,7 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onT
         {filtered.map((note) => (
           <div
             key={note.id}
-            className={`relative rounded-md border px-3 py-2 text-left text-sm transition-colors duration-150 hover:bg-gray-50 ${
+            className={`relative rounded-md border px-3 py-2 text-left text-sm transition-colors duration-150 hover-bg ${
               selectedNoteId === note.id ? 'border-accent bg-accent-light' : ''
             }`}
           >

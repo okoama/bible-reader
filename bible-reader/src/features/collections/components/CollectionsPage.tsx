@@ -60,7 +60,7 @@ export default function CollectionsPage({ refreshKey, onSelectCollection, onNewC
             key={col.id}
             type="button"
             onClick={() => onSelectCollection(col.id)}
-            className="rounded-lg border p-5 text-left transition-colors hover:bg-gray-50"
+            className="rounded-lg border p-5 text-left transition-colors hover-bg"
           >
             <p className="text-lg font-semibold">{col.name}</p>
             {col.description && (

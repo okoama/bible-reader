@@ -72,7 +72,7 @@ export default function InsertLinkModal({ onInsert, onClose }: InsertLinkModalPr
       aria-modal="true"
       aria-label="Insert link"
     >
-      <div className="mx-4 flex w-full max-w-md flex-col gap-3 rounded-lg border bg-white p-6 shadow-xl animate-slide-up">
+      <div className="mx-4 flex w-full max-w-md flex-col gap-3 rounded-lg bg-card border border-theme p-6 shadow-xl animate-slide-up">
         <h2 className="text-lg font-semibold">Insert Link</h2>
 
         <select
@@ -103,7 +103,7 @@ export default function InsertLinkModal({ onInsert, onClose }: InsertLinkModalPr
               type="button"
               disabled={!manualId.trim()}
               onClick={() => handleInsert(manualId.trim(), manualId.trim())}
-              className="self-end rounded-md bg-accent px-4 py-2 text-sm text-white transition-colors hover:bg-accent-hover disabled:opacity-50"
+              className="self-end rounded-md btn-stained px-4 py-2 text-sm transition-colors disabled:opacity-50"
             >
               Insert
             </button>
@@ -123,7 +123,7 @@ export default function InsertLinkModal({ onInsert, onClose }: InsertLinkModalPr
                   key={n.id}
                   type="button"
                   onClick={() => handleInsert(n.id, n.title)}
-                  className="w-full rounded-md border px-3 py-2 text-left text-sm transition-colors hover:bg-gray-50"
+                  className="w-full rounded-md border px-3 py-2 text-left text-sm transition-colors hover-bg"
                 >
                   <p className="font-medium truncate">{n.title || 'Untitled'}</p>
                   <p className="text-xs opacity-40 truncate">{n.sourceReference}</p>
@@ -134,7 +134,7 @@ export default function InsertLinkModal({ onInsert, onClose }: InsertLinkModalPr
                   key={p.id}
                   type="button"
                   onClick={() => handleInsert(p.id, p.title)}
-                  className="w-full rounded-md border px-3 py-2 text-left text-sm transition-colors hover:bg-gray-50"
+                  className="w-full rounded-md border px-3 py-2 text-left text-sm transition-colors hover-bg"
                 >
                   <p className="font-medium truncate">{p.title}</p>
                 </button>
@@ -144,7 +144,7 @@ export default function InsertLinkModal({ onInsert, onClose }: InsertLinkModalPr
                   key={c.id}
                   type="button"
                   onClick={() => handleInsert(c.id, c.name)}
-                  className="w-full rounded-md border px-3 py-2 text-left text-sm transition-colors hover:bg-gray-50"
+                  className="w-full rounded-md border px-3 py-2 text-left text-sm transition-colors hover-bg"
                 >
                   <p className="font-medium truncate">{c.name}</p>
                   <p className="text-xs opacity-40">{c.items.length} items</p>
@@ -166,7 +166,7 @@ export default function InsertLinkModal({ onInsert, onClose }: InsertLinkModalPr
         <button
           type="button"
           onClick={onClose}
-          className="self-end rounded-md border px-4 py-1.5 text-sm transition-colors hover:bg-gray-100"
+          className="btn-stained-ghost self-end rounded px-4 py-1.5 text-sm"
         >
           Cancel
         </button>

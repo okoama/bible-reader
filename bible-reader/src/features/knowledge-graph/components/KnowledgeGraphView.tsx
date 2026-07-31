@@ -8,7 +8,7 @@ import GraphFilterPanel from './GraphFilterPanel';
 const REPULSION = 8000, ATTRACTION = 0.005, IDEAL_LENGTH = 160, GRAVITY = 0.002, DAMPING = 0.85;
 const MAX_TICKS = 200, NODE_RADIUS = 7, MAX_VISIBLE_NODES = 300;
 const ALL_TYPES: GraphNodeType[] = ['passage', 'note', 'bookmark', 'prayer', 'collection', 'project', 'catechism', 'summa'];
-const EDGE_COLORS: Record<string, string> = { references: '#93c5fd', linked_to: '#c4b5fd', part_of: '#86efac', mentions: '#fdba74', contains: '#fcd34d' };
+const EDGE_COLORS: Record<string, string> = { references: '#5f7fb0', linked_to: '#8b7bb0', part_of: '#6d9e76', mentions: '#b08a5f', contains: '#b09a5f' };
 const BATCH_INTERVAL = 80;
 
 type Props = { onNodeClick: (type: GraphNodeType, id: string) => void };
@@ -194,8 +194,8 @@ export default function KnowledgeGraphView({ onNodeClick }: Props) {
       onKeyDown={(e) => handleNodeKeyDown(e, node.type, node.id)}
       className="cursor-pointer hover:opacity-80 outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 rounded"
     >
-      <circle cx={node.x} cy={node.y} r={NODE_RADIUS} fill={NODE_COLORS[node.type] ?? '#9ca3af'} stroke="#fff" strokeWidth={1.5} />
-      <text x={node.x + NODE_RADIUS + 4} y={node.y + 3} fontSize={10} fill="#374151" className="select-none pointer-events-none">{node.label}</text>
+      <circle cx={node.x} cy={node.y} r={NODE_RADIUS} fill={NODE_COLORS[node.type] ?? '#9ca3af'} stroke="var(--border)" strokeWidth={1.5} />
+      <text x={node.x + NODE_RADIUS + 4} y={node.y + 3} fontSize={10} fill="var(--text)" className="select-none pointer-events-none">{node.label}</text>
     </g>
   )), [positionedNodes, handleNodePointerDown, handleNodeKeyDown]);
 
@@ -219,22 +219,22 @@ export default function KnowledgeGraphView({ onNodeClick }: Props) {
       <button type="button"
         onClick={() => setShowFilters((s) => !s)}
         aria-expanded={showFilters}
-        className="absolute left-3 top-3 z-20 rounded border bg-white px-2.5 py-1.5 text-xs shadow transition-colors hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-accent">
+        className="absolute left-3 top-3 z-20 rounded border border-theme bg-card px-2.5 py-1.5 text-xs shadow transition-colors hover-bg focus-visible:ring-2 focus-visible:ring-accent">
         {showFilters ? '\u2715 Hide Filters' : '\u2630 Filters'}
       </button>
       {showFilters && graphData && (
-        <div className="z-10 w-56 shrink-0 border-r bg-white overflow-y-auto" role="region" aria-label="Graph filters" onKeyDown={handleFilterKeyDown}>
+        <div className="z-10 w-56 shrink-0 border-r border-theme bg-panel overflow-y-auto" role="region" aria-label="Graph filters" onKeyDown={handleFilterKeyDown}>
           <GraphFilterPanel filters={filters} onChange={setFilters} allTags={allTags} collections={graphData.collections} projects={graphData.projects} />
         </div>
       )}
       <div className="relative flex-1">
         <div className="absolute right-3 top-3 z-10 flex flex-col gap-2" role="toolbar" aria-label="Graph zoom controls">
           <button type="button" onClick={() => setZoom((z) => Math.min(5, z * 1.2))} aria-label="Zoom in"
-            className="flex h-7 w-7 items-center justify-center rounded border bg-white text-sm shadow hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-accent">+</button>
+            className="flex h-7 w-7 items-center justify-center rounded border border-theme bg-card text-sm shadow hover-bg focus-visible:ring-2 focus-visible:ring-accent">+</button>
           <button type="button" onClick={() => setZoom((z) => Math.max(0.2, z * 0.8))} aria-label="Zoom out"
-            className="flex h-7 w-7 items-center justify-center rounded border bg-white text-sm shadow hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-accent">&minus;</button>
+            className="flex h-7 w-7 items-center justify-center rounded border border-theme bg-card text-sm shadow hover-bg focus-visible:ring-2 focus-visible:ring-accent">&minus;</button>
           <button type="button" onClick={() => { setPan({ x: 0, y: 0 }); setZoom(1); }} aria-label="Reset view"
-            className="flex h-7 w-7 items-center justify-center rounded border bg-white text-xs shadow hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-accent">R</button>
+            className="flex h-7 w-7 items-center justify-center rounded border border-theme bg-card text-xs shadow hover-bg focus-visible:ring-2 focus-visible:ring-accent">R</button>
         </div>
         {loading ? (
           <div className="flex h-full items-center justify-center text-sm italic opacity-50" role="status" aria-live="polite">Building graph...</div>
@@ -255,7 +255,7 @@ export default function KnowledgeGraphView({ onNodeClick }: Props) {
           </div>
         )}
         {!loading && positionedNodes.length > 0 && (
-          <div className="absolute bottom-3 left-3 z-10 flex flex-wrap gap-2 rounded-lg border bg-white/90 px-3 py-2 text-xs shadow-sm" role="list" aria-label="Node type legend">
+          <div className="absolute bottom-3 left-3 z-10 flex flex-wrap gap-2 rounded-lg border border-theme bg-card/90 px-3 py-2 text-xs shadow-sm backdrop-blur-sm" role="list" aria-label="Node type legend">
             {ALL_TYPES.map((type) => (
               <span key={type} role="listitem"
                 className={`flex items-center gap-1 ${filters.nodeTypes.includes(type) ? '' : 'opacity-30'}`}>
@@ -266,12 +266,12 @@ export default function KnowledgeGraphView({ onNodeClick }: Props) {
           </div>
         )}
         {filters.focusedNodeId && filters.depth !== 'all' && (
-          <div className="absolute bottom-3 right-3 z-10 rounded-lg border bg-white/90 px-3 py-2 text-xs shadow-sm" role="status" aria-live="polite">
+          <div className="absolute bottom-3 right-3 z-10 rounded-lg border border-theme bg-card/90 px-3 py-2 text-xs shadow-sm backdrop-blur-sm" role="status" aria-live="polite">
             Focused: {positionedNodes.find((n) => n.id === filters.focusedNodeId)?.label ?? filters.focusedNodeId}
           </div>
         )}
         {nodeLimitExceeded && (
-          <div className="absolute left-1/2 top-3 z-10 -translate-x-1/2 rounded-lg border bg-amber-50 px-4 py-2 text-xs text-amber-800 shadow-sm" role="alert">
+          <div className="absolute left-1/2 top-3 z-10 -translate-x-1/2 rounded-lg border border-theme bg-card px-4 py-2 text-xs shadow-sm" role="alert">
             Showing {MAX_VISIBLE_NODES} of {graphData.nodes.length} nodes. Refine filters or increase depth.
           </div>
         )}

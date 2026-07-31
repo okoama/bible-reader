@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import type { WorkspaceSettings, AccentName } from '../../types';
-import { loadSettings, saveSettings, DEFAULT_SETTINGS } from '../utils/workspaceSettings';
+import type { WorkspaceSettings, AccentName, ThemeId } from '../../types';
+import { loadSettings, saveSettings, DEFAULT_SETTINGS, THEMES } from '../utils/workspaceSettings';
 import { ACCENT_COLORS } from '../utils/accent';
 
 type WorkspaceSettingsContextValue = {
@@ -29,6 +29,25 @@ function applyReadingWidth(width: number): void {
   document.documentElement.style.setProperty('--reading-width', `${width}px`);
 }
 
+function applyTheme(themeId: ThemeId): void {
+  const theme = THEMES[themeId];
+  if (!theme) return;
+  const root = document.documentElement;
+  root.style.setProperty('--bg', theme.bg);
+  root.style.setProperty('--sidebar-bg', theme.sidebarBg);
+  root.style.setProperty('--panel-bg', theme.panelBg);
+  root.style.setProperty('--reader-bg', theme.readerBg);
+  root.style.setProperty('--card-bg', theme.cardBg);
+  root.style.setProperty('--hover', theme.hover);
+  root.style.setProperty('--text', theme.text);
+  root.style.setProperty('--muted', theme.muted);
+  root.style.setProperty('--border', theme.border);
+  root.style.setProperty('--secondary', theme.secondary);
+  root.style.setProperty('--reader-font', theme.readerFont);
+  root.style.setProperty('--ui-font', theme.uiFont);
+  root.style.setProperty('--line-height', String(theme.lineHeight));
+}
+
 export function WorkspaceSettingsProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<WorkspaceSettings>(loadSettings);
 
@@ -36,6 +55,7 @@ export function WorkspaceSettingsProvider({ children }: { children: React.ReactN
     applyAccent(settings.accent);
     applyFontSize(settings.fontSize);
     applyReadingWidth(settings.readingWidth);
+    applyTheme(settings.theme);
   }, []);
 
   const updateSettings = useCallback((patch: Partial<WorkspaceSettings>) => {
@@ -45,6 +65,7 @@ export function WorkspaceSettingsProvider({ children }: { children: React.ReactN
       if (patch.accent) applyAccent(patch.accent);
       if (patch.fontSize) applyFontSize(patch.fontSize);
       if (patch.readingWidth) applyReadingWidth(patch.readingWidth);
+      if (patch.theme) applyTheme(patch.theme);
       return next;
     });
   }, []);
@@ -55,6 +76,7 @@ export function WorkspaceSettingsProvider({ children }: { children: React.ReactN
     applyAccent(DEFAULT_SETTINGS.accent);
     applyFontSize(DEFAULT_SETTINGS.fontSize);
     applyReadingWidth(DEFAULT_SETTINGS.readingWidth);
+    applyTheme(DEFAULT_SETTINGS.theme);
   }, []);
 
   return (

@@ -101,7 +101,7 @@ export default function PrayerJournal({ refreshKey, onRefresh }: PrayerJournalPr
         <button
           type="button"
           onClick={handleNew}
-          className="rounded-md bg-accent px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-accent-hover"
+          className="rounded-md btn-stained px-4 py-2 text-sm transition-colors duration-150"
         >
           New Prayer
         </button>
@@ -120,7 +120,7 @@ export default function PrayerJournal({ refreshKey, onRefresh }: PrayerJournalPr
           type="button"
           onClick={() => setCategoryFilter('all')}
           className={`rounded-full px-3 py-1 text-xs font-medium transition-colors duration-150 ${
-            categoryFilter === 'all' ? 'bg-accent text-white' : 'border hover:bg-gray-100'
+            categoryFilter === 'all' ? 'bg-accent text-white' : 'border hover-bg'
           }`}
         >
           All
@@ -143,7 +143,7 @@ export default function PrayerJournal({ refreshKey, onRefresh }: PrayerJournalPr
           type="button"
           onClick={() => setFavoritesOnly((f) => !f)}
           className={`rounded-full px-3 py-1 text-xs font-medium transition-colors duration-150 ${
-            favoritesOnly ? 'bg-yellow-500 text-white' : 'border hover:bg-gray-100'
+            favoritesOnly ? 'bg-yellow-500 text-white' : 'border hover-bg'
           }`}
         >
           {favoritesOnly ? '★ Favorites' : '☆ Favorites'}
@@ -154,7 +154,7 @@ export default function PrayerJournal({ refreshKey, onRefresh }: PrayerJournalPr
         {filtered.map((prayer) => {
           const catLabel = PRAYER_CATEGORIES.find((c) => c.value === prayer.category)?.label ?? prayer.category;
           return (
-            <div key={prayer.id} className="rounded-md border p-4 transition-colors duration-150 hover:bg-gray-50">
+            <div key={prayer.id} className="rounded-md border p-4 transition-colors duration-150 hover-bg">
               <div className="flex items-start justify-between">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">

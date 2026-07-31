@@ -61,10 +61,11 @@ export default function RightPanel({
   sectionId,
 }: RightPanelProps) {
   const { settings, updateSettings } = useWorkspaceSettings();
+  const [panelOpen, setPanelOpen] = useState(true);
   const [panelWidth, setPanelWidth] = useState(settings.rightPanelWidth);
   const [deletingHighlight, setDeletingHighlight] = useState<Highlight | null>(null);
   const [deletingBookmark, setDeletingBookmark] = useState<Bookmark | null>(null);
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set(['passage', 'highlights', 'notes', 'bookmarks']));
   const [addToCollectionTarget, setAddToCollectionTarget] = useState<{ type: CollectionItemType; label: string; sourceReference?: string; itemId?: string } | null>(null);
   const dragRef = useRef<{ startX: number; startWidth: number } | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -188,10 +189,10 @@ export default function RightPanel({
 
   const isCollapsed = (id: string) => collapsed.has(id);
 
-  return (
+  return panelOpen ? (
     <aside
       ref={panelRef}
-      className="relative flex shrink-0 flex-col border-l"
+      className="relative flex shrink-0 flex-col border-l border-theme bg-panel"
       style={{ width: panelWidth }}
     >
       <div
@@ -201,8 +202,13 @@ export default function RightPanel({
         aria-orientation="vertical"
         aria-label="Resize panel"
       />
-
-      <div className="flex-1 overflow-y-auto p-4 pl-5">
+      <div className="flex items-center justify-between px-4 pt-2">
+        <span className="text-[10px] font-semibold uppercase tracking-widest opacity-40">Panel</span>
+        <button type="button" onClick={() => setPanelOpen(false)} className="text-xs opacity-40 hover:opacity-80" title="Collapse panel">
+          {'\u2715'}
+        </button>
+      </div>
+      <div className="flex-1 overflow-y-auto p-4 pl-5 pt-1">
         <Section
           id="passage"
           title="Passage"
@@ -292,7 +298,7 @@ export default function RightPanel({
               {bookmarks.map((b) => (
                 <div
                   key={b.id}
-                  className="group cursor-pointer rounded border p-2 hover:bg-gray-50"
+                  className="group cursor-pointer rounded border p-2 hover-bg"
                   onClick={() => onNavigateToBookmark(b.sourceReference)}
                   role="button"
                   tabIndex={0}
@@ -380,6 +386,16 @@ export default function RightPanel({
         />
       )}
     </aside>
+  ) : (
+    <button
+      type="button"
+      onClick={() => setPanelOpen(true)}
+      className="shrink-0 border-l border-theme bg-panel px-1 py-3 text-xs text-muted hover:text-text hover-bg transition-colors duration-150"
+      title="Expand panel"
+      style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+    >
+      Panel
+    </button>
   );
 }
 
@@ -399,11 +415,13 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mb-3">
+    <div className={`mb-3 overflow-hidden rounded-lg border bg-card shadow-sm transition-all duration-150 hover:shadow-lg ${
+      collapsed ? 'border-theme' : 'border-[#B8962E]/60'
+    }`}>
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center gap-2 rounded py-1 text-left text-xs font-semibold uppercase tracking-wide opacity-60 transition-opacity duration-150 hover:opacity-100"
+        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide opacity-60 transition-all duration-150 hover:opacity-100 hover:bg-black/5"
         aria-expanded={!collapsed}
         aria-controls={`section-${id}`}
       >
@@ -412,7 +430,7 @@ function Section({
         </span>
         {title}
         {count > 0 && (
-          <span className="ml-auto rounded-full bg-gray-200 px-1.5 py-0.5 text-[10px] font-normal">
+          <span className="ml-auto rounded-full bg-accent/10 px-1.5 py-0.5 text-[10px] font-normal text-accent">
             {count}
           </span>
         )}
@@ -420,9 +438,14 @@ function Section({
       <div
         id={`section-${id}`}
         role="region"
-        className={`transition-all duration-150 ${collapsed ? 'h-0 overflow-hidden' : 'mt-1'}`}
+        aria-hidden={collapsed}
+        className={`grid transition-[grid-template-rows] duration-200 ease-out ${collapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]'}`}
       >
-        {children}
+        <div className="min-h-0 overflow-hidden">
+          <div className="px-3 pb-3">
+            {children}
+          </div>
+        </div>
       </div>
     </div>
   );

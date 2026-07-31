@@ -57,7 +57,7 @@ export default function PrayerViewer({ prayer, readOnly = false, onClose, onEdit
       aria-modal="true"
       aria-label={prayer.title}
     >
-      <div className="mx-4 flex w-full max-w-2xl flex-col gap-4 rounded-lg border bg-white p-6 shadow-xl animate-slide-up max-h-[85vh] overflow-y-auto">
+      <div className="mx-4 flex w-full max-w-2xl flex-col gap-4 rounded-lg bg-card border border-theme p-6 shadow-xl animate-slide-up max-h-[85vh] overflow-y-auto">
         <div className="flex items-start justify-between">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
@@ -94,14 +94,14 @@ export default function PrayerViewer({ prayer, readOnly = false, onClose, onEdit
               <button
                 type="button"
                 onClick={() => onEdit?.(prayer)}
-                className="rounded-md border px-3 py-1.5 text-sm transition-colors duration-150 hover:bg-gray-100"
+                className="btn-stained-ghost rounded px-3 py-1.5 text-sm"
               >
                 Edit
               </button>
               <button
                 type="button"
                 onClick={handleMarkPrayed}
-                className="rounded-md bg-green-600 px-3 py-1.5 text-sm text-white transition-colors duration-150 hover:bg-green-700"
+                className="btn-stained rounded px-3 py-1.5 text-sm"
               >
                 {prayer.lastPrayed ? 'Prayed Again' : 'Mark Prayed'}
               </button>
@@ -109,7 +109,7 @@ export default function PrayerViewer({ prayer, readOnly = false, onClose, onEdit
                 type="button"
                 onClick={handleMarkAnswered}
                 className={`rounded-md border px-3 py-1.5 text-sm transition-colors duration-150 ${
-                  prayer.answered ? 'bg-green-50 text-green-700 hover:bg-green-100' : 'hover:bg-gray-100'
+                  prayer.answered ? 'bg-green-50 text-green-700 hover:bg-green-100' : 'hover-bg'
                 }`}
               >
                 {prayer.answered ? '✓ Answered' : 'Mark Answered'}

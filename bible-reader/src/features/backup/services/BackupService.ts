@@ -1,4 +1,4 @@
-import type { WorkspaceBackup } from '../../types';
+import type { WorkspaceBackup } from '../../../types';
 import { db } from '../../../lib/database/database';
 
 export class BackupService {

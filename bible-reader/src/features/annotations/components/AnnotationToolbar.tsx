@@ -7,6 +7,7 @@ type AnnotationToolbarProps = {
   onHighlight: (text: string, verses: SelectedVerse[], color: string) => void;
   onNote: (text: string, verses: SelectedVerse[]) => void;
   onBookmark: (verses: SelectedVerse[]) => void;
+  onAddFavorite: (text: string, verses: SelectedVerse[]) => void;
 };
 
 const TOOLBAR_HEIGHT = 40;
@@ -17,6 +18,7 @@ export default function AnnotationToolbar({
   onHighlight,
   onNote,
   onBookmark,
+  onAddFavorite,
 }: AnnotationToolbarProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState<{ left: number; top: number }>({
@@ -77,7 +79,7 @@ export default function AnnotationToolbar({
           <button
             type="button"
             onClick={() => setShowColors(false)}
-            className="rounded px-2 py-1 text-xs transition-colors duration-150 hover:bg-gray-100"
+            className="rounded px-2 py-1 text-xs transition-colors duration-150 hover-bg"
           >
             Cancel
           </button>
@@ -98,10 +100,19 @@ export default function AnnotationToolbar({
           >
             Note
           </button>
+          <div className="mx-1 h-4 w-px bg-gray-200" />
+          <button
+            type="button"
+            onClick={() => onAddFavorite(selection.text, selection.verses)}
+            className="rounded px-2 py-1 text-sm transition-colors duration-150 hover:bg-yellow-100 hover:text-yellow-700"
+            title="Add to favorites"
+          >
+            {'\u2605'} Favorite
+          </button>
           <button
             type="button"
             onClick={() => onBookmark(selection.verses)}
-            className="rounded px-2 py-1 text-sm transition-colors duration-150 hover:bg-gray-100"
+            className="rounded px-2 py-1 text-sm transition-colors duration-150 hover-bg"
           >
             Bookmark
           </button>

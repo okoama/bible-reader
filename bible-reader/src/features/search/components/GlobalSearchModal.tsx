@@ -17,7 +17,7 @@ export default function GlobalSearchModal({ onSelectNote, onClose }: Props) {
   const [allNotes, setAllNotes] = useState<Note[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const [activeIndex, setActiveIndex] = useState(-1);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     noteRepository.findAll().then(setAllNotes);
@@ -82,7 +82,7 @@ export default function GlobalSearchModal({ onSelectNote, onClose }: Props) {
       className="fixed inset-0 z-50 flex items-start justify-center bg-black/30 pt-[15vh]"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="mx-4 w-full max-w-lg rounded-lg border bg-white shadow-lg">
+      <div className="mx-4 w-full max-w-lg rounded-lg bg-card border border-theme shadow-lg">
         <div className="border-b p-3">
           <input
             ref={inputRef}

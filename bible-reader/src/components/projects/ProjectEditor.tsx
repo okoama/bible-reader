@@ -49,7 +49,7 @@ export default function ProjectEditor({ project, onSave, onCancel }: Props) {
           <span className="text-xs font-medium opacity-60" id="status-label">Status</span>
           <div className="mt-1 flex gap-2" role="radiogroup" aria-labelledby="status-label">
             {PROJECT_STATUSES.map((s) => (
-              <button key={s} type="button" role="radio" aria-checked={status === s} onClick={() => setStatus(s)} className={`rounded-full px-3 py-1 text-xs capitalize transition-colors focus-visible:ring-2 focus-visible:ring-accent ${status === s ? 'bg-accent text-white' : 'border hover:bg-gray-50'}`}>{s}</button>
+              <button key={s} type="button" role="radio" aria-checked={status === s} onClick={() => setStatus(s)} className={`rounded-full px-3 py-1 text-xs capitalize transition-colors focus-visible:ring-2 focus-visible:ring-accent ${status === s ? 'bg-accent text-white' : 'border hover-bg'}`}>{s}</button>
             ))}
           </div>
         </div>
@@ -73,7 +73,7 @@ export default function ProjectEditor({ project, onSave, onCancel }: Props) {
         </div>
 
         <div className="flex justify-end gap-2">
-          <button type="button" onClick={onCancel} className="rounded-md border px-4 py-2 text-sm transition-colors hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-accent">Cancel</button>
+          <button type="button" onClick={onCancel} className="rounded-md border px-4 py-2 text-sm transition-colors hover-bg focus-visible:ring-2 focus-visible:ring-accent">Cancel</button>
           <button type="button" disabled={!title.trim()} onClick={handleSubmit} className="rounded-md bg-accent px-4 py-2 text-sm text-white transition-colors hover:bg-accent-hover disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-accent">{project ? 'Save' : 'Create'}</button>
         </div>
       </div>

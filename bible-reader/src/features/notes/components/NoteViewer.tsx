@@ -21,7 +21,7 @@ export default function NoteViewer({ note, onClose, onCrossLinkNavigate }: NoteV
       aria-modal="true"
       aria-label={note.title || 'Note'}
     >
-      <div className="mx-4 flex w-full max-w-2xl max-h-[85vh] flex-col gap-4 rounded-lg border bg-white p-6 shadow-xl animate-slide-up overflow-y-auto">
+      <div className="mx-4 flex w-full max-w-2xl max-h-[85vh] flex-col gap-4 rounded-lg bg-card border border-theme p-6 shadow-xl animate-slide-up overflow-y-auto">
         <div className="flex items-start justify-between">
           <div>
             <h2 className="text-xl font-semibold">{note.title || 'Untitled'}</h2>
@@ -30,7 +30,7 @@ export default function NoteViewer({ note, onClose, onCrossLinkNavigate }: NoteV
           <button
             type="button"
             onClick={onClose}
-            className="shrink-0 rounded px-2 py-1 text-sm text-gray-500 hover:bg-gray-100"
+            className="shrink-0 rounded px-2 py-1 text-sm text-gray-500 hover-bg"
           >
             &times;
           </button>
@@ -60,7 +60,7 @@ export default function NoteViewer({ note, onClose, onCrossLinkNavigate }: NoteV
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md border px-4 py-2 text-sm transition-colors hover:bg-gray-100"
+            className="btn-stained-ghost rounded px-4 py-2 text-sm"
           >
             Close
           </button>

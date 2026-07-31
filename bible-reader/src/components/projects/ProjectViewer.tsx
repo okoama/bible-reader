@@ -155,7 +155,7 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
           </div>
         </div>
         <div className="flex gap-1 shrink-0">
-          <button type="button" onClick={() => onEdit(project)} className="rounded border px-3 py-1 text-sm transition-colors hover:bg-gray-100">Edit</button>
+          <button type="button" onClick={() => onEdit(project)} className="btn-stained-ghost rounded px-3 py-1 text-sm">Edit</button>
           <button type="button" onClick={() => onDelete(project.id)} className="rounded border px-3 py-1 text-sm text-red-600 transition-colors hover:bg-red-50">Delete</button>
         </div>
       </div>
@@ -167,7 +167,7 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
             type="button"
             onClick={() => onStatusChange(project.id, s)}
             className={`rounded-full px-4 py-1.5 text-xs capitalize transition-colors ${
-              project.status === s ? 'bg-accent text-white' : 'border hover:bg-gray-50'
+              project.status === s ? 'bg-accent text-white' : 'border hover-bg'
             }`}
           >{s}</button>
         ))}

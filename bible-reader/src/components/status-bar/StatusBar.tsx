@@ -21,7 +21,7 @@ export default function StatusBar() {
   };
 
   return (
-    <footer className="flex items-center justify-between border-t px-4 py-2 text-sm">
+    <footer className="flex items-center justify-between border-t border-theme bg-panel px-4 py-2 text-sm">
       <span className="opacity-60">Ready • Offline • Version 0.1.0</span>
       <div className="flex items-center gap-3">
         {session && !session.endTime && (
@@ -30,20 +30,20 @@ export default function StatusBar() {
             <button
               type="button"
               onClick={handleEnd}
-              className="rounded bg-red-500 px-3 py-1 text-xs text-white hover:bg-red-600"
+              className="btn-stained-danger rounded px-3 py-1 text-xs"
             >
               End Session
             </button>
           </>
         )}
         {(!session || session.endTime) && (
-          <button
-            type="button"
-            onClick={() => startSession()}
-            className="rounded bg-accent px-3 py-1 text-xs text-white hover:bg-accent-hover"
-          >
-            Start Session
-          </button>
+            <button
+              type="button"
+              onClick={() => startSession()}
+              className="btn-stained rounded px-3 py-1 text-xs"
+            >
+              Start Session
+            </button>
         )}
       </div>
       {showSummary && session && (

@@ -57,7 +57,7 @@ export default function SettingsModal({ onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={onClose}>
-      <div className="mx-4 w-full max-w-sm rounded-lg border bg-white p-6 shadow-lg" onClick={(e) => e.stopPropagation()}>
+      <div className="mx-4 w-full max-w-sm rounded-lg bg-card border border-theme p-6 shadow-lg" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-bold">Workspace Settings</h2>
 
         <div className="mt-5 space-y-5">
@@ -77,7 +77,7 @@ export default function SettingsModal({ onClose }: Props) {
                     key={name}
                     type="button"
                     onClick={() => set({ accent: name })}
-                    className={`h-8 w-8 rounded-full transition-transform ${isActive ? 'scale-125 ring-2 ring-offset-2' : 'hover:scale-110'}`}
+                    className={`h-7 w-7 rounded-full transition-transform ${isActive ? 'scale-125 ring-2 ring-offset-2' : 'hover:scale-110'}`}
                     style={{ backgroundColor: colors.base }}
                     title={name}
                   />
@@ -91,15 +91,15 @@ export default function SettingsModal({ onClose }: Props) {
           </button>
         </div>
 
-        <hr className="my-4 border-gray-200" />
+        <hr className="divider-gold" />
 
         <div className="space-y-2">
           <h3 className="text-sm font-semibold">Backup & Restore</h3>
           <div className="flex gap-2">
-            <button type="button" onClick={handleExport} className="rounded border px-3 py-1.5 text-xs hover:bg-gray-100">
+            <button type="button" onClick={handleExport} className="btn-stained-ghost rounded px-3 py-1.5 text-xs">
               Export Backup
             </button>
-            <button type="button" onClick={() => fileInputRef.current?.click()} className="rounded border px-3 py-1.5 text-xs hover:bg-gray-100">
+            <button type="button" onClick={() => fileInputRef.current?.click()} className="btn-stained-ghost rounded px-3 py-1.5 text-xs">
               Import Backup
             </button>
             <input ref={fileInputRef} type="file" accept=".json" onChange={handleImport} className="hidden" />
@@ -112,7 +112,7 @@ export default function SettingsModal({ onClose }: Props) {
         </div>
 
         <div className="mt-6 flex justify-end">
-          <button type="button" onClick={onClose} className="rounded bg-accent px-4 py-2 text-sm text-white hover:bg-accent-hover">
+          <button type="button" onClick={onClose} className="btn-stained rounded px-4 py-2 text-sm">
             Done
           </button>
         </div>

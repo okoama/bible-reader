@@ -6,6 +6,7 @@ import type { BibleBook, BibleVerse, Bookmark, Collection, CollectionItem, Highl
 import type { ActiveView } from '../../layouts/AppLayout';
 import { CollectionRepository } from '../../lib/repositories/CollectionRepository';
 import { HighlightRepository } from '../../lib/repositories/HighlightRepository';
+import { VerseFavoriteRepository } from '../../lib/repositories/VerseFavoriteRepository';
 import { BookmarkEditor } from '../../features/bookmarks';
 import { useHighlights } from '../../lib/hooks/useHighlights';
 import { useChapterNotes } from '../../lib/hooks/useChapterNotes';
@@ -29,6 +30,7 @@ import { ResearchProjectRepository } from '../../lib/repositories/ResearchProjec
 const bibleService = new BibleService();
 const highlightRepository = new HighlightRepository();
 const projectRepository = new ResearchProjectRepository();
+const scrollMemory = new Map<string, number>();
 
 function getHighlightsForVerse(highlights: Highlight[], verseNumber: number): Highlight[] {
   return highlights.filter((h) => {
@@ -92,6 +94,7 @@ type ReaderProps = {
   onDeleteSelectedNote: () => void;
   prayerFilter: PrayerFilter;
   onCrossLinkNavigate?: (type: string, id: string) => void;
+  onNavigateToPassage?: (bookId: string, chapter: number, verse?: number) => void;
 };
 
 export default function Reader({
@@ -114,12 +117,14 @@ export default function Reader({
   onDeleteSelectedNote,
   prayerFilter,
   onCrossLinkNavigate,
+  onNavigateToPassage,
 }: ReaderProps) {
   const [chapterNumbers, setChapterNumbers] = useState<number[]>([]);
   const [verses, setVerses] = useState<BibleVerse[]>([]);
   const [containerElement, setContainerElement] = useState<HTMLDivElement | null>(null);
   const mainRef = useRef<HTMLElement>(null);
   const verseRefs = useRef<Map<string, HTMLParagraphElement>>(new Map());
+  const lastRestoredScrollKey = useRef<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [collectionsRefreshKey, setCollectionsRefreshKey] = useState(0);
   const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
@@ -227,6 +232,30 @@ export default function Reader({
 
   const handleBookmarkCancel = () => {
     setBookmarkModalSourceRef(null);
+  };
+
+  const verseFavRepo = new VerseFavoriteRepository();
+
+  const handleAddFavorite = async (text: string, verses: SelectedVerse[]) => {
+    const first = verses[0];
+    const last = verses[verses.length - 1];
+    const sourceReference = `${first.bookId}:${first.chapterNumber}:${first.verseNumber}-${last.verseNumber}`;
+    const existing = await verseFavRepo.findBySourceReference(sourceReference);
+    if (existing) {
+      await verseFavRepo.delete(existing.id);
+    } else {
+      await verseFavRepo.create({
+        id: createId(),
+        sourceReference,
+        selectedText: text.length > 120 ? text.slice(0, 120) + '...' : text,
+        bookId: first.bookId,
+        chapterNumber: first.chapterNumber,
+        createdAt: new Date().toISOString(),
+      });
+    }
+    setRefreshKey((k) => k + 1);
+    if (session && !session.endTime) logBookmark(createId(), sourceReference, text);
+    clearSelection();
   };
 
   const handlePrayerRefresh = () => {
@@ -407,6 +436,22 @@ export default function Reader({
     }
   }, [pendingNavigation, verses, onPendingNavigationClear]);
 
+  const handleMainScroll = (e: React.UIEvent<HTMLElement>) => {
+    if (activeView === 'bible' && selectedBook && selectedChapter) {
+      scrollMemory.set(`${selectedBook.id}:${selectedChapter}`, e.currentTarget.scrollTop);
+    }
+  };
+
+  useEffect(() => {
+    if (activeView !== 'bible' || !selectedBook || !selectedChapter || verses.length === 0 || pendingNavigation) return;
+    const key = `${selectedBook.id}:${selectedChapter}`;
+    if (lastRestoredScrollKey.current === key) return;
+    lastRestoredScrollKey.current = key;
+    const saved = scrollMemory.get(key) ?? 0;
+    const main = mainRef.current;
+    if (main) requestAnimationFrame(() => { main.scrollTop = saved; });
+  }, [activeView, selectedBook, selectedChapter, verses, pendingNavigation]);
+
   useEffect(() => {
     const isInputFocused = () => {
       const el = document.activeElement;
@@ -475,10 +520,10 @@ export default function Reader({
   const isLoading = selectedBook && selectedChapter && verses.length === 0;
 
   return (
-    <main ref={mainRef} className="reading-text flex-1 overflow-y-auto p-6">
+    <main ref={mainRef} className="reading-text flex-1 overflow-y-auto bg-reader p-8" onScroll={handleMainScroll}>
       {activeView === 'favorites' ? (
         <div className="mx-auto reading-width animate-fade-in">
-          <FavoritesPage refreshKey={prayerRefreshKey} onRefresh={handlePrayerRefresh} onCrossLinkNavigate={onCrossLinkNavigate} />
+          <FavoritesPage refreshKey={prayerRefreshKey} onRefresh={handlePrayerRefresh} onCrossLinkNavigate={onCrossLinkNavigate} onNavigateToPassage={onNavigateToPassage} />
         </div>
       ) : activeView === 'prayer-journal' ? (
         <div className="mx-auto reading-width rounded-lg border p-6 animate-fade-in">
@@ -486,7 +531,7 @@ export default function Reader({
         </div>
       ) : activeView === 'companion-text' && selectedWorkId ? (
         <div className="animate-fade-in">
-          <CompanionTextReader workId={selectedWorkId} initialSectionId={selectedSectionId} onSectionChange={onSelectSection} />
+          <CompanionTextReader workId={selectedWorkId} sectionId={selectedSectionId} onSectionChange={onSelectSection} />
         </div>
       ) : activeView === 'collections' && selectedCollectionId ? (
         <CollectionViewer
@@ -530,7 +575,7 @@ export default function Reader({
           onSelectSection={(id) => onSelectChapter(Number.parseInt(id, 10))}
           loading={!!isLoading}
         >
-          <div ref={setContainerElement} className="animate-fade-in space-y-1">
+          <div key={`${selectedBook.id}-${selectedChapter}`} ref={setContainerElement} className="animate-fade-in-slow space-y-1">
             {verses.map((verse) => {
               const verseHighlights = getHighlightsForVerse(highlights, verse.verseNumber);
 
@@ -541,7 +586,7 @@ export default function Reader({
                   className={`cursor-pointer leading-relaxed rounded px-1 -mx-1 transition-colors duration-100 ${
                     selectedVerse?.verseNumber === verse.verseNumber
                       ? 'bg-accent-light'
-                      : 'hover:bg-gray-50'
+                      : 'hover-bg'
                   }`}
                   data-book={selectedBook.id}
                   data-chapter={selectedChapter}
@@ -553,7 +598,10 @@ export default function Reader({
                     if (e.key === 'Enter' || e.key === ' ') handleVerseClick(verse.verseNumber);
                   }}
                 >
-                  <span className="mr-1 text-xs font-semibold align-super text-accent">
+                  {verse.verseNumber === 1 && (
+                    <span className="mr-1 text-xs opacity-40">✠</span>
+                  )}
+                  <span className="mr-0.5 text-[10px] font-semibold align-super leading-none text-[#B8962E]/70">
                     {verse.verseNumber}
                   </span>
                   {getVerseNotes(verse.verseNumber).map((note) => (
@@ -572,7 +620,7 @@ export default function Reader({
           </div>
         </ContentReader>
       ) : (
-        <div className="mx-auto reading-width rounded-lg border p-6">
+        <div className="mx-auto reading-width reader-card p-8">
           <div className="py-12 text-center">
             <h2 className="text-2xl font-semibold">Welcome to Catholic Study Desk</h2>
             <p className="mt-3 opacity-60">
@@ -588,6 +636,7 @@ export default function Reader({
           onHighlight={handleHighlight}
           onNote={handleNote}
           onBookmark={handleBookmark}
+          onAddFavorite={handleAddFavorite}
         />
       )}
 

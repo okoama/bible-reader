@@ -8,9 +8,10 @@ export type ContentSection = {
 type ContentReaderProps = {
   title: string;
   subtitle?: string;
-  sections: ContentSection[];
-  currentSectionId: string | null;
-  onSelectSection: (sectionId: string) => void;
+  sections?: ContentSection[];
+  currentSectionId?: string | null;
+  onSelectSection?: (sectionId: string) => void;
+  showSections?: boolean;
   loading?: boolean;
   emptyMessage?: string;
   children: ReactNode;
@@ -19,23 +20,31 @@ type ContentReaderProps = {
 export default function ContentReader({
   title,
   subtitle,
-  sections,
-  currentSectionId,
+  sections = [],
+  currentSectionId = null,
   onSelectSection,
+  showSections = true,
   loading = false,
   emptyMessage = 'Select a section to begin reading.',
   children,
 }: ContentReaderProps) {
   return (
-    <div className="mx-auto reading-width rounded-lg border p-6">
-      <h2 className="text-2xl font-semibold">{title}</h2>
+    <div className="mx-auto reading-width reader-card py-8 px-12">
+      <h2 className="heading-book">{title}</h2>
       {subtitle && (
-        <p className="mt-1 text-sm opacity-60">{subtitle}</p>
+        <>
+          <div className="mb-4 flex items-center gap-3">
+            <span className="flex-1 h-px bg-gradient-to-r from-transparent via-[#B8962E]/40 to-transparent" />
+            <span className="text-xs text-[#B8962E]/60" aria-hidden="true">✠</span>
+            <span className="flex-1 h-px bg-gradient-to-r from-transparent via-[#B8962E]/40 to-transparent" />
+          </div>
+          <p className="mb-6 text-sm tracking-widest opacity-75 text-center">{subtitle}</p>
+        </>
       )}
 
-      {sections.length > 0 && (
-        <div className={`mt-6 ${sections.length > 60 ? 'max-h-60 overflow-y-auto border rounded-lg p-2' : 'flex flex-wrap gap-1.5'}`}>
-          <div className={sections.length > 60 ? 'space-y-0.5' : 'flex flex-wrap gap-1.5'}>
+      {showSections && sections.length > 0 && onSelectSection && (
+        <div className={`mb-6 ${sections.length > 60 ? 'max-h-60 overflow-y-auto border rounded-lg p-2' : 'flex flex-wrap gap-1'}`}>
+          <div className={sections.length > 60 ? 'space-y-0.5' : 'flex flex-wrap gap-1'}>
             {sections.map((section) => {
               const isSelected = currentSectionId === section.id;
 
@@ -44,10 +53,8 @@ export default function ContentReader({
                   key={section.id}
                   type="button"
                   onClick={() => onSelectSection(section.id)}
-                  className={`rounded-md px-3 py-1.5 text-sm transition-colors duration-150 ${
-                    isSelected
-                      ? 'bg-accent text-white'
-                      : 'border hover:bg-gray-100'
+                  className={`rounded-xl px-3 py-1.5 text-sm btn-stone ${
+                    isSelected ? 'selected' : ''
                   } ${sections.length > 60 ? 'w-full text-left' : ''}`}
                 >
                   {section.label}

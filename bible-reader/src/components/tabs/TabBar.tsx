@@ -1,30 +1,17 @@
 import { useCallback, useRef } from 'react';
 import type { Tab } from '../../types';
+import { HomeIcon, BibleIcon, BooksIcon, StarIcon, FolderIcon, TabletIcon, GraphIcon, CandleIcon } from '../../lib/ui/icons';
 
 type TabBarProps = {
   tabs: Tab[];
   activeTabId: string;
   onSelectTab: (tabId: string) => void;
   onCloseTab: (tabId: string) => void;
+  onNewTab: () => void;
 };
 
-const TAB_ICONS: Record<string, string> = {
-  dashboard: '\u{1F3E0}',
-  bible: '\u{1F4D6}',
-  'companion-text': '\u{1F4DA}',
-  'prayer-journal': '\u{1F64F}',
-  favorites: '\u{2B50}',
-  collections: '\u{1F4C1}',
-  projects: '\u{1F4CB}',
-  graph: '\u{1F4CA}',
-  'collection-item': '\u{1F4C1}',
-  'project-item': '\u{1F4CB}',
-};
-
-export default function TabBar({ tabs, activeTabId, onSelectTab, onCloseTab }: TabBarProps) {
+export default function TabBar({ tabs, activeTabId, onSelectTab, onCloseTab, onNewTab }: TabBarProps) {
   const tabRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-
-  if (tabs.length <= 1) return null;
 
   const focusTab = useCallback((tabId: string) => {
     tabRefs.current.get(tabId)?.focus();
@@ -54,7 +41,7 @@ export default function TabBar({ tabs, activeTabId, onSelectTab, onCloseTab }: T
   }, [tabs, onSelectTab, focusTab]);
 
   return (
-    <div className="flex items-center bg-gray-100 border-b border-gray-300 overflow-x-auto text-sm select-none" role="tablist" aria-label="Workspace tabs">
+    <div className="flex items-center bg-panel border-b border-theme overflow-x-auto text-sm select-none" role="tablist" aria-label="Workspace tabs">
       {tabs.map((tab, i) => {
         const isActive = tab.id === activeTabId;
         return (
@@ -67,18 +54,27 @@ export default function TabBar({ tabs, activeTabId, onSelectTab, onCloseTab }: T
             aria-label={`${tab.label} tab`}
             onClick={() => onSelectTab(tab.id)}
             onKeyDown={(e) => handleKeyDown(e, i)}
-            className={`flex items-center gap-1 px-3 py-1.5 cursor-pointer border-r border-gray-300 whitespace-nowrap min-w-0 outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset ${
+            className={`group flex items-center gap-1.5 px-4 py-2 cursor-pointer whitespace-nowrap min-w-0 outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset transition-all duration-150 ${
               isActive
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'bg-gray-50 text-gray-500 hover:bg-gray-200'
+                ? 'tab-active text-accent' : 'opacity-40 hover:opacity-70 hover-bg'
             }`}
           >
-            <span className="text-xs" aria-hidden="true">{TAB_ICONS[tab.type] ?? '\u{1F4C4}'}</span>
-            <span className="truncate max-w-36">{tab.label}</span>
+            <span className="shrink-0" aria-hidden="true">
+              {tab.type === 'dashboard' ? <HomeIcon size={14} /> :
+               tab.type === 'bible' ? <BibleIcon size={14} /> :
+               tab.type === 'companion-text' ? <BooksIcon size={14} /> :
+               tab.type === 'prayer-journal' ? <CandleIcon size={14} /> :
+               tab.type === 'favorites' ? <StarIcon size={14} /> :
+               tab.type === 'collections' || tab.type === 'collection-item' ? <FolderIcon size={14} /> :
+               tab.type === 'projects' || tab.type === 'project-item' ? <TabletIcon size={14} /> :
+               tab.type === 'graph' ? <GraphIcon size={14} /> :
+               <HomeIcon size={14} />}
+            </span>
+            <span className="truncate max-w-36 text-xs uppercase tracking-wider">{tab.label}</span>
             {tabs.length > 1 && (
               <button
                 onClick={(e) => { e.stopPropagation(); onCloseTab(tab.id); }}
-                className="ml-1 text-gray-400 hover:text-gray-700 hover:bg-gray-300 rounded-sm leading-none px-0.5 text-xs focus-visible:ring-2 focus-visible:ring-accent"
+                className="ml-1 opacity-0 group-hover:opacity-60 hover:opacity-100 text-muted hover:text-text rounded-sm leading-none px-0.5 text-xs transition-opacity duration-150 focus-visible:ring-2 focus-visible:ring-accent"
                 aria-label={`Close ${tab.label} tab`}
                 tabIndex={-1}
               >
@@ -88,6 +84,16 @@ export default function TabBar({ tabs, activeTabId, onSelectTab, onCloseTab }: T
           </div>
         );
       })}
+      <button
+        onClick={onNewTab}
+        className="flex items-center px-3 py-2 opacity-40 hover:opacity-70 hover-bg focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset transition-opacity duration-150"
+        aria-label="New tab"
+        title="New tab"
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      </button>
     </div>
   );
 }

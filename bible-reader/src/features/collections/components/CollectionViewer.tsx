@@ -82,7 +82,7 @@ export default function CollectionViewer({
           <button
             type="button"
             onClick={() => onEdit(collection)}
-            className="rounded border px-3 py-1 text-sm transition-colors hover:bg-gray-100"
+            className="btn-stained-ghost rounded px-3 py-1 text-sm"
           >
             Edit
           </button>
@@ -116,7 +116,7 @@ export default function CollectionViewer({
                 onNavigateToItem(item);
               }
             }}
-            className="flex w-full items-start gap-3 rounded-lg border p-4 text-left transition-colors hover:bg-gray-50"
+            className="flex w-full items-start gap-3 rounded-lg border p-4 text-left transition-colors hover-bg"
           >
             <span className="mt-0.5 text-lg">{typeIcon(item.type)}</span>
             <div className="min-w-0 flex-1">

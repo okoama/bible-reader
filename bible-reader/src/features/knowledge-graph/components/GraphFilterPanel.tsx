@@ -120,9 +120,9 @@ export default function GraphFilterPanel({ filters, onChange, allTags, collectio
             className="w-full rounded border px-2 py-1 text-xs focus-accent"
           />
           {filteredSuggestions.length > 0 && (
-            <div className="absolute z-10 mt-0.5 w-full rounded border bg-white shadow" role="listbox" aria-label="Tag suggestions">
+            <div className="absolute z-10 mt-0.5 w-full rounded border border-theme bg-card shadow" role="listbox" aria-label="Tag suggestions">
               {filteredSuggestions.map((s) => (
-                <button key={s} type="button" role="option" onClick={() => addTag(s)} className="w-full px-2 py-1 text-left text-xs hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-accent">{s}</button>
+                <button key={s} type="button" role="option" onClick={() => addTag(s)} className="w-full px-2 py-1 text-left text-xs hover-bg focus-visible:ring-2 focus-visible:ring-accent">{s}</button>
               ))}
             </div>
           )}
@@ -158,7 +158,7 @@ export default function GraphFilterPanel({ filters, onChange, allTags, collectio
       <button
         type="button"
         onClick={handleReset}
-        className="mt-2 rounded border px-3 py-1.5 text-xs transition-colors hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-accent"
+        className="btn-stained-ghost mt-2 rounded px-3 py-1.5 text-xs"
       >
         Reset Filters
       </button>

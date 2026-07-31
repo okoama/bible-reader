@@ -143,7 +143,7 @@ function ToolBtn({
       }}
       onMouseDown={(e) => e.preventDefault()}
       title={title}
-      className="rounded px-1.5 py-0.5 text-xs leading-none transition-colors duration-150 hover:bg-gray-200"
+      className="rounded px-1.5 py-0.5 text-xs leading-none transition-colors duration-150 hover-bg"
     >
       {children}
     </button>

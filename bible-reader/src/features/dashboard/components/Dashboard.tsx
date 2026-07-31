@@ -187,7 +187,7 @@ export default function Dashboard({ books, onNavigateToPassage, onSelectView, on
           <p className="text-sm italic opacity-50">Save favorite passages and notes for quick access</p>
         </SectionCard>
 
-        <SectionCard title="Recent Notes" onAction={() => onSelectView('favorites')} actionLabel="All Notes">
+        <SectionCard title="Recent Notes" variant="paper" onAction={() => onSelectView('favorites')} actionLabel="All">
           {recentNotes.length === 0 ? (
             <p className="text-sm italic opacity-50">No notes yet — create one with Ctrl+Alt+N</p>
           ) : (
@@ -210,7 +210,7 @@ export default function Dashboard({ books, onNavigateToPassage, onSelectView, on
           )}
         </SectionCard>
 
-        <SectionCard title="Today's Prayers" onAction={() => onSelectView('prayer-journal')} actionLabel="Prayer Journal">
+        <SectionCard title="Today's Prayers" variant="journal" onAction={() => onSelectView('prayer-journal')} actionLabel="Prayer Journal">
           {todayPrayers.length === 0 ? (
             <p className="text-sm italic opacity-50">No prayers recorded today</p>
           ) : (
@@ -236,7 +236,7 @@ export default function Dashboard({ books, onNavigateToPassage, onSelectView, on
           )}
         </SectionCard>
 
-        <SectionCard title="Recent Collections" onAction={() => onSelectView('collections')} actionLabel="All Collections">
+        <SectionCard title="Recent Collections" variant="folder" onAction={() => onSelectView('collections')} actionLabel="All">
           {collections.length === 0 ? (
             <p className="text-sm italic opacity-50">No collections yet</p>
           ) : (
@@ -251,7 +251,7 @@ export default function Dashboard({ books, onNavigateToPassage, onSelectView, on
           )}
         </SectionCard>
 
-        <SectionCard title="Recent Sessions" actionLabel="">
+        <SectionCard title="Recent Sessions" variant="ledger" actionLabel="">
           {recentSessions.length === 0 ? (
             <p className="text-sm italic opacity-50">No study sessions yet</p>
           ) : (
@@ -266,7 +266,7 @@ export default function Dashboard({ books, onNavigateToPassage, onSelectView, on
           )}
         </SectionCard>
 
-        <SectionCard title="Projects" actionLabel="">
+        <SectionCard title="Projects" variant="folder" actionLabel="">
           {recentProjects.length === 0 ? (
             <p className="text-sm italic opacity-50">No research projects yet</p>
           ) : (
@@ -291,7 +291,7 @@ export default function Dashboard({ books, onNavigateToPassage, onSelectView, on
             <StatBox label="Highlights" value={totalHighlights} />
             <StatBox label="Reading Hours" value={readingMinutes < 60 ? `${readingMinutes}m` : `${Math.floor(readingMinutes / 60)}h ${readingMinutes % 60}m`} />
             {mostStudiedBookName && (
-              <div className="col-span-2 mt-1 rounded-md bg-gray-50 p-2 text-center">
+              <div className="col-span-2 mt-1 rounded-md bg-card p-2 text-center">
                 <span className="text-xs uppercase tracking-wide opacity-60">Most Studied</span>
                 <p className="font-semibold">{mostStudiedBookName}</p>
               </div>
@@ -299,7 +299,7 @@ export default function Dashboard({ books, onNavigateToPassage, onSelectView, on
           </div>
         </SectionCard>
 
-        <SectionCard title="Reading History" actionLabel="">
+        <SectionCard title="Reading History" variant="ledger" actionLabel="">
           {history.length === 0 ? (
             <p className="text-sm italic opacity-50">No reading history yet</p>
           ) : (
@@ -320,23 +320,24 @@ export default function Dashboard({ books, onNavigateToPassage, onSelectView, on
 
 function StatBox({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-md bg-gray-50 p-2 text-center">
+    <div className="rounded-md bg-card p-2 text-center">
       <p className="text-lg font-bold">{value}</p>
       <p className="text-xs uppercase tracking-wide opacity-60">{label}</p>
     </div>
   );
 }
 
-function SectionCard({ title, children, onAction, actionLabel }: {
+function SectionCard({ title, children, onAction, actionLabel, variant = 'default' }: {
   title: string;
   children: React.ReactNode;
   onAction?: () => void;
   actionLabel?: string;
+  variant?: 'default' | 'paper' | 'folder' | 'journal' | 'ledger';
 }) {
   return (
-    <div className="rounded-lg border p-4">
+    <div className={`rounded-lg border p-4 ${variant === 'default' ? 'border-theme bg-card' : `card-${variant}`}`}>
       <div className="mb-2 flex items-center justify-between">
-        <h2 className="text-sm font-semibold uppercase tracking-wide opacity-70">{title}</h2>
+        <h2 className={`text-sm font-semibold uppercase tracking-wide opacity-70 ${variant === 'default' ? '' : 'card-title-serif'}`}>{title}</h2>
         {onAction && actionLabel && (
           <button type="button" onClick={onAction} className="text-xs text-accent hover:underline">{actionLabel}</button>
         )}

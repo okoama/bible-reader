@@ -30,7 +30,7 @@ export default function CollectionEditor({ collection, onSave, onCancel }: Colle
       aria-modal="true"
       aria-label={collection ? 'Edit collection' : 'New collection'}
     >
-      <div className="mx-4 flex w-full max-w-lg flex-col gap-4 rounded-lg border bg-white p-6 shadow-xl animate-slide-up">
+      <div className="mx-4 flex w-full max-w-lg flex-col gap-4 rounded-lg bg-card border border-theme p-6 shadow-xl animate-slide-up">
         <h2 className="text-lg font-semibold">
           {collection ? 'Edit Collection' : 'New Collection'}
         </h2>
@@ -58,7 +58,7 @@ export default function CollectionEditor({ collection, onSave, onCancel }: Colle
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-md border px-4 py-2 text-sm transition-colors hover:bg-gray-100"
+            className="rounded-md border px-4 py-2 text-sm btn-stained-ghost"
           >
             Cancel
           </button>
@@ -66,7 +66,7 @@ export default function CollectionEditor({ collection, onSave, onCancel }: Colle
             type="button"
             disabled={!name.trim()}
             onClick={() => onSave(name.trim(), description.trim(), projectId)}
-            className="rounded-md bg-accent px-4 py-2 text-sm text-white transition-colors hover:bg-accent-hover disabled:opacity-50"
+            className="rounded-md btn-stained px-4 py-2 text-sm transition-colors disabled:opacity-50"
           >
             {collection ? 'Save' : 'Create'}
           </button>

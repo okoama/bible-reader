@@ -162,7 +162,7 @@ export default function PrayerLibrary({ filter, refreshKey, onRefresh }: PrayerL
               key={prayer.id}
               type="button"
               onClick={() => setViewingPrayer(prayer)}
-              className={`rounded-lg border p-4 text-left transition-colors duration-150 hover:bg-gray-50 hover:shadow-sm ${trad ? 'border-l-4 border-l-blue-400' : ''}`}
+              className={`rounded-lg border p-4 text-left transition-colors duration-150 hover-bg hover:shadow-sm ${trad ? 'border-l-4 border-l-blue-400' : ''}`}
             >
               <div className="flex items-center gap-2">
                 {prayer.favorite && <span className="text-yellow-500 text-sm shrink-0">★</span>}

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ResearchProject } from '../../types';
 import { ResearchProjectRepository } from '../../lib/repositories/ResearchProjectRepository';
 
@@ -38,7 +38,7 @@ export default function ProjectsPage({ refreshKey, onSelectProject, onNewProject
       ) : (
         <div className="grid gap-4 sm:grid-cols-2" role="list" aria-label="Research projects">
           {projects.map((p) => (
-            <button key={p.id} type="button" role="listitem" onClick={() => onSelectProject(p.id)} aria-label={`Open project: ${p.title}`} className="rounded-lg border p-5 text-left transition-colors hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-accent">
+            <button key={p.id} type="button" role="listitem" onClick={() => onSelectProject(p.id)} aria-label={`Open project: ${p.title}`} className="rounded-lg border p-5 text-left transition-colors hover-bg focus-visible:ring-2 focus-visible:ring-accent">
               <div className="flex items-center gap-3">
                 <span className="text-2xl" aria-hidden="true">{p.icon}</span>
                 <div className="min-w-0 flex-1">

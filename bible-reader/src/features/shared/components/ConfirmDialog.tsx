@@ -28,20 +28,20 @@ export default function ConfirmDialog({ message, onConfirm, onCancel }: ConfirmD
       aria-modal="true"
       aria-label="Confirm delete"
     >
-      <div className="mx-4 w-full max-w-sm rounded-lg border bg-white p-6 shadow-xl animate-slide-up">
+      <div className="mx-4 w-full max-w-sm rounded-lg bg-card border border-theme p-6 shadow-xl animate-slide-up">
         <p className="text-sm">{message}</p>
         <div className="mt-5 flex justify-end gap-2">
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-md border px-4 py-2 text-sm transition-colors duration-150 hover:bg-gray-100"
+            className="btn-stained-ghost rounded px-4 py-2 text-sm"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={onConfirm}
-            className="rounded-md bg-red-600 px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-red-700"
+            className="btn-stained-danger rounded px-4 py-2 text-sm"
           >
             Delete
           </button>

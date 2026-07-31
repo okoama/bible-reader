@@ -70,7 +70,7 @@ export default function BookmarkEditor({
     >
       <div
         ref={dialogRef}
-        className="mx-4 flex w-full max-w-lg flex-col gap-4 rounded-lg border bg-white p-6 shadow-xl animate-slide-up"
+        className="mx-4 flex w-full max-w-lg flex-col gap-4 rounded-lg bg-card border border-theme p-6 shadow-xl animate-slide-up"
       >
         <h2 className="text-lg font-semibold">New Bookmark</h2>
 
@@ -103,14 +103,14 @@ export default function BookmarkEditor({
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-md border px-4 py-2 text-sm transition-colors duration-150 hover:bg-gray-100"
+            className="rounded-md border px-4 py-2 text-sm transition-colors duration-150 hover-bg"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={handleSave}
-            className="rounded-md bg-accent px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-accent-hover"
+            className="rounded-md btn-stained px-4 py-2 text-sm transition-colors duration-150"
           >
             Save
           </button>

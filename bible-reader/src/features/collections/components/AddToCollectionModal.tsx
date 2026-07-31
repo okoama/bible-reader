@@ -62,7 +62,7 @@ export default function AddToCollectionModal({
       aria-modal="true"
       aria-label="Add to collection"
     >
-      <div className="mx-4 flex w-full max-w-sm flex-col gap-3 rounded-lg border bg-white p-6 shadow-xl animate-slide-up">
+      <div className="mx-4 flex w-full max-w-sm flex-col gap-3 rounded-lg bg-card border border-theme p-6 shadow-xl animate-slide-up">
         <h2 className="text-lg font-semibold">Add to Collection</h2>
         <p className="text-sm opacity-60 truncate">{itemLabel}</p>
 
@@ -75,7 +75,7 @@ export default function AddToCollectionModal({
                 key={col.id}
                 type="button"
                 onClick={() => handleAdd(col.id)}
-                className="w-full rounded-md border px-3 py-2 text-left text-sm transition-colors hover:bg-gray-50"
+                className="w-full rounded-md border px-3 py-2 text-left text-sm transition-colors hover-bg"
               >
                 <p className="font-medium">{col.name}</p>
                 {col.items.length > 0 && (
@@ -89,7 +89,7 @@ export default function AddToCollectionModal({
         <button
           type="button"
           onClick={onClose}
-          className="mt-1 self-end rounded-md border px-4 py-1.5 text-sm transition-colors hover:bg-gray-100"
+          className="btn-stained-ghost mt-1 self-end rounded px-4 py-1.5 text-sm"
         >
           Cancel
         </button>

@@ -98,7 +98,7 @@ export default function PrayerEditor({ prayer, onSave, onCancel, initialProjectI
       aria-modal="true"
       aria-label={prayer ? 'Edit prayer' : 'New prayer'}
     >
-      <div className="mx-4 flex w-full max-w-lg flex-col gap-4 rounded-lg border bg-white p-6 shadow-xl animate-slide-up max-h-[90vh] overflow-y-auto">
+      <div className="mx-4 flex w-full max-w-lg flex-col gap-4 rounded-lg bg-card border border-theme p-6 shadow-xl animate-slide-up max-h-[90vh] overflow-y-auto">
         <h2 className="text-lg font-semibold">
           {prayer ? 'Edit Prayer' : 'New Prayer'}
         </h2>
@@ -175,7 +175,7 @@ export default function PrayerEditor({ prayer, onSave, onCancel, initialProjectI
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-md border px-4 py-2 text-sm transition-colors duration-150 hover:bg-gray-100"
+            className="rounded-md border px-4 py-2 text-sm btn-stained-ghost"
           >
             Cancel
           </button>
@@ -183,7 +183,7 @@ export default function PrayerEditor({ prayer, onSave, onCancel, initialProjectI
             type="button"
             onClick={handleSave}
             disabled={!title.trim()}
-            className="rounded-md bg-accent px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-md btn-stained px-4 py-2 text-sm transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Save
           </button>
