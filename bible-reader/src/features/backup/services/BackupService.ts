@@ -45,7 +45,7 @@ export class BackupService {
     try {
       const raw = localStorage.getItem('workspace-settings');
       if (raw) workspaceSettings = JSON.parse(raw);
-    } catch {}
+    } catch { /* empty */ }
 
     return {
       version: BACKUP_VERSION,
