@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { Bookmark } from '../../../types';
 import { BookmarkRepository } from '../../../lib/repositories/BookmarkRepository';
 import { createId } from '../../../lib/utils/id';
+import ProjectPicker from '../../../components/projects/ProjectPicker';
 
 const bookmarkRepository = new BookmarkRepository();
 
@@ -9,14 +10,18 @@ type BookmarkEditorProps = {
   sourceReference: string;
   onSave: (bookmark: Bookmark) => void;
   onCancel: () => void;
+  initialProjectId?: string;
 };
 
 export default function BookmarkEditor({
   sourceReference,
   onSave,
   onCancel,
+  initialProjectId,
 }: BookmarkEditorProps) {
   const [title, setTitle] = useState('');
+  const [favorite, setFavorite] = useState(false);
+  const [projectId, setProjectId] = useState<string | undefined>(initialProjectId);
   const titleRef = useRef<HTMLInputElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
 
@@ -46,6 +51,8 @@ export default function BookmarkEditor({
       id: createId('bm'),
       sourceReference,
       title: title.trim() || undefined,
+      favorite,
+      projectId,
       createdAt: new Date().toISOString(),
     };
 
@@ -80,6 +87,18 @@ export default function BookmarkEditor({
           Attached to: {sourceReference}
         </p>
 
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            checked={favorite}
+            onChange={(e) => setFavorite(e.target.checked)}
+            className="rounded border-gray-300 text-yellow-500 focus:ring-yellow-400"
+          />
+          Mark as favorite
+        </label>
+
+        <ProjectPicker value={projectId} onChange={setProjectId} />
+
         <div className="flex justify-end gap-2">
           <button
             type="button"
@@ -91,7 +110,7 @@ export default function BookmarkEditor({
           <button
             type="button"
             onClick={handleSave}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-blue-700"
+            className="rounded-md bg-accent px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-accent-hover"
           >
             Save
           </button>

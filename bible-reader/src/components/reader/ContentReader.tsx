@@ -27,7 +27,7 @@ export default function ContentReader({
   children,
 }: ContentReaderProps) {
   return (
-    <div className="mx-auto max-w-3xl rounded-lg border p-6">
+    <div className="mx-auto reading-width rounded-lg border p-6">
       <h2 className="text-2xl font-semibold">{title}</h2>
       {subtitle && (
         <p className="mt-1 text-sm opacity-60">{subtitle}</p>
@@ -46,7 +46,7 @@ export default function ContentReader({
                   onClick={() => onSelectSection(section.id)}
                   className={`rounded-md px-3 py-1.5 text-sm transition-colors duration-150 ${
                     isSelected
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-accent text-white'
                       : 'border hover:bg-gray-100'
                   } ${sections.length > 60 ? 'w-full text-left' : ''}`}
                 >

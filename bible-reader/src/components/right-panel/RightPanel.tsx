@@ -1,33 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { BibleBook, Highlight, Bookmark, Note, VerseRef } from '../../types';
+import type { BibleBook, CollectionItemType, Highlight, Bookmark, Note, VerseRef } from '../../types';
 import { useHighlights } from '../../lib/hooks/useHighlights';
 import { useWorkHighlights } from '../../lib/hooks/useWorkHighlights';
 import { useBookmarks } from '../../lib/hooks/useBookmarks';
 import { HighlightRepository } from '../../lib/repositories/HighlightRepository';
+import { NoteRepository } from '../../lib/repositories/NoteRepository';
 import { BookmarkRepository } from '../../lib/repositories/BookmarkRepository';
 import { HIGHLIGHT_COLORS } from '../../lib/constants';
 import { formatDate } from '../../lib/utils/date';
 import { TextService } from '../../features/companion-texts/services/TextService';
 import ConfirmDialog from '../ConfirmDialog';
 import NoteSearch from '../sidebar/NoteSearch';
+import AddToCollectionModal from '../reader/AddToCollectionModal';
+import { useWorkspaceSettings } from '../../lib/contexts/WorkspaceSettingsContext';
 
 const highlightRepository = new HighlightRepository();
+const noteRepository = new NoteRepository();
 const bookmarkRepository = new BookmarkRepository();
 
 const MIN_WIDTH = 200;
 const MAX_WIDTH = 500;
-const STORAGE_KEY = 'right-panel-width';
-
-function getStoredWidth(): number {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const n = Number.parseInt(stored, 10);
-      if (n >= MIN_WIDTH && n <= MAX_WIDTH) return n;
-    }
-  } catch {}
-  return 288;
-}
 
 type RightPanelProps = {
   selectedVerse: VerseRef | null;
@@ -68,10 +60,12 @@ export default function RightPanel({
   workId,
   sectionId,
 }: RightPanelProps) {
-  const [panelWidth, setPanelWidth] = useState(getStoredWidth);
+  const { settings, updateSettings } = useWorkspaceSettings();
+  const [panelWidth, setPanelWidth] = useState(settings.rightPanelWidth);
   const [deletingHighlight, setDeletingHighlight] = useState<Highlight | null>(null);
   const [deletingBookmark, setDeletingBookmark] = useState<Bookmark | null>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [addToCollectionTarget, setAddToCollectionTarget] = useState<{ type: CollectionItemType; label: string; sourceReference?: string; itemId?: string } | null>(null);
   const dragRef = useRef<{ startX: number; startWidth: number } | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const textServiceRef = useRef(new TextService());
@@ -125,20 +119,26 @@ export default function RightPanel({
     });
   }
 
+  const currentWidthRef = useRef(panelWidth);
+  currentWidthRef.current = panelWidth;
+
   const handleDragStart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
-    dragRef.current = { startX: e.clientX, startWidth: panelWidth };
+    dragRef.current = { startX: e.clientX, startWidth: currentWidthRef.current };
 
     const handleDragMove = (ev: MouseEvent) => {
       if (!dragRef.current) return;
       const dx = dragRef.current.startX - ev.clientX;
       const newWidth = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, dragRef.current.startWidth + dx));
       setPanelWidth(newWidth);
+      currentWidthRef.current = newWidth;
     };
 
     const handleDragEnd = () => {
       if (dragRef.current) {
-        localStorage.setItem(STORAGE_KEY, String(panelWidth));
+        const finalWidth = currentWidthRef.current;
+        localStorage.setItem('right-panel-width', String(finalWidth));
+        updateSettings({ rightPanelWidth: finalWidth });
         dragRef.current = null;
       }
       document.removeEventListener('mousemove', handleDragMove);
@@ -151,10 +151,10 @@ export default function RightPanel({
     document.addEventListener('mouseup', handleDragEnd);
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
-  }, [panelWidth]);
+  }, [updateSettings]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, String(panelWidth));
+    localStorage.setItem('right-panel-width', String(panelWidth));
   }, [panelWidth]);
 
   async function handleConfirmDeleteHighlight() {
@@ -168,6 +168,16 @@ export default function RightPanel({
     await highlightRepository.update({ ...highlight, color });
     onNoteDeleted();
   }
+
+  const handleToggleNoteFavorite = useCallback(async (note: Note) => {
+    await noteRepository.update({ ...note, favorite: !note.favorite });
+    onNoteDeleted(); // re-trigger refresh
+  }, [onNoteDeleted]);
+
+  const handleToggleBookmarkFavorite = useCallback(async (b: Bookmark) => {
+    await bookmarkRepository.update({ ...b, favorite: !b.favorite });
+    onNoteDeleted(); // re-trigger refresh
+  }, [onNoteDeleted]);
 
   async function handleConfirmDeleteBookmark() {
     if (!deletingBookmark) return;
@@ -185,7 +195,7 @@ export default function RightPanel({
       style={{ width: panelWidth }}
     >
       <div
-        className="absolute left-0 top-0 z-10 h-full w-1 cursor-col-resize transition-colors duration-150 hover:bg-blue-300 active:bg-blue-400"
+        className="absolute left-0 top-0 z-10 h-full w-1 cursor-col-resize transition-colors duration-150 hover:bg-accent-light active:bg-accent-lighter"
         onMouseDown={handleDragStart}
         role="separator"
         aria-orientation="vertical"
@@ -267,7 +277,7 @@ export default function RightPanel({
           onToggle={() => toggleSection('notes')}
           count={notes.length}
         >
-          <NoteSearch notes={notes} books={books} onNavigate={onNavigateToNote} onSelectNote={onSelectNote} selectedNoteId={selectedNoteId} />
+          <NoteSearch notes={notes} books={books} onNavigate={onNavigateToNote} onSelectNote={onSelectNote} onToggleFavorite={handleToggleNoteFavorite} onAddToCollection={(type, label, ref, id) => setAddToCollectionTarget({ type, label, sourceReference: ref, itemId: id })} selectedNoteId={selectedNoteId} />
         </Section>
 
         <Section
@@ -282,7 +292,7 @@ export default function RightPanel({
               {bookmarks.map((b) => (
                 <div
                   key={b.id}
-                  className="cursor-pointer rounded border p-2 hover:bg-gray-50"
+                  className="group cursor-pointer rounded border p-2 hover:bg-gray-50"
                   onClick={() => onNavigateToBookmark(b.sourceReference)}
                   role="button"
                   tabIndex={0}
@@ -298,16 +308,42 @@ export default function RightPanel({
                       <p className="mt-1 text-xs opacity-60">{b.sourceReference}</p>
                       <p className="mt-1 text-xs opacity-60">{formatDate(b.createdAt)}</p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeletingBookmark(b);
-                      }}
-                      className="ml-2 shrink-0 text-xs text-red-500 hover:text-red-700"
-                    >
-                      Delete
-                    </button>
+                    <div className="ml-2 flex shrink-0 items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setAddToCollectionTarget({ type: 'bookmark', label: b.title ?? 'Bookmark', sourceReference: b.sourceReference, itemId: b.id });
+                        }}
+                        className="text-sm text-gray-400 hover:text-green-600 transition-colors"
+                        title="Add to collection"
+                      >
+                        {'\u{1F4C1}'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleBookmarkFavorite(b);
+                        }}
+                        className={`text-lg leading-none transition-colors ${
+                          b.favorite ? 'text-yellow-500' : 'text-gray-300 hover:text-yellow-400'
+                        }`}
+                        title={b.favorite ? 'Remove from favorites' : 'Add to favorites'}
+                      >
+                        {b.favorite ? '\u2605' : '\u2606'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeletingBookmark(b);
+                        }}
+                        className="text-xs text-red-500 hover:text-red-700"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -330,6 +366,17 @@ export default function RightPanel({
           message={`Delete bookmark "${deletingBookmark.title ?? 'Bookmark'}"?`}
           onConfirm={handleConfirmDeleteBookmark}
           onCancel={() => setDeletingBookmark(null)}
+        />
+      )}
+
+      {addToCollectionTarget && (
+        <AddToCollectionModal
+          itemType={addToCollectionTarget.type}
+          itemLabel={addToCollectionTarget.label}
+          sourceReference={addToCollectionTarget.sourceReference}
+          itemId={addToCollectionTarget.itemId}
+          onClose={() => setAddToCollectionTarget(null)}
+          onAdded={() => onNoteDeleted()}
         />
       )}
     </aside>

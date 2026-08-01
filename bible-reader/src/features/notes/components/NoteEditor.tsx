@@ -4,6 +4,7 @@ import { NoteRepository } from '../../../lib/repositories/NoteRepository';
 import { createId } from '../../../lib/utils/id';
 import { useDraft } from '../../../lib/hooks/useDraft';
 import RichTextEditor from '../../../components/RichTextEditor';
+import ProjectPicker from '../../../components/projects/ProjectPicker';
 
 const noteRepository = new NoteRepository();
 
@@ -14,6 +15,7 @@ type NoteEditorProps = {
   sourceReference: string;
   onSave: (note: Note) => void;
   onCancel: () => void;
+  initialProjectId?: string;
 };
 
 export default function NoteEditor({
@@ -21,14 +23,17 @@ export default function NoteEditor({
   sourceReference,
   onSave,
   onCancel,
+  initialProjectId,
 }: NoteEditorProps) {
   const draftKey = note?.id ? `note:${note.id}` : `note:new:${sourceReference}`;
   const [title, setTitle] = useState(note?.title ?? '');
   const [content, setContent] = useState(note?.content ?? '');
   const [tags, setTags] = useState<string[]>(note?.tags ?? []);
+  const [favorite, setFavorite] = useState(note?.favorite ?? false);
   const [tagInput, setTagInput] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [allUsedTags, setAllUsedTags] = useState<string[]>([]);
+  const [projectId, setProjectId] = useState<string | undefined>(initialProjectId);
   const titleRef = useRef<HTMLInputElement>(null);
   const tagInputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
@@ -130,6 +135,8 @@ export default function NoteEditor({
       title,
       content,
       tags,
+      favorite,
+      projectId,
       createdAt: note?.createdAt ?? now,
       updatedAt: now,
     };
@@ -189,19 +196,29 @@ export default function NoteEditor({
           rows={6}
         />
 
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            checked={favorite}
+            onChange={(e) => setFavorite(e.target.checked)}
+            className="rounded border-gray-300 text-yellow-500 focus:ring-yellow-400"
+          />
+          Mark as favorite
+        </label>
+
         <div className="relative">
           <label className="mb-1 block text-xs font-medium opacity-70">Tags</label>
           <div className="flex flex-wrap gap-1 rounded border px-2 py-1.5 focus-within:border-blue-500">
             {tags.map((tag) => (
               <span
                 key={tag}
-                className="inline-flex items-center gap-1 rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-800"
+                className="inline-flex items-center gap-1 rounded bg-accent-lighter px-2 py-0.5 text-xs text-accent"
               >
                 {tag}
                 <button
                   type="button"
                   onClick={() => removeTag(tag)}
-                  className="text-blue-500 hover:text-blue-700"
+                  className="text-accent hover:text-accent-hover"
                 >
                   &times;
                 </button>
@@ -232,7 +249,7 @@ export default function NoteEditor({
                   key={s}
                   type="button"
                   onClick={() => addTag(s)}
-                  className="w-full px-3 py-1.5 text-left text-sm hover:bg-blue-50"
+                  className="w-full px-3 py-1.5 text-left text-sm hover:bg-accent-light"
                 >
                   <span>{s}</span>
                   {PRESET_TAGS.includes(s) && (
@@ -243,6 +260,8 @@ export default function NoteEditor({
             </div>
           )}
         </div>
+
+        <ProjectPicker value={projectId} onChange={setProjectId} />
 
         <p className="text-xs opacity-60">
           Attached to: {sourceReference}
@@ -260,7 +279,7 @@ export default function NoteEditor({
             type="button"
             onClick={handleSave}
             disabled={!title.trim()}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-md bg-accent px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
           >
             Save
           </button>

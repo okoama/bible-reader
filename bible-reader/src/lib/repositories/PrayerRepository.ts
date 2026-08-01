@@ -1,4 +1,4 @@
-import type { Prayer } from '../../types';
+import type { Prayer, PrayerCategory } from '../../types';
 import { db } from '../database/database';
 
 export class PrayerRepository {
@@ -12,6 +12,22 @@ export class PrayerRepository {
     return this.database.prayers.get(id);
   }
 
+  async findByCategory(category: PrayerCategory): Promise<Prayer[]> {
+    return this.database.prayers.where('category').equals(category).toArray();
+  }
+
+  async findFavorites(): Promise<Prayer[]> {
+    return this.database.prayers.toCollection().filter((p) => p.favorite).toArray();
+  }
+
+  async findAnswered(): Promise<Prayer[]> {
+    return this.database.prayers.where('answered').equals(1).toArray();
+  }
+
+  async findByTag(tag: string): Promise<Prayer[]> {
+    return this.database.prayers.where('tags').equals(tag).toArray();
+  }
+
   async create(prayer: Prayer): Promise<string> {
     await this.database.prayers.put(prayer);
     return prayer.id;
@@ -21,7 +37,24 @@ export class PrayerRepository {
     await this.database.prayers.put(prayer);
   }
 
+  async markPrayed(id: string): Promise<void> {
+    const prayer = await this.findById(id);
+    if (prayer) {
+      prayer.lastPrayed = new Date().toISOString();
+      prayer.updatedAt = prayer.lastPrayed;
+      await this.update(prayer);
+    }
+  }
+
+  async findRecentPrayed(limit = 10): Promise<Prayer[]> {
+    return this.database.prayers.orderBy('lastPrayed').reverse().filter((p) => p.lastPrayed != null).limit(limit).toArray();
+  }
+
   async delete(id: string): Promise<void> {
     await this.database.prayers.delete(id);
+  }
+
+  async findByProjectId(projectId: string): Promise<Prayer[]> {
+    return this.database.prayers.where('projectId').equals(projectId).toArray();
   }
 }

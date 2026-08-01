@@ -8,6 +8,10 @@ export class NoteRepository {
     return this.database.notes.toArray();
   }
 
+  async count(): Promise<number> {
+    return this.database.notes.count();
+  }
+
   async findById(id: string): Promise<Note | undefined> {
     return this.database.notes.get(id);
   }
@@ -28,6 +32,10 @@ export class NoteRepository {
       .toArray();
   }
 
+  async findFavorites(): Promise<Note[]> {
+    return this.database.notes.toCollection().filter((n) => n.favorite).toArray();
+  }
+
   async findByBook(bookId: string): Promise<Note[]> {
     return this.database.notes
       .where('sourceReference')
@@ -44,6 +52,14 @@ export class NoteRepository {
       }
     }
     return [...tags].sort();
+  }
+
+  async findRecent(limit = 10): Promise<Note[]> {
+    return this.database.notes.orderBy('updatedAt').reverse().limit(limit).toArray();
+  }
+
+  async findByProjectId(projectId: string): Promise<Note[]> {
+    return this.database.notes.where('projectId').equals(projectId).toArray();
   }
 
   async delete(id: string): Promise<void> {

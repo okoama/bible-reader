@@ -2,22 +2,33 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { BibleService } from '../../features/bible/services/BibleService';
 import { useTextSelection } from '../../features/annotations/hooks/useTextSelection';
 import type { SelectedVerse } from '../../features/annotations/hooks/useTextSelection';
-import type { BibleBook, BibleVerse, Highlight, Note, VerseRef } from '../../types';
+import type { BibleBook, BibleVerse, Bookmark, Collection, CollectionItem, Highlight, Note, PrayerFilter, ResearchProject, VerseRef } from '../../types';
 import type { ActiveView } from '../../layouts/AppLayout';
+import { CollectionRepository } from '../../lib/repositories/CollectionRepository';
 import { HighlightRepository } from '../../lib/repositories/HighlightRepository';
 import { BookmarkEditor } from '../../features/bookmarks';
 import { useHighlights } from '../../lib/hooks/useHighlights';
 import { useChapterNotes } from '../../lib/hooks/useChapterNotes';
 import { createId } from '../../lib/utils/id';
+import { useStudySession } from '../../lib/contexts/StudySessionContext';
 import AnnotationToolbar from '../AnnotationToolbar';
 import NoteEditor from '../../features/notes/components/NoteEditor';
-import PrayerJournal from './PrayerJournal';
+import PrayerLibrary from './PrayerLibrary';
+import FavoritesPage from './FavoritesPage';
+import CollectionsPage from './CollectionsPage';
+import CollectionViewer from './CollectionViewer';
+import CollectionEditor from './CollectionEditor';
 import ContentReader from './ContentReader';
 
 import CompanionTextReader from './CompanionTextReader';
+import ProjectsPage from '../projects/ProjectsPage';
+import ProjectViewer from '../projects/ProjectViewer';
+import ProjectEditor from '../projects/ProjectEditor';
+import { ResearchProjectRepository } from '../../lib/repositories/ResearchProjectRepository';
 
 const bibleService = new BibleService();
 const highlightRepository = new HighlightRepository();
+const projectRepository = new ResearchProjectRepository();
 
 function getHighlightsForVerse(highlights: Highlight[], verseNumber: number): Highlight[] {
   return highlights.filter((h) => {
@@ -79,6 +90,8 @@ type ReaderProps = {
   selectedNoteId: string | null;
   onSelectNote: (noteId: string | null) => void;
   onDeleteSelectedNote: () => void;
+  prayerFilter: PrayerFilter;
+  onCrossLinkNavigate?: (type: string, id: string) => void;
 };
 
 export default function Reader({
@@ -99,6 +112,8 @@ export default function Reader({
   selectedNoteId,
   onSelectNote,
   onDeleteSelectedNote,
+  prayerFilter,
+  onCrossLinkNavigate,
 }: ReaderProps) {
   const [chapterNumbers, setChapterNumbers] = useState<number[]>([]);
   const [verses, setVerses] = useState<BibleVerse[]>([]);
@@ -106,12 +121,21 @@ export default function Reader({
   const mainRef = useRef<HTMLElement>(null);
   const verseRefs = useRef<Map<string, HTMLParagraphElement>>(new Map());
   const [refreshKey, setRefreshKey] = useState(0);
+  const [collectionsRefreshKey, setCollectionsRefreshKey] = useState(0);
+  const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
+  const [showCollectionEditor, setShowCollectionEditor] = useState(false);
+  const [editingCollection, setEditingCollection] = useState<Collection | null>(null);
+  const [projectsRefreshKey, setProjectsRefreshKey] = useState(0);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [showProjectEditor, setShowProjectEditor] = useState(false);
+  const [editingProject, setEditingProject] = useState<ResearchProject | null>(null);
   const [modalSourceRef, setModalSourceRef] = useState<string | null>(null);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [bookmarkModalSourceRef, setBookmarkModalSourceRef] = useState<string | null>(null);
   const { selection, clearSelection } = useTextSelection(containerElement);
   const highlights = useHighlights(selectedBook?.id ?? null, selectedChapter, refreshKey);
   const chapterNotes = useChapterNotes(selectedBook?.id ?? null, selectedChapter, refreshKey);
+  const { session, logNote, logBookmark, logCollectionEvent } = useStudySession();
 
   const verseRefCallback = useCallback((key: string) => {
     return (node: HTMLParagraphElement | null) => {
@@ -172,11 +196,12 @@ export default function Reader({
     clearSelection();
   };
 
-  const handleNoteSave = () => {
+  const handleNoteSave = (savedNote?: Note) => {
     setEditingNote(null);
     setModalSourceRef(null);
     setRefreshKey((k) => k + 1);
     onNoteSaved?.();
+    if (savedNote && session && !session.endTime) logNote(savedNote.id, savedNote.title, savedNote.sourceReference);
   };
 
   const handleNoteCancel = () => {
@@ -193,10 +218,11 @@ export default function Reader({
     clearSelection();
   };
 
-  const handleBookmarkSave = () => {
+  const handleBookmarkSave = (savedBookmark?: Bookmark) => {
     setBookmarkModalSourceRef(null);
     setRefreshKey((k) => k + 1);
     onNoteSaved?.();
+    if (savedBookmark && session && !session.endTime) logBookmark(savedBookmark.id, savedBookmark.sourceReference, savedBookmark.title ?? savedBookmark.sourceReference);
   };
 
   const handleBookmarkCancel = () => {
@@ -205,6 +231,110 @@ export default function Reader({
 
   const handlePrayerRefresh = () => {
     onNoteSaved?.();
+  };
+
+  const collectionRepo = new CollectionRepository();
+
+  const handleSelectCollection = (id: string) => {
+    setSelectedCollectionId(id);
+  };
+
+  const handleBackToCollections = () => {
+    setSelectedCollectionId(null);
+  };
+
+  const handleNewCollection = () => {
+    setEditingCollection(null);
+    setShowCollectionEditor(true);
+  };
+
+  const handleEditCollection = (col: Collection) => {
+    setEditingCollection(col);
+    setShowCollectionEditor(true);
+  };
+
+  const handleSaveCollection = async (name: string, description: string, projectId?: string) => {
+    if (editingCollection) {
+      await collectionRepo.update({ ...editingCollection, name, description, projectId });
+      setShowCollectionEditor(false);
+      setEditingCollection(null);
+      if (session && !session.endTime) logCollectionEvent(editingCollection.id, name, 'update');
+    } else {
+      const id = await collectionRepo.create(name, description || undefined, projectId);
+      setShowCollectionEditor(false);
+      if (session && !session.endTime) logCollectionEvent(id, name, 'create');
+    }
+    setCollectionsRefreshKey((k) => k + 1);
+  };
+
+  const handleDeleteCollection = async (id: string) => {
+    await collectionRepo.delete(id);
+    setSelectedCollectionId(null);
+    setCollectionsRefreshKey((k) => k + 1);
+  };
+
+  const handleSelectProject = (id: string) => {
+    setSelectedProjectId(id);
+  };
+
+  const handleBackToProjects = () => {
+    setSelectedProjectId(null);
+  };
+
+  const handleNewProject = () => {
+    setEditingProject(null);
+    setShowProjectEditor(true);
+  };
+
+  const handleEditProject = (p: ResearchProject) => {
+    setEditingProject(p);
+    setShowProjectEditor(true);
+  };
+
+  const handleSaveProject = async (title: string, description: string, status: ResearchProject['status'], icon: string, color: string) => {
+    if (editingProject) {
+      const updated = { ...editingProject, title, description, status, icon, color, updatedAt: new Date().toISOString() };
+      await projectRepository.save(updated);
+    } else {
+      await projectRepository.save({ id: createId('project'), title, description, status, icon, color, notes: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+    }
+    setShowProjectEditor(false);
+    setEditingProject(null);
+    setProjectsRefreshKey((k) => k + 1);
+  };
+
+  const handleDeleteProject = async (id: string) => {
+    await projectRepository.delete(id);
+    setSelectedProjectId(null);
+    setProjectsRefreshKey((k) => k + 1);
+  };
+
+  const handleProjectStatusChange = async (id: string, status: ResearchProject['status']) => {
+    const p = await projectRepository.findById(id);
+    if (p) {
+      p.status = status;
+      p.updatedAt = new Date().toISOString();
+      await projectRepository.save(p);
+      setProjectsRefreshKey((k) => k + 1);
+    }
+  };
+
+  const handleNavigateToCollectionItem = (item: CollectionItem) => {
+    if (item.type === 'passage' && item.sourceReference) {
+      const match = item.sourceReference.match(/^([^:]+):(\d+)/);
+      if (match && match[1] && match[2]) {
+        setSelectedCollectionId(null);
+        _onSelectWork(match[1], match[2]);
+      }
+    }
+  };
+
+  const handleNavigateToPassage = (sourceReference: string) => {
+    const match = sourceReference.match(/^([^:]+):(\d+)/);
+    if (match && match[1] && match[2]) {
+      setSelectedCollectionId(null);
+      _onSelectWork(match[1], match[2]);
+    }
   };
 
   useEffect(() => {
@@ -345,15 +475,52 @@ export default function Reader({
   const isLoading = selectedBook && selectedChapter && verses.length === 0;
 
   return (
-    <main ref={mainRef} className="flex-1 overflow-y-auto p-6">
-      {activeView === 'prayer-journal' ? (
-        <div className="mx-auto max-w-3xl rounded-lg border p-6 animate-fade-in">
-          <PrayerJournal refreshKey={prayerRefreshKey} onRefresh={handlePrayerRefresh} />
+    <main ref={mainRef} className="reading-text flex-1 overflow-y-auto p-6">
+      {activeView === 'favorites' ? (
+        <div className="mx-auto reading-width animate-fade-in">
+          <FavoritesPage refreshKey={prayerRefreshKey} onRefresh={handlePrayerRefresh} onCrossLinkNavigate={onCrossLinkNavigate} />
+        </div>
+      ) : activeView === 'prayer-journal' ? (
+        <div className="mx-auto reading-width rounded-lg border p-6 animate-fade-in">
+          <PrayerLibrary filter={prayerFilter} refreshKey={prayerRefreshKey} onRefresh={handlePrayerRefresh} />
         </div>
       ) : activeView === 'companion-text' && selectedWorkId ? (
         <div className="animate-fade-in">
           <CompanionTextReader workId={selectedWorkId} initialSectionId={selectedSectionId} onSectionChange={onSelectSection} />
         </div>
+      ) : activeView === 'collections' && selectedCollectionId ? (
+        <CollectionViewer
+          collectionId={selectedCollectionId}
+          refreshKey={collectionsRefreshKey}
+          onNavigateToItem={handleNavigateToCollectionItem}
+          onNavigateToPassage={handleNavigateToPassage}
+          onBack={handleBackToCollections}
+          onEdit={handleEditCollection}
+          onDelete={handleDeleteCollection}
+          onCrossLinkNavigate={onCrossLinkNavigate}
+        />
+      ) : activeView === 'collections' ? (
+        <CollectionsPage
+          refreshKey={collectionsRefreshKey}
+          onSelectCollection={handleSelectCollection}
+          onNewCollection={handleNewCollection}
+        />
+      ) : activeView === 'projects' && selectedProjectId ? (
+        <ProjectViewer
+          projectId={selectedProjectId}
+          refreshKey={projectsRefreshKey}
+          onBack={handleBackToProjects}
+          onEdit={handleEditProject}
+          onDelete={handleDeleteProject}
+          onStatusChange={handleProjectStatusChange}
+          onNavigateToReference={(ref) => onCrossLinkNavigate?.('bible-passage', ref)}
+        />
+      ) : activeView === 'projects' ? (
+        <ProjectsPage
+          refreshKey={projectsRefreshKey}
+          onSelectProject={handleSelectProject}
+          onNewProject={handleNewProject}
+        />
       ) : selectedBook ? (
         <ContentReader
           title={selectedBook.name}
@@ -373,7 +540,7 @@ export default function Reader({
                   ref={verseRefCallback(`${selectedBook.id}:${selectedChapter}:${verse.verseNumber}`)}
                   className={`cursor-pointer leading-relaxed rounded px-1 -mx-1 transition-colors duration-100 ${
                     selectedVerse?.verseNumber === verse.verseNumber
-                      ? 'bg-blue-50'
+                      ? 'bg-accent-light'
                       : 'hover:bg-gray-50'
                   }`}
                   data-book={selectedBook.id}
@@ -386,7 +553,7 @@ export default function Reader({
                     if (e.key === 'Enter' || e.key === ' ') handleVerseClick(verse.verseNumber);
                   }}
                 >
-                  <span className="mr-1 text-xs font-semibold align-super text-blue-600">
+                  <span className="mr-1 text-xs font-semibold align-super text-accent">
                     {verse.verseNumber}
                   </span>
                   {getVerseNotes(verse.verseNumber).map((note) => (
@@ -405,7 +572,7 @@ export default function Reader({
           </div>
         </ContentReader>
       ) : (
-        <div className="mx-auto max-w-3xl rounded-lg border p-6">
+        <div className="mx-auto reading-width rounded-lg border p-6">
           <div className="py-12 text-center">
             <h2 className="text-2xl font-semibold">Welcome to Catholic Study Desk</h2>
             <p className="mt-3 opacity-60">
@@ -439,6 +606,22 @@ export default function Reader({
           sourceReference={bookmarkModalSourceRef}
           onSave={handleBookmarkSave}
           onCancel={handleBookmarkCancel}
+        />
+      )}
+
+      {showCollectionEditor && (
+        <CollectionEditor
+          collection={editingCollection ?? undefined}
+          onSave={handleSaveCollection}
+          onCancel={() => { setShowCollectionEditor(false); setEditingCollection(null); }}
+        />
+      )}
+
+      {showProjectEditor && (
+        <ProjectEditor
+          project={editingProject ?? undefined}
+          onSave={handleSaveProject}
+          onCancel={() => { setShowProjectEditor(false); setEditingProject(null); }}
         />
       )}
     </main>

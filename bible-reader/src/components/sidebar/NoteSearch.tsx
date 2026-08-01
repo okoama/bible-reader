@@ -10,6 +10,8 @@ type NoteSearchProps = {
   books: BibleBook[];
   onNavigate: (sourceReference: string) => void;
   onSelectNote?: (noteId: string) => void;
+  onToggleFavorite?: (note: Note) => void;
+  onAddToCollection?: (type: 'note', label: string, sourceReference: string, itemId: string) => void;
   selectedNoteId?: string | null;
 };
 
@@ -50,7 +52,7 @@ function matchesDateFilter(note: Note, filter: DateFilter): boolean {
   }
 }
 
-export default function NoteSearch({ notes, books, onNavigate, onSelectNote, selectedNoteId }: NoteSearchProps) {
+export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onToggleFavorite, onAddToCollection, selectedNoteId }: NoteSearchProps) {
   const [query, setQuery] = useState('');
   const [filterBook, setFilterBook] = useState('');
   const [filterTag, setFilterTag] = useState('');
@@ -125,7 +127,7 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, sel
         placeholder="Search notes..."
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        className="mb-2 w-full rounded-md border px-3 py-2 text-sm outline-none transition-colors duration-150 focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
+        className="mb-2 w-full rounded-md border px-3 py-2 text-sm outline-none transition-colors duration-150 focus-accent"
       />
 
       <button
@@ -135,7 +137,7 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, sel
       >
         <span>{showFilters ? 'Hide' : 'Show'} filters</span>
         {hasActiveFilters && (
-          <span className="inline-block h-1.5 w-1.5 rounded-full bg-blue-500" />
+          <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent" />
         )}
       </button>
 
@@ -146,7 +148,7 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, sel
             <select
               value={filterBook}
               onChange={(e) => setFilterBook(e.target.value)}
-              className="w-full rounded-md border px-2 py-1 text-xs outline-none transition-colors duration-150 focus:border-blue-500"
+              className="w-full rounded-md border px-2 py-1 text-xs outline-none transition-colors duration-150 focus-accent"
             >
               <option value="">All books</option>
               {uniqueBookIds.map((id) => (
@@ -162,7 +164,7 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, sel
             <select
               value={filterTag}
               onChange={(e) => setFilterTag(e.target.value)}
-              className="w-full rounded-md border px-2 py-1 text-xs outline-none transition-colors duration-150 focus:border-blue-500"
+              className="w-full rounded-md border px-2 py-1 text-xs outline-none transition-colors duration-150 focus-accent"
             >
               <option value="">All tags</option>
               {uniqueTags.map((tag) => (
@@ -178,7 +180,7 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, sel
             <select
               value={filterDate}
               onChange={(e) => setFilterDate(e.target.value as DateFilter)}
-              className="w-full rounded-md border px-2 py-1 text-xs outline-none transition-colors duration-150 focus:border-blue-500"
+              className="w-full rounded-md border px-2 py-1 text-xs outline-none transition-colors duration-150 focus-accent"
             >
               <option value="all">All time</option>
               <option value="today">Today</option>
@@ -203,21 +205,21 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, sel
       {hasActiveFilters && (
         <div className="mb-2 flex flex-wrap gap-1">
           {filterBook && (
-            <span className="inline-flex items-center gap-1 rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">
+            <span className="inline-flex items-center gap-1 rounded bg-accent-lighter px-1.5 py-0.5 text-xs text-accent">
               {bookIdToName.get(filterBook) ?? filterBook}
-              <button type="button" onClick={() => setFilterBook('')} className="hover:text-blue-900">&times;</button>
+              <button type="button" onClick={() => setFilterBook('')} className="hover:text-accent-hover">&times;</button>
             </span>
           )}
           {filterTag && (
-            <span className="inline-flex items-center gap-1 rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">
+            <span className="inline-flex items-center gap-1 rounded bg-accent-lighter px-1.5 py-0.5 text-xs text-accent">
               {filterTag}
-              <button type="button" onClick={() => setFilterTag('')} className="hover:text-blue-900">&times;</button>
+              <button type="button" onClick={() => setFilterTag('')} className="hover:text-accent-hover">&times;</button>
             </span>
           )}
           {filterDate !== 'all' && (
-            <span className="inline-flex items-center gap-1 rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">
+            <span className="inline-flex items-center gap-1 rounded bg-accent-lighter px-1.5 py-0.5 text-xs text-accent">
               {filterDate === 'week' ? 'Last 7 days' : filterDate === 'month' ? 'Last 30 days' : filterDate === 'year' ? 'Last year' : 'Today'}
-              <button type="button" onClick={() => setFilterDate('all')} className="hover:text-blue-900">&times;</button>
+              <button type="button" onClick={() => setFilterDate('all')} className="hover:text-accent-hover">&times;</button>
             </span>
           )}
         </div>
@@ -225,17 +227,20 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, sel
 
       <div className="space-y-2">
         {filtered.map((note) => (
-          <button
+          <div
             key={note.id}
-            type="button"
-            onClick={() => {
-              onNavigate(note.sourceReference);
-              onSelectNote?.(note.id);
-            }}
-            className={`w-full rounded-md border px-3 py-2 text-left text-sm transition-colors duration-150 hover:bg-gray-50 ${
-              selectedNoteId === note.id ? 'border-blue-500 bg-blue-50' : ''
+            className={`relative rounded-md border px-3 py-2 text-left text-sm transition-colors duration-150 hover:bg-gray-50 ${
+              selectedNoteId === note.id ? 'border-accent bg-accent-light' : ''
             }`}
           >
+            <button
+              type="button"
+              onClick={() => {
+                onNavigate(note.sourceReference);
+                onSelectNote?.(note.id);
+              }}
+              className="w-full text-left"
+            >
             <p className="font-medium">{note.title || 'Untitled'}</p>
             <p className="mt-1 text-xs opacity-60">{formatDate(note.createdAt)}</p>
             <p className="mt-0.5 text-xs opacity-40">{note.sourceReference}</p>
@@ -245,13 +250,38 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, sel
             {note.tags.length > 0 && (
               <div className="mt-1 flex flex-wrap gap-1">
                 {note.tags.map((tag) => (
-                  <span key={tag} className="rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">
+                  <span key={tag} className="rounded bg-accent-lighter px-1.5 py-0.5 text-xs text-accent">
                     {tag}
                   </span>
                 ))}
               </div>
             )}
-          </button>
+            </button>
+            <div className="absolute right-1.5 top-1.5 flex gap-1">
+              {onAddToCollection && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onAddToCollection('note', note.title || 'Untitled', note.sourceReference, note.id); }}
+                  className="text-sm leading-none text-gray-400 hover:text-green-600 transition-colors"
+                  title="Add to collection"
+                >
+                  {'\u{1F4C1}'}
+                </button>
+              )}
+              {onToggleFavorite && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onToggleFavorite(note); }}
+                  className={`text-lg leading-none transition-colors ${
+                    note.favorite ? 'text-yellow-500' : 'text-gray-300 hover:text-yellow-400'
+                  }`}
+                  title={note.favorite ? 'Remove from favorites' : 'Add to favorites'}
+                >
+                  {note.favorite ? '\u2605' : '\u2606'}
+                </button>
+              )}
+            </div>
+          </div>
         ))}
 
         {notes.length === 0 && (

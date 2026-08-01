@@ -94,7 +94,7 @@ export default function AnnotationToolbar({
           <button
             type="button"
             onClick={() => onNote(selection.text, selection.verses)}
-            className="rounded px-2 py-1 text-sm transition-colors duration-150 hover:bg-blue-100 hover:text-blue-800"
+            className="rounded px-2 py-1 text-sm transition-colors duration-150 hover:bg-accent-lighter hover:text-accent-hover"
           >
             Note
           </button>

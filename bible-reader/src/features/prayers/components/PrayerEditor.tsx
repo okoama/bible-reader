@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Prayer } from '../../../types';
+import type { Prayer, PrayerCategory } from '../../../types';
+import { PRAYER_CATEGORIES } from '../../../types';
 import { PrayerRepository } from '../../../lib/repositories/PrayerRepository';
 import { createId } from '../../../lib/utils/id';
 import { useDraft } from '../../../lib/hooks/useDraft';
 import RichTextEditor from '../../../components/RichTextEditor';
+import ProjectPicker from '../../../components/projects/ProjectPicker';
 
 const prayerRepository = new PrayerRepository();
 
@@ -11,12 +13,17 @@ type PrayerEditorProps = {
   prayer?: Prayer;
   onSave: (prayer: Prayer) => void;
   onCancel: () => void;
+  initialProjectId?: string;
 };
 
-export default function PrayerEditor({ prayer, onSave, onCancel }: PrayerEditorProps) {
+export default function PrayerEditor({ prayer, onSave, onCancel, initialProjectId }: PrayerEditorProps) {
   const draftKey = prayer?.id ? `prayer:${prayer.id}` : 'prayer:new';
   const [title, setTitle] = useState(prayer?.title ?? '');
   const [content, setContent] = useState(prayer?.content ?? '');
+  const [category, setCategory] = useState<PrayerCategory>(prayer?.category ?? 'custom');
+  const [tagsInput, setTagsInput] = useState(prayer?.tags?.join(', ') ?? '');
+  const [favorite, setFavorite] = useState(prayer?.favorite ?? false);
+  const [projectId, setProjectId] = useState<string | undefined>(initialProjectId);
   const titleRef = useRef<HTMLInputElement>(null);
 
   const { hasDraft, restoreDraft, clearDraft } = useDraft(draftKey, title, content);
@@ -54,13 +61,23 @@ export default function PrayerEditor({ prayer, onSave, onCancel }: PrayerEditorP
 
   const handleSave = async () => {
     const now = new Date().toISOString();
+    const tags = tagsInput
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
 
     const saved: Prayer = {
       id: prayer?.id ?? createId('prayer'),
       title,
       content,
+      category,
+      favorite,
+      answered: prayer?.answered ?? false,
+      tags,
+      projectId,
       createdAt: prayer?.createdAt ?? now,
       updatedAt: now,
+      lastPrayed: prayer?.lastPrayed ?? null,
     };
 
     if (prayer) {
@@ -81,7 +98,7 @@ export default function PrayerEditor({ prayer, onSave, onCancel }: PrayerEditorP
       aria-modal="true"
       aria-label={prayer ? 'Edit prayer' : 'New prayer'}
     >
-      <div className="mx-4 flex w-full max-w-lg flex-col gap-4 rounded-lg border bg-white p-6 shadow-xl animate-slide-up">
+      <div className="mx-4 flex w-full max-w-lg flex-col gap-4 rounded-lg border bg-white p-6 shadow-xl animate-slide-up max-h-[90vh] overflow-y-auto">
         <h2 className="text-lg font-semibold">
           {prayer ? 'Edit Prayer' : 'New Prayer'}
         </h2>
@@ -117,12 +134,42 @@ export default function PrayerEditor({ prayer, onSave, onCancel }: PrayerEditorP
           className="rounded-md border px-3 py-2 text-sm outline-none transition-colors duration-150 focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
         />
 
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value as PrayerCategory)}
+          className="rounded-md border px-3 py-2 text-sm outline-none transition-colors duration-150 focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
+        >
+          {PRAYER_CATEGORIES.map((c) => (
+            <option key={c.value} value={c.value}>{c.label}</option>
+          ))}
+        </select>
+
+        <input
+          type="text"
+          placeholder="Tags (comma-separated)"
+          value={tagsInput}
+          onChange={(e) => setTagsInput(e.target.value)}
+          className="rounded-md border px-3 py-2 text-sm outline-none transition-colors duration-150 focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
+        />
+
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            checked={favorite}
+            onChange={(e) => setFavorite(e.target.checked)}
+            className="rounded border-gray-300 text-yellow-500 focus:ring-yellow-400"
+          />
+          Mark as favorite
+        </label>
+
         <RichTextEditor
           value={content}
           onChange={setContent}
           placeholder="Write your prayer here..."
           rows={8}
         />
+
+        <ProjectPicker value={projectId} onChange={setProjectId} />
 
         <div className="flex justify-end gap-2">
           <button
@@ -136,7 +183,7 @@ export default function PrayerEditor({ prayer, onSave, onCancel }: PrayerEditorP
             type="button"
             onClick={handleSave}
             disabled={!title.trim()}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-md bg-accent px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
           >
             Save
           </button>

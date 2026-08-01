@@ -8,6 +8,10 @@ export class HighlightRepository {
     return this.database.highlights.toArray();
   }
 
+  async count(): Promise<number> {
+    return this.database.highlights.count();
+  }
+
   async findByPassage(sourceReference: string): Promise<Highlight[]> {
     return this.database.highlights
       .where('sourceReference')

@@ -8,11 +8,23 @@ export class BookmarkRepository {
     return this.database.bookmarks.toArray();
   }
 
+  async count(): Promise<number> {
+    return this.database.bookmarks.count();
+  }
+
+  async findFavorites(): Promise<Bookmark[]> {
+    return this.database.bookmarks.toCollection().filter((b) => b.favorite).toArray();
+  }
+
   async findByBook(bookId: string): Promise<Bookmark[]> {
     return this.database.bookmarks
       .where('sourceReference')
       .startsWith(`${bookId}:`)
       .toArray();
+  }
+
+  async update(bookmark: Bookmark): Promise<void> {
+    await this.database.bookmarks.put(bookmark);
   }
 
   async create(bookmark: Bookmark): Promise<string> {
@@ -22,5 +34,9 @@ export class BookmarkRepository {
 
   async delete(id: string): Promise<void> {
     await this.database.bookmarks.delete(id);
+  }
+
+  async findByProjectId(projectId: string): Promise<Bookmark[]> {
+    return this.database.bookmarks.where('projectId').equals(projectId).toArray();
   }
 }
