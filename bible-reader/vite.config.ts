@@ -3,8 +3,10 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+const base = '/bible-reader/'
+
 export default defineConfig({
-  base: '/bible-reader/',
+  base,
   define: {
     'import.meta.env.VITE_APP_VERSION': JSON.stringify(process.env.npm_package_version ?? '0.0.0'),
   },
@@ -25,10 +27,10 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,png,svg,json}'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-        navigateFallback: '/',
+        navigateFallback: `${base}index.html`,
         runtimeCaching: [
           {
-            urlPattern: /\/data\/.*\.json$/,
+            urlPattern: new RegExp(`${base}data/.*\\.json$`),
             handler: 'CacheFirst',
             options: {
               cacheName: 'static-data',
