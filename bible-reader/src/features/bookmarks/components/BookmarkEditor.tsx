@@ -4,6 +4,7 @@ import { BookmarkRepository } from '../../../lib/repositories/BookmarkRepository
 import { createId } from '../../../lib/utils/id';
 import ProjectPicker from '../../projects/components/ProjectPicker';
 import AsyncButton from '../../shared/components/AsyncButton';
+import { useToast } from '../../../lib/contexts/ToastContext';
 
 const bookmarkRepository = new BookmarkRepository();
 
@@ -25,6 +26,7 @@ export default function BookmarkEditor({
   const [projectId, setProjectId] = useState<string | undefined>(initialProjectId);
   const titleRef = useRef<HTMLInputElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
+  const { showToast } = useToast();
 
   useEffect(() => {
     titleRef.current?.focus();
@@ -58,6 +60,7 @@ export default function BookmarkEditor({
     };
 
     await bookmarkRepository.create(bookmark);
+    showToast('Bookmark added');
     onSave(bookmark);
   };
 

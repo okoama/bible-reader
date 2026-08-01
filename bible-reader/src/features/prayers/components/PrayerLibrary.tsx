@@ -6,6 +6,7 @@ import { PrayerRepository } from '../../../lib/repositories/PrayerRepository';
 import { stripHtml } from '../../../lib/utils/text';
 import { formatDate } from '../../../lib/utils/date';
 import { useStudySession } from '../../../lib/contexts/StudySessionContext';
+import { useToast } from '../../../lib/contexts/ToastContext';
 import PrayerEditor from './PrayerEditor';
 import PrayerViewer from './PrayerViewer';
 import AddToCollectionModal from '../../collections/components/AddToCollectionModal';
@@ -41,6 +42,7 @@ export default function PrayerLibrary({ filter, refreshKey, onRefresh }: PrayerL
   const [deletingPrayer, setDeletingPrayer] = useState<Prayer | null>(null);
   const [addToCollectionPrayer, setAddToCollectionPrayer] = useState<Prayer | null>(null);
   const { session, logPrayer } = useStudySession();
+  const { showToast } = useToast();
 
   const isTraditional = filter.type === 'traditional';
 
@@ -112,6 +114,7 @@ export default function PrayerLibrary({ filter, refreshKey, onRefresh }: PrayerL
   async function handleConfirmDelete() {
     if (!deletingPrayer) return;
     await prayerRepository.delete(deletingPrayer.id);
+    showToast('Prayer deleted');
     setDeletingPrayer(null);
     onRefresh();
   }

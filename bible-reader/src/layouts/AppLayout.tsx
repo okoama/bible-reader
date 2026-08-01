@@ -25,6 +25,7 @@ import KeyboardShortcutsHelp from '../features/help/components/KeyboardShortcuts
 import LoadingIndicator from '../features/shared/components/LoadingIndicator';
 import ConfirmDialog from '../features/shared/components/ConfirmDialog';
 import ErrorBoundary from '../features/shared/components/ErrorBoundary';
+import { useToast } from '../lib/contexts/ToastContext';
 import KnowledgeGraphView from '../features/knowledge-graph/components/KnowledgeGraphView';
 import TabBar from '../components/tabs/TabBar';
 import type { GraphNodeType } from '../types';
@@ -105,6 +106,7 @@ export default function AppLayout() {
   const { lastPosition, loaded, savePosition } = useReadingProgress();
   const { session, logVisit } = useStudySession();
   const { notes, loading: notesLoading } = useNotes(notesRefreshKey);
+  const { showToast } = useToast();
 
   const [showGlobalSearch, setShowGlobalSearch] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
@@ -482,6 +484,7 @@ export default function AppLayout() {
   const handleConfirmDeleteSelectedNote = async () => {
     if (!selectedNoteId) return;
     await noteRepository.delete(selectedNoteId);
+    showToast('Note deleted');
     setSelectedNoteId(null);
     setNotesRefreshKey((k) => k + 1);
     setConfirmingNoteDelete(false);
@@ -719,6 +722,7 @@ export default function AppLayout() {
           onSave={(title, description, status, icon, color) => {
             const repo = new ResearchProjectRepository();
             void repo.create({ id: createId('project'), title, description, status, icon, color, notes: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+            showToast('Project created');
             setShowNewProject(false);
           }}
           onCancel={() => setShowNewProject(false)}

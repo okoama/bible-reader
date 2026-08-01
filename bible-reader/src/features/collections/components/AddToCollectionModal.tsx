@@ -3,6 +3,7 @@ import type { Collection, CollectionItem, CollectionItemType } from '../../../ty
 import { CollectionRepository } from '../../../lib/repositories/CollectionRepository';
 import { createId } from '../../../lib/utils/id';
 import { useStudySession } from '../../../lib/contexts/StudySessionContext';
+import { useToast } from '../../../lib/contexts/ToastContext';
 import LoadingIndicator from '../../shared/components/LoadingIndicator';
 
 const repo = new CollectionRepository();
@@ -28,6 +29,7 @@ export default function AddToCollectionModal({
   const [loading, setLoading] = useState(true);
   const [addingId, setAddingId] = useState<string | null>(null);
   const { session, logCollectionEvent } = useStudySession();
+  const { showToast } = useToast();
 
   useEffect(() => {
     let active = true;
@@ -52,6 +54,7 @@ export default function AddToCollectionModal({
       await repo.addItem(collectionId, item);
       const col = collections.find((c) => c.id === collectionId);
       if (session && !session.endTime && col) logCollectionEvent(collectionId, col.name, 'add_item');
+      showToast(col ? `Added to "${col.name}"` : 'Added to collection');
       onAdded();
       onClose();
     } finally {

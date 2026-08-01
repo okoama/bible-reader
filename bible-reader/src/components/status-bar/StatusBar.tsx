@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useStudySession } from '../../lib/contexts/StudySessionContext';
+import { useToast } from '../../lib/contexts/ToastContext';
 import SessionSummary from '../../features/study-sessions/components/SessionSummary';
 
 function formatElapsed(ms: number): string {
@@ -13,10 +14,12 @@ function formatElapsed(ms: number): string {
 
 export default function StatusBar() {
   const { session, sessionLoading, elapsed, startSession, endSession } = useStudySession();
+  const { showToast } = useToast();
   const [showSummary, setShowSummary] = useState(false);
 
   const handleEnd = () => {
     endSession();
+    showToast('Study session ended');
     setShowSummary(true);
   };
 
@@ -45,7 +48,7 @@ export default function StatusBar() {
             {(!session || session.endTime) && (
                 <button
                   type="button"
-                  onClick={() => startSession()}
+                  onClick={() => { startSession(); showToast('Study session started'); }}
                   className="btn-stained rounded px-3 py-1 text-xs"
                 >
                   Start Session

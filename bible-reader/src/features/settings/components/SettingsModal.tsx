@@ -6,6 +6,7 @@ import { BackupService } from '../../backup/services/BackupService';
 import type { WorkspaceSettings, WorkspaceBackup } from '../../../types';
 import LoadingIndicator from '../../shared/components/LoadingIndicator';
 import ConfirmDialog from '../../shared/components/ConfirmDialog';
+import { useToast } from '../../../lib/contexts/ToastContext';
 
 type SettingsModalProps = { onClose: () => void };
 
@@ -31,6 +32,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
   const [busy, setBusy] = useState<'export' | 'import' | null>(null);
   const [pendingBackup, setPendingBackup] = useState<WorkspaceBackup | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { showToast } = useToast();
 
   const set = (patch: Partial<WorkspaceSettings>) => updateSettings(patch);
 
@@ -39,7 +41,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
     try {
       const backup = await backupService.exportBackup();
       backupService.downloadBackup(backup);
-      setMessage({ text: 'Backup downloaded successfully.', type: 'success' });
+      showToast('Backup downloaded');
     } catch (err) {
       setMessage({ text: `Export failed: ${err instanceof Error ? err.message : 'Unknown error'}`, type: 'error' });
     } finally {
@@ -71,7 +73,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
     try {
       await backupService.importBackup(pendingBackup);
       setPendingBackup(null);
-      setMessage({ text: 'Import successful. Close settings and refresh the page to see your restored workspace.', type: 'success' });
+      showToast('Backup restored — close settings and refresh to see your workspace');
     } catch (err) {
       setPendingBackup(null);
       setMessage({ text: `Import failed: ${err instanceof Error ? err.message : 'Invalid file'}`, type: 'error' });
@@ -111,7 +113,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             </div>
           </div>
 
-          <button type="button" onClick={resetSettings} className="text-xs opacity-50 hover:opacity-100">
+          <button type="button" onClick={() => { resetSettings(); showToast('Settings reset to defaults'); }} className="text-xs opacity-50 hover:opacity-100">
             Reset to defaults
           </button>
         </div>

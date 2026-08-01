@@ -11,6 +11,7 @@ import { formatDate } from '../../../lib/utils/date';
 import LoadingIndicator from '../../shared/components/LoadingIndicator';
 import ErrorRetry from '../../shared/components/ErrorRetry';
 import ConfirmDialog from '../../shared/components/ConfirmDialog';
+import { useToast } from '../../../lib/contexts/ToastContext';
 
 const projectRepo = new ResearchProjectRepository();
 const noteRepo = new NoteRepository();
@@ -52,6 +53,7 @@ function ItemList<T>({ items, render }: { items: T[]; render: (item: T) => React
 }
 
 export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, onDelete, onStatusChange, onNavigateToReference }: ProjectViewerProps) {
+  const { showToast } = useToast();
   const [project, setProject] = useState<ResearchProject | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
@@ -103,39 +105,44 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
       await projectRepo.create(updated);
       setProject(updated);
       setNotesSaved(true);
+      showToast('Project notes saved');
     } finally {
       setSaving(false);
     }
-  }, [project, projectNotes]);
+  }, [project, projectNotes, showToast]);
 
   const handleCreateNote = useCallback(async (title: string, content: string, sourceReference: string) => {
     const now = new Date().toISOString();
     const note: Note = { id: createId('note'), title, content, sourceReference, tags: [], favorite: false, projectId, createdAt: now, updatedAt: now };
     await noteRepo.create(note);
+    showToast('Note saved');
     setNotes((prev) => [...prev, note]);
     setShowNewNote(false);
-  }, [projectId]);
+  }, [projectId, showToast]);
 
   const handleCreateBookmark = useCallback(async (sourceReference: string, title: string) => {
     const bm: Bookmark = { id: createId('bm'), sourceReference, title, favorite: false, projectId, createdAt: new Date().toISOString() };
     await bookmarkRepo.create(bm);
+    showToast('Bookmark added');
     setBookmarks((prev) => [...prev, bm]);
     setShowNewBookmark(false);
-  }, [projectId]);
+  }, [projectId, showToast]);
 
   const handleCreatePrayer = useCallback(async (title: string, content: string) => {
     const now = new Date().toISOString();
     const prayer: Prayer = { id: createId('pr'), title, content, category: 'custom', favorite: false, answered: false, projectId, tags: [], createdAt: now, updatedAt: now, lastPrayed: null };
     await prayerRepo.create(prayer);
+    showToast('Prayer saved');
     setPrayers((prev) => [...prev, prayer]);
     setShowNewPrayer(false);
-  }, [projectId]);
+  }, [projectId, showToast]);
 
   const handleDeleteLink = useCallback(async (type: string, itemId: string) => {
     if (type === 'note') { await noteRepo.delete(itemId); setNotes((prev) => prev.filter((n) => n.id !== itemId)); }
     if (type === 'bookmark') { await bookmarkRepo.delete(itemId); setBookmarks((prev) => prev.filter((b) => b.id !== itemId)); }
     if (type === 'prayer') { await prayerRepo.delete(itemId); setPrayers((prev) => prev.filter((p) => p.id !== itemId)); }
-  }, []);
+    showToast(type === 'note' ? 'Note deleted' : type === 'bookmark' ? 'Bookmark deleted' : 'Prayer deleted');
+  }, [showToast]);
 
   const recentActivity = useMemo(() => {
     const all: { date: string; label: string; type: string }[] = [

@@ -3,6 +3,7 @@ import type { Note } from '../../../types';
 import { NoteRepository } from '../../../lib/repositories/NoteRepository';
 import { createId } from '../../../lib/utils/id';
 import { useDraft } from '../../../lib/hooks/useDraft';
+import { useToast } from '../../../lib/contexts/ToastContext';
 import RichTextEditor from './RichTextEditor';
 import ProjectPicker from '../../projects/components/ProjectPicker';
 import AsyncButton from '../../shared/components/AsyncButton';
@@ -40,6 +41,7 @@ export default function NoteEditor({
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
   const { hasDraft, restoreDraft, clearDraft } = useDraft(draftKey, title, content);
+  const { showToast } = useToast();
 
   const handleRestore = useCallback(() => {
     const data = restoreDraft();
@@ -148,6 +150,7 @@ export default function NoteEditor({
       await noteRepository.create(saved);
     }
 
+    showToast(note ? 'Note updated' : 'Note saved');
     clearDraft();
     onSave(saved);
   };

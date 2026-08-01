@@ -13,6 +13,7 @@ import { HighlightRepository } from '../../../lib/repositories/HighlightReposito
 import { useHighlights } from '../../../lib/hooks/useHighlights';
 import { useRefNotes } from '../../../lib/hooks/useRefNotes';
 import { createId } from '../../../lib/utils/id';
+import { useToast } from '../../../lib/contexts/ToastContext';
 import type { TextWork, TextSection, Highlight, Note } from '../../../types';
 
 const textService = new TextService();
@@ -89,6 +90,7 @@ export default function CompanionTextReader({ workId, sectionId, onSectionChange
   }, [onSectionChange]);
 
   const { selection, clearSelection } = useTextSelection(containerElement, COMPANION_TEXT_SELECTION_CONFIG);
+  const { showToast } = useToast();
   const highlights = useHighlights(workId, selectedSection, refreshKey);
   const chapterNotes = useRefNotes(workId, selectedSection, refreshKey);
 
@@ -164,6 +166,7 @@ export default function CompanionTextReader({ workId, sectionId, onSectionChange
         selectedText: text,
         createdAt: new Date().toISOString(),
       });
+      showToast('Highlight added');
     } finally {
       setAnnotationBusy(false);
     }
@@ -233,6 +236,7 @@ export default function CompanionTextReader({ workId, sectionId, onSectionChange
           createdAt: new Date().toISOString(),
         });
       }
+      showToast(existing ? 'Favorite removed' : 'Verse added to favorites');
     } finally {
       setAnnotationBusy(false);
     }

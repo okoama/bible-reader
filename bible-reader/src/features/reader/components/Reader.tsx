@@ -12,6 +12,7 @@ import { useHighlights } from '../../../lib/hooks/useHighlights';
 import { useRefNotes } from '../../../lib/hooks/useRefNotes';
 import { createId } from '../../../lib/utils/id';
 import { useStudySession } from '../../../lib/contexts/StudySessionContext';
+import { useToast } from '../../../lib/contexts/ToastContext';
 import AnnotationToolbar from '../../annotations/components/AnnotationToolbar';
 import NoteEditor from '../../notes/components/NoteEditor';
 import PrayerLibrary from '../../prayers/components/PrayerLibrary';
@@ -148,6 +149,7 @@ export default function Reader({
   const highlights = useHighlights(selectedBook?.id ?? null, selectedChapter, refreshKey);
   const chapterNotes = useRefNotes(selectedBook?.id ?? null, selectedChapter, refreshKey);
   const { session, logNote, logBookmark, logCollectionEvent } = useStudySession();
+  const { showToast } = useToast();
 
   const verseRefCallback = useCallback((key: string) => {
     return (node: HTMLParagraphElement | null) => {
@@ -195,6 +197,7 @@ export default function Reader({
         selectedText: text,
         createdAt: new Date().toISOString(),
       });
+      showToast('Highlight added');
     } finally {
       setAnnotationBusy(false);
     }
@@ -268,6 +271,7 @@ export default function Reader({
           createdAt: new Date().toISOString(),
         });
       }
+      showToast(existing ? 'Favorite removed' : 'Verse added to favorites');
     } finally {
       setAnnotationBusy(false);
     }
@@ -311,11 +315,13 @@ export default function Reader({
       setShowCollectionEditor(false);
       if (session && !session.endTime) logCollectionEvent(id, name, 'create');
     }
+    showToast(editingCollection ? 'Collection updated' : 'Collection created');
     setCollectionsRefreshKey((k) => k + 1);
   };
 
   const handleDeleteCollection = async (id: string) => {
     await collectionRepo.delete(id);
+    showToast('Collection deleted');
     setSelectedCollectionId(null);
     setCollectionsRefreshKey((k) => k + 1);
   };
@@ -345,6 +351,7 @@ export default function Reader({
     } else {
       await projectRepository.create({ id: createId('project'), title, description, status, icon, color, notes: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
     }
+    showToast(editingProject ? 'Project updated' : 'Project created');
     setShowProjectEditor(false);
     setEditingProject(null);
     setProjectsRefreshKey((k) => k + 1);
@@ -352,6 +359,7 @@ export default function Reader({
 
   const handleDeleteProject = async (id: string) => {
     await projectRepository.delete(id);
+    showToast('Project deleted');
     setSelectedProjectId(null);
     setProjectsRefreshKey((k) => k + 1);
   };

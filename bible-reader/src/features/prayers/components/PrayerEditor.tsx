@@ -4,6 +4,7 @@ import { PRAYER_CATEGORIES } from '../../../types';
 import { PrayerRepository } from '../../../lib/repositories/PrayerRepository';
 import { createId } from '../../../lib/utils/id';
 import { useDraft } from '../../../lib/hooks/useDraft';
+import { useToast } from '../../../lib/contexts/ToastContext';
 import RichTextEditor from '../../notes/components/RichTextEditor';
 import ProjectPicker from '../../projects/components/ProjectPicker';
 import AsyncButton from '../../shared/components/AsyncButton';
@@ -28,6 +29,7 @@ export default function PrayerEditor({ prayer, onSave, onCancel, initialProjectI
   const titleRef = useRef<HTMLInputElement>(null);
 
   const { hasDraft, restoreDraft, clearDraft } = useDraft(draftKey, title, content);
+  const { showToast } = useToast();
 
   const handleRestore = useCallback(() => {
     const data = restoreDraft();
@@ -87,6 +89,7 @@ export default function PrayerEditor({ prayer, onSave, onCancel, initialProjectI
       await prayerRepository.create(saved);
     }
 
+    showToast(prayer ? 'Prayer updated' : 'Prayer saved');
     clearDraft();
     onSave(saved);
   };

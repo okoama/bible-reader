@@ -13,6 +13,7 @@ import NoteSearch from '../../features/notes/components/NoteSearch';
 import AddToCollectionModal from '../../features/collections/components/AddToCollectionModal';
 import LoadingIndicator from '../../features/shared/components/LoadingIndicator';
 import { useWorkspaceSettings } from '../../lib/contexts/WorkspaceSettingsContext';
+import { useToast } from '../../lib/contexts/ToastContext';
 
 const highlightRepository = new HighlightRepository();
 const noteRepository = new NoteRepository();
@@ -63,6 +64,7 @@ export default function RightPanel({
   sectionId,
 }: RightPanelProps) {
   const { settings, updateSettings } = useWorkspaceSettings();
+  const { showToast } = useToast();
   const [panelOpen, setPanelOpen] = useState(true);
   const [panelWidth, setPanelWidth] = useState(settings.rightPanelWidth);
   const [deletingHighlight, setDeletingHighlight] = useState<Highlight | null>(null);
@@ -171,6 +173,7 @@ export default function RightPanel({
   async function handleConfirmDeleteHighlight() {
     if (!deletingHighlight) return;
     await highlightRepository.delete(deletingHighlight.id);
+    showToast('Highlight deleted');
     setDeletingHighlight(null);
     onNoteDeleted();
   }
@@ -180,6 +183,7 @@ export default function RightPanel({
     setChangingHighlightId(highlight.id);
     try {
       await highlightRepository.update({ ...highlight, color });
+      showToast('Highlight color updated');
       onNoteDeleted();
     } finally {
       setChangingHighlightId(null);
@@ -188,23 +192,26 @@ export default function RightPanel({
 
   const handleToggleNoteFavorite = useCallback(async (note: Note) => {
     await noteRepository.update({ ...note, favorite: !note.favorite });
+    showToast(note.favorite ? 'Note removed from favorites' : 'Note added to favorites');
     onNoteDeleted(); // re-trigger refresh
-  }, [onNoteDeleted]);
+  }, [onNoteDeleted, showToast]);
 
   const handleToggleBookmarkFavorite = useCallback(async (b: Bookmark) => {
     if (busyBookmarkId) return;
     setBusyBookmarkId(b.id);
     try {
       await bookmarkRepository.update({ ...b, favorite: !b.favorite });
+      showToast(b.favorite ? 'Bookmark removed from favorites' : 'Bookmark added to favorites');
       onNoteDeleted(); // re-trigger refresh
     } finally {
       setBusyBookmarkId(null);
     }
-  }, [onNoteDeleted, busyBookmarkId]);
+  }, [onNoteDeleted, busyBookmarkId, showToast]);
 
   async function handleConfirmDeleteBookmark() {
     if (!deletingBookmark) return;
     await bookmarkRepository.delete(deletingBookmark.id);
+    showToast('Bookmark deleted');
     setDeletingBookmark(null);
     onNoteDeleted();
   }

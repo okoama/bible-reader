@@ -5,6 +5,7 @@ import { formatDate } from '../../../lib/utils/date';
 import { PrayerRepository } from '../../../lib/repositories/PrayerRepository';
 import LoadingIndicator from '../../shared/components/LoadingIndicator';
 import ConfirmDialog from '../../shared/components/ConfirmDialog';
+import { useToast } from '../../../lib/contexts/ToastContext';
 
 const prayerRepository = new PrayerRepository();
 
@@ -33,11 +34,13 @@ export default function PrayerViewer({ prayer, readOnly = false, onClose, onEdit
   const catColor = CATEGORY_COLORS[prayer.category] ?? 'bg-gray-100 text-gray-800';
   const [busyAction, setBusyAction] = useState<'answered' | 'prayed' | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const { showToast } = useToast();
 
   async function handleMarkAnswered() {
     setBusyAction('answered');
     try {
       await prayerRepository.update({ ...prayer, answered: !prayer.answered, updatedAt: new Date().toISOString() });
+      showToast(prayer.answered ? 'Prayer marked as not answered' : 'Prayer marked as answered');
       onRefresh();
     } finally {
       setBusyAction(null);
@@ -48,6 +51,7 @@ export default function PrayerViewer({ prayer, readOnly = false, onClose, onEdit
     setBusyAction('prayed');
     try {
       await prayerRepository.markPrayed(prayer.id);
+      showToast('Prayer marked as prayed');
       onRefresh();
     } finally {
       setBusyAction(null);
@@ -56,6 +60,7 @@ export default function PrayerViewer({ prayer, readOnly = false, onClose, onEdit
 
   async function handleDelete() {
     await prayerRepository.delete(prayer.id);
+    showToast('Prayer deleted');
     onRefresh();
     onClose();
   }
