@@ -6,6 +6,7 @@ import { formatDate } from '../../../lib/utils/date';
 import NoteViewer from '../../notes/components/NoteViewer';
 import LoadingIndicator from '../../shared/components/LoadingIndicator';
 import ErrorRetry from '../../shared/components/ErrorRetry';
+import ConfirmDialog from '../../shared/components/ConfirmDialog';
 
 const repo = new CollectionRepository();
 const noteRepo = new NoteRepository();
@@ -17,7 +18,7 @@ type CollectionViewerProps = {
   onNavigateToPassage: (sourceReference: string) => void;
   onBack: () => void;
   onEdit: (collection: Collection) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: string) => void | Promise<void>;
   onCrossLinkNavigate?: (type: CrossLinkType, id: string) => void;
 };
 
@@ -45,6 +46,7 @@ export default function CollectionViewer({
   const [viewingNote, setViewingNote] = useState<Note | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const handleRetry = () => {
     setLoadError(false);
@@ -117,7 +119,7 @@ export default function CollectionViewer({
           </button>
           <button
             type="button"
-            onClick={() => onDelete(collection.id)}
+            onClick={() => setConfirmingDelete(true)}
             className="rounded border px-3 py-1 text-sm text-red-600 transition-colors hover:bg-red-50"
           >
             Delete
@@ -165,6 +167,14 @@ export default function CollectionViewer({
           note={viewingNote}
           onClose={() => setViewingNote(null)}
           onCrossLinkNavigate={onCrossLinkNavigate}
+        />
+      )}
+
+      {confirmingDelete && (
+        <ConfirmDialog
+          message={`Delete collection "${collection.name}"? Its items will be removed from the collection. This cannot be undone.`}
+          onConfirm={() => onDelete(collection.id)}
+          onCancel={() => setConfirmingDelete(false)}
         />
       )}
     </div>

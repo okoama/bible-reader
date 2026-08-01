@@ -10,6 +10,7 @@ import { createId } from '../../../lib/utils/id';
 import { formatDate } from '../../../lib/utils/date';
 import LoadingIndicator from '../../shared/components/LoadingIndicator';
 import ErrorRetry from '../../shared/components/ErrorRetry';
+import ConfirmDialog from '../../shared/components/ConfirmDialog';
 
 const projectRepo = new ResearchProjectRepository();
 const noteRepo = new NoteRepository();
@@ -22,7 +23,7 @@ type ProjectViewerProps = {
   refreshKey: number;
   onBack: () => void;
   onEdit: (project: ResearchProject) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: string) => void | Promise<void>;
   onStatusChange: (id: string, status: ProjectStatus) => void;
   onNavigateToReference?: (sourceReference: string) => void;
 };
@@ -63,6 +64,8 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
   const [showNewNote, setShowNewNote] = useState(false);
   const [showNewBookmark, setShowNewBookmark] = useState(false);
   const [showNewPrayer, setShowNewPrayer] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [confirmingLinkDelete, setConfirmingLinkDelete] = useState<{ type: string; itemId: string; label: string } | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -185,7 +188,7 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
         </div>
         <div className="flex gap-1 shrink-0">
           <button type="button" onClick={() => onEdit(project)} className="btn-stained-ghost rounded px-3 py-1 text-sm">Edit</button>
-          <button type="button" onClick={() => onDelete(project.id)} className="rounded border px-3 py-1 text-sm text-red-600 transition-colors hover:bg-red-50">Delete</button>
+          <button type="button" onClick={() => setConfirmingDelete(true)} className="rounded border px-3 py-1 text-sm text-red-600 transition-colors hover:bg-red-50">Delete</button>
         </div>
       </div>
 
@@ -248,7 +251,7 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
                 <div className="flex items-center gap-2 text-sm">
                   <button type="button" onClick={() => onNavigateToReference?.(n.sourceReference)} className="flex-1 truncate text-left hover:text-accent focus-visible:ring-2 focus-visible:ring-accent rounded" title={n.sourceReference}>{n.title || 'Untitled'}</button>
                   <span className="text-xs opacity-40">{n.sourceReference}</span>
-                  <button type="button" onClick={() => handleDeleteLink('note', n.id)} className="text-xs text-red-400 hover:text-red-600">&times;</button>
+                  <button type="button" onClick={() => setConfirmingLinkDelete({ type: 'note', itemId: n.id, label: n.title || 'Untitled' })} className="text-xs text-red-400 hover:text-red-600">&times;</button>
                 </div>
               )} />
               {notes.length === 0 && <EmptyState hint="No linked notes." action={<button type="button" onClick={() => setShowNewNote(true)} className="text-xs text-accent hover:underline">+ Add Note</button>} />}
@@ -266,7 +269,7 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
                 <div className="flex items-center gap-2 text-sm">
                   <button type="button" onClick={() => onNavigateToReference?.(b.sourceReference)} className="flex-1 truncate text-left hover:text-accent focus-visible:ring-2 focus-visible:ring-accent rounded" title={b.sourceReference}>{b.title ?? b.sourceReference}</button>
                   <span className="text-xs opacity-40">{b.sourceReference}</span>
-                  <button type="button" onClick={() => handleDeleteLink('bookmark', b.id)} className="text-xs text-red-400 hover:text-red-600">&times;</button>
+                  <button type="button" onClick={() => setConfirmingLinkDelete({ type: 'bookmark', itemId: b.id, label: b.title ?? b.sourceReference })} className="text-xs text-red-400 hover:text-red-600">&times;</button>
                 </div>
               )} />
               {bookmarks.length === 0 && <EmptyState hint="No linked passages." action={<button type="button" onClick={() => setShowNewBookmark(true)} className="text-xs text-accent hover:underline">+ Add Passage Reference</button>} />}
@@ -314,7 +317,7 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
                 <div className="flex items-center gap-2 text-sm">
                   <span className="flex-1 truncate">{p.title}</span>
                   <span className="text-xs opacity-40">{p.category}</span>
-                  <button type="button" onClick={() => handleDeleteLink('prayer', p.id)} className="text-xs text-red-400 hover:text-red-600">&times;</button>
+                  <button type="button" onClick={() => setConfirmingLinkDelete({ type: 'prayer', itemId: p.id, label: p.title })} className="text-xs text-red-400 hover:text-red-600">&times;</button>
                 </div>
               )} />
               {prayers.length === 0 && <EmptyState hint="No linked prayers." action={<button type="button" onClick={() => setShowNewPrayer(true)} className="text-xs text-accent hover:underline">+ Add Prayer</button>} />}
@@ -354,6 +357,22 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
           </ul>
         </SectionCard>
       </div>
+
+      {confirmingDelete && (
+        <ConfirmDialog
+          message={`Delete project "${project.title}"? Its linked notes, prayers, and bookmarks will also be removed. This cannot be undone.`}
+          onConfirm={() => onDelete(project.id)}
+          onCancel={() => setConfirmingDelete(false)}
+        />
+      )}
+
+      {confirmingLinkDelete && (
+        <ConfirmDialog
+          message={`Delete ${confirmingLinkDelete.type === 'note' ? 'note' : confirmingLinkDelete.type === 'bookmark' ? 'bookmark' : 'prayer'} "${confirmingLinkDelete.label}"? This cannot be undone.`}
+          onConfirm={() => handleDeleteLink(confirmingLinkDelete.type, confirmingLinkDelete.itemId)}
+          onCancel={() => setConfirmingLinkDelete(null)}
+        />
+      )}
     </div>
   );
 }

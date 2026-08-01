@@ -23,6 +23,7 @@ import { ResearchProjectRepository } from '../lib/repositories/ResearchProjectRe
 import { createId } from '../lib/utils/id';
 import KeyboardShortcutsHelp from '../features/help/components/KeyboardShortcutsHelp';
 import LoadingIndicator from '../features/shared/components/LoadingIndicator';
+import ConfirmDialog from '../features/shared/components/ConfirmDialog';
 import ErrorBoundary from '../features/shared/components/ErrorBoundary';
 import KnowledgeGraphView from '../features/knowledge-graph/components/KnowledgeGraphView';
 import TabBar from '../components/tabs/TabBar';
@@ -471,11 +472,19 @@ export default function AppLayout() {
     }
   }, [pushNavSnapshot, handleSelectView, handleNavigateToBookmark]);
 
-  const handleDeleteSelectedNote = async () => {
+  const [confirmingNoteDelete, setConfirmingNoteDelete] = useState(false);
+
+  const handleDeleteSelectedNote = () => {
+    if (!selectedNoteId) return;
+    setConfirmingNoteDelete(true);
+  };
+
+  const handleConfirmDeleteSelectedNote = async () => {
     if (!selectedNoteId) return;
     await noteRepository.delete(selectedNoteId);
     setSelectedNoteId(null);
     setNotesRefreshKey((k) => k + 1);
+    setConfirmingNoteDelete(false);
   };
 
   useEffect(() => {
@@ -713,6 +722,14 @@ export default function AppLayout() {
             setShowNewProject(false);
           }}
           onCancel={() => setShowNewProject(false)}
+        />
+      )}
+
+      {confirmingNoteDelete && (
+        <ConfirmDialog
+          message={`Delete note "${notes.find((n) => n.id === selectedNoteId)?.title ?? 'this note'}"? This cannot be undone.`}
+          onConfirm={handleConfirmDeleteSelectedNote}
+          onCancel={() => setConfirmingNoteDelete(false)}
         />
       )}
 

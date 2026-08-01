@@ -4,6 +4,7 @@ import { PRAYER_CATEGORIES } from '../../../types';
 import { formatDate } from '../../../lib/utils/date';
 import { PrayerRepository } from '../../../lib/repositories/PrayerRepository';
 import LoadingIndicator from '../../shared/components/LoadingIndicator';
+import ConfirmDialog from '../../shared/components/ConfirmDialog';
 
 const prayerRepository = new PrayerRepository();
 
@@ -30,7 +31,8 @@ const CATEGORY_COLORS: Record<string, string> = {
 export default function PrayerViewer({ prayer, readOnly = false, onClose, onEdit, onRefresh }: PrayerViewerProps) {
   const catLabel = PRAYER_CATEGORIES.find((c) => c.value === prayer.category)?.label ?? prayer.category;
   const catColor = CATEGORY_COLORS[prayer.category] ?? 'bg-gray-100 text-gray-800';
-  const [busyAction, setBusyAction] = useState<'answered' | 'prayed' | 'delete' | null>(null);
+  const [busyAction, setBusyAction] = useState<'answered' | 'prayed' | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   async function handleMarkAnswered() {
     setBusyAction('answered');
@@ -53,14 +55,9 @@ export default function PrayerViewer({ prayer, readOnly = false, onClose, onEdit
   }
 
   async function handleDelete() {
-    setBusyAction('delete');
-    try {
-      await prayerRepository.delete(prayer.id);
-      onRefresh();
-      onClose();
-    } finally {
-      setBusyAction(null);
-    }
+    await prayerRepository.delete(prayer.id);
+    onRefresh();
+    onClose();
   }
 
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -148,19 +145,11 @@ export default function PrayerViewer({ prayer, readOnly = false, onClose, onEdit
               </button>
               <button
                 type="button"
-                onClick={handleDelete}
+                onClick={() => setConfirmingDelete(true)}
                 disabled={busyAction !== null}
-                aria-busy={busyAction === 'delete'}
                 className="ml-auto rounded-md border border-red-200 px-3 py-1.5 text-sm text-red-600 transition-colors duration-150 hover:bg-red-50 disabled:opacity-60"
               >
-                {busyAction === 'delete' ? (
-                  <span className="inline-flex items-center gap-1.5">
-                    <LoadingIndicator compact size="xs" />
-                    <span>Removing…</span>
-                  </span>
-                ) : (
-                  'Delete'
-                )}
+                Delete
               </button>
             </>
           )}
@@ -169,6 +158,14 @@ export default function PrayerViewer({ prayer, readOnly = false, onClose, onEdit
           )}
         </div>
       </div>
+
+      {confirmingDelete && (
+        <ConfirmDialog
+          message={`Delete prayer "${prayer.title}"? This cannot be undone.`}
+          onConfirm={handleDelete}
+          onCancel={() => setConfirmingDelete(false)}
+        />
+      )}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { ACCENT_COLORS } from '../../../lib/utils/accent';
 import { BackupService } from '../../backup/services/BackupService';
 import type { WorkspaceSettings, WorkspaceBackup } from '../../../types';
 import LoadingIndicator from '../../shared/components/LoadingIndicator';
+import ConfirmDialog from '../../shared/components/ConfirmDialog';
 
 type SettingsModalProps = { onClose: () => void };
 
@@ -28,6 +29,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
   const { settings, updateSettings, resetSettings } = useWorkspaceSettings();
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [busy, setBusy] = useState<'export' | 'import' | null>(null);
+  const [pendingBackup, setPendingBackup] = useState<WorkspaceBackup | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const set = (patch: Partial<WorkspaceSettings>) => updateSettings(patch);
@@ -45,20 +47,35 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
     }
   };
 
-  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
 
     setBusy('import');
     try {
       const text = await file.text();
       const backup: WorkspaceBackup = JSON.parse(text);
-      await backupService.importBackup(backup);
-      setMessage({ text: 'Import successful. Close settings and refresh the page to see your restored workspace.', type: 'success' });
+      setMessage(null);
+      setPendingBackup(backup);
     } catch (err) {
       setMessage({ text: `Import failed: ${err instanceof Error ? err.message : 'Invalid file'}`, type: 'error' });
     } finally {
-      e.target.value = '';
+      setBusy(null);
+    }
+  };
+
+  const handleConfirmImport = async () => {
+    if (!pendingBackup) return;
+    setBusy('import');
+    try {
+      await backupService.importBackup(pendingBackup);
+      setPendingBackup(null);
+      setMessage({ text: 'Import successful. Close settings and refresh the page to see your restored workspace.', type: 'success' });
+    } catch (err) {
+      setPendingBackup(null);
+      setMessage({ text: `Import failed: ${err instanceof Error ? err.message : 'Invalid file'}`, type: 'error' });
+    } finally {
       setBusy(null);
     }
   };
@@ -124,7 +141,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                 'Import Backup'
               )}
             </button>
-            <input ref={fileInputRef} type="file" accept=".json" onChange={handleImport} className="hidden" disabled={busy !== null} />
+            <input ref={fileInputRef} type="file" accept=".json" onChange={handleFileSelected} className="hidden" disabled={busy !== null} />
           </div>
           {message && (
             <p className={`text-xs ${message.type === 'error' ? 'text-red-600' : 'text-green-700'}`}>
@@ -139,6 +156,16 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
           </button>
         </div>
       </div>
+
+      {pendingBackup && (
+        <ConfirmDialog
+          message="Restore this backup? This will overwrite your current notes, prayers, collections, projects, and settings. This cannot be undone."
+          confirmLabel="Restore"
+          busyLabel="Restoring…"
+          onConfirm={handleConfirmImport}
+          onCancel={() => setPendingBackup(null)}
+        />
+      )}
     </div>
   );
 }
