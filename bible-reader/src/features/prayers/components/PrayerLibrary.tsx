@@ -10,6 +10,7 @@ import PrayerEditor from './PrayerEditor';
 import PrayerViewer from './PrayerViewer';
 import AddToCollectionModal from '../../collections/components/AddToCollectionModal';
 import ConfirmDialog from '../../shared/components/ConfirmDialog';
+import LoadingIndicator from '../../shared/components/LoadingIndicator';
 
 const prayerRepository = new PrayerRepository();
 
@@ -32,7 +33,7 @@ type PrayerLibraryProps = {
 };
 
 export default function PrayerLibrary({ filter, refreshKey, onRefresh }: PrayerLibraryProps) {
-  const userPrayers = usePrayers(refreshKey);
+  const { prayers: userPrayers, loading: prayersLoading } = usePrayers(refreshKey);
   const [query, setQuery] = useState('');
   const [viewingPrayer, setViewingPrayer] = useState<Prayer | null>(null);
   const [editingPrayer, setEditingPrayer] = useState<Prayer | null>(null);
@@ -199,13 +200,17 @@ export default function PrayerLibrary({ filter, refreshKey, onRefresh }: PrayerL
 
         {filtered.length === 0 && (
           <div className="sm:col-span-2">
-            <p className="mt-8 text-center text-sm opacity-50 italic">
-              {isTraditional
-                ? 'No traditional prayers found.'
-                : userPrayers.length === 0
-                  ? 'No prayers yet. Click "New Prayer" to begin.'
-                  : 'No matching prayers.'}
-            </p>
+            {!isTraditional && prayersLoading && userPrayers.length === 0 ? (
+              <LoadingIndicator compact message="Gathering the prayers…" className="mt-8" />
+            ) : (
+              <p className="mt-8 text-center text-sm opacity-50 italic">
+                {isTraditional
+                  ? 'No traditional prayers found.'
+                  : userPrayers.length === 0
+                    ? 'No prayers yet. Click "New Prayer" to begin.'
+                    : 'No matching prayers.'}
+              </p>
+            )}
           </div>
         )}
       </div>

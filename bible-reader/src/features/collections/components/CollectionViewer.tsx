@@ -4,6 +4,8 @@ import { CollectionRepository } from '../../../lib/repositories/CollectionReposi
 import { NoteRepository } from '../../../lib/repositories/NoteRepository';
 import { formatDate } from '../../../lib/utils/date';
 import NoteViewer from '../../notes/components/NoteViewer';
+import LoadingIndicator from '../../shared/components/LoadingIndicator';
+import ErrorRetry from '../../shared/components/ErrorRetry';
 
 const repo = new CollectionRepository();
 const noteRepo = new NoteRepository();
@@ -41,19 +43,46 @@ export default function CollectionViewer({
 }: CollectionViewerProps) {
   const [collection, setCollection] = useState<Collection | null>(null);
   const [viewingNote, setViewingNote] = useState<Note | null>(null);
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const handleRetry = () => {
+    setLoadError(false);
+    setReloadKey((k) => k + 1);
+  };
 
   useEffect(() => {
     let active = true;
     void repo.findById(collectionId).then((c) => {
-      if (active && c) setCollection(c);
+      if (active) {
+        if (c) {
+          setCollection(c);
+        } else {
+          setLoadError(true);
+        }
+      }
+    }).catch(() => {
+      if (active) setLoadError(true);
     });
     return () => { active = false; };
-  }, [collectionId, refreshKey]);
+  }, [collectionId, refreshKey, reloadKey]);
+
+  if (loadError) {
+    return (
+      <div className="mx-auto reading-width animate-fade-in">
+        <button type="button" onClick={onBack} className="mb-3 text-sm text-accent hover:text-accent-hover">&larr; Collections</button>
+        <ErrorRetry
+          message="This collection could not be found or loaded. It may have been deleted."
+          onRetry={handleRetry}
+        />
+      </div>
+    );
+  }
 
   if (!collection) {
     return (
       <div className="mx-auto reading-width animate-fade-in">
-        <p className="mt-12 text-center text-sm opacity-50 italic">Loading...</p>
+        <LoadingIndicator message="Unrolling the scroll…" className="mt-12" />
       </div>
     );
   }

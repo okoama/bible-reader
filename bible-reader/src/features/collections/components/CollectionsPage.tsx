@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Collection } from '../../../types';
 import { CollectionRepository } from '../../../lib/repositories/CollectionRepository';
+import LoadingIndicator from '../../shared/components/LoadingIndicator';
 
 const repo = new CollectionRepository();
 
@@ -12,14 +13,33 @@ type CollectionsPageProps = {
 
 export default function CollectionsPage({ refreshKey, onSelectCollection, onNewCollection }: CollectionsPageProps) {
   const [collections, setCollections] = useState<Collection[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
     void repo.findAll().then((all) => {
       if (active) setCollections(all);
-    });
+    }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [refreshKey]);
+
+  if (loading) {
+    return (
+      <div className="mx-auto reading-width animate-fade-in">
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-2xl font-semibold">Collections</h2>
+          <button
+            type="button"
+            onClick={onNewCollection}
+            className="rounded-md bg-accent px-4 py-2 text-sm text-white transition-colors hover:bg-accent-hover"
+          >
+            + New Collection
+          </button>
+        </div>
+        <LoadingIndicator message="Sifting the scrolls…" className="mt-12" />
+      </div>
+    );
+  }
 
   if (collections.length === 0) {
     return (

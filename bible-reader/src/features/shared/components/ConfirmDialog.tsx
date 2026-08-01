@@ -1,12 +1,23 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import LoadingIndicator from './LoadingIndicator';
 
 type ConfirmDialogProps = {
   message: string;
-  onConfirm: () => void;
+  confirmLabel?: string;
+  busyLabel?: string;
+  onConfirm: () => void | Promise<void>;
   onCancel: () => void;
 };
 
-export default function ConfirmDialog({ message, onConfirm, onCancel }: ConfirmDialogProps) {
+export default function ConfirmDialog({
+  message,
+  confirmLabel = 'Delete',
+  busyLabel = 'Deleting…',
+  onConfirm,
+  onCancel,
+}: ConfirmDialogProps) {
+  const [busy, setBusy] = useState(false);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onCancel();
@@ -19,6 +30,16 @@ export default function ConfirmDialog({ message, onConfirm, onCancel }: ConfirmD
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) onCancel();
   };
+
+  const handleConfirm = useCallback(async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await onConfirm();
+    } finally {
+      setBusy(false);
+    }
+  }, [busy, onConfirm]);
 
   return (
     <div
@@ -34,16 +55,26 @@ export default function ConfirmDialog({ message, onConfirm, onCancel }: ConfirmD
           <button
             type="button"
             onClick={onCancel}
-            className="btn-stained-ghost rounded px-4 py-2 text-sm"
+            disabled={busy}
+            className="btn-stained-ghost rounded px-4 py-2 text-sm disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             type="button"
-            onClick={onConfirm}
-            className="btn-stained-danger rounded px-4 py-2 text-sm"
+            onClick={handleConfirm}
+            disabled={busy}
+            aria-busy={busy}
+            className="btn-stained-danger rounded px-4 py-2 text-sm disabled:opacity-70"
           >
-            Delete
+            {busy ? (
+              <span className="inline-flex items-center gap-1.5">
+                <LoadingIndicator compact size="xs" />
+                <span>{busyLabel}</span>
+              </span>
+            ) : (
+              confirmLabel
+            )}
           </button>
         </div>
       </div>

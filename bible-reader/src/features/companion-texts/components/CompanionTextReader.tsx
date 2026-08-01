@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ContentReader from '../../reader/components/ContentReader';
+import LoadingIndicator from '../../shared/components/LoadingIndicator';
+import ErrorRetry from '../../shared/components/ErrorRetry';
 import { TextService } from '../services/TextService';
 import { useTextSelection, COMPANION_TEXT_SELECTION_CONFIG } from '../../annotations/hooks/useTextSelection';
 import type { SelectedVerse } from '../../annotations/hooks/useTextSelection';
@@ -71,6 +73,10 @@ export default function CompanionTextReader({ workId, sectionId, onSectionChange
   const [loading, setLoading] = useState(true);
   const [sectionLoading, setSectionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sectionError, setSectionError] = useState<string | null>(null);
+  const [workReloadKey, setWorkReloadKey] = useState(0);
+  const [sectionReloadKey, setSectionReloadKey] = useState(0);
+  const [annotationBusy, setAnnotationBusy] = useState(false);
   const [containerElement, setContainerElement] = useState<HTMLDivElement | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [modalSourceRef, setModalSourceRef] = useState<string | null>(null);
@@ -109,7 +115,7 @@ export default function CompanionTextReader({ workId, sectionId, onSectionChange
     });
 
     return () => { isActive = false; };
-  }, [workId, sectionId]);
+  }, [workId, sectionId, workReloadKey]);
 
   useEffect(() => {
     if (!work || !selectedSection) {
@@ -119,6 +125,7 @@ export default function CompanionTextReader({ workId, sectionId, onSectionChange
 
     let isActive = true;
     setSectionLoading(true);
+    setSectionError(null);
 
     textService.loadSection(workId, selectedSection).then((loaded) => {
       if (isActive) {
@@ -127,13 +134,13 @@ export default function CompanionTextReader({ workId, sectionId, onSectionChange
       }
     }).catch((err) => {
       if (isActive) {
-        setError(`Failed to load section "${selectedSection}" in "${workId}": ${err instanceof Error ? err.message : 'Unknown error'}`);
+        setSectionError(`Failed to load section "${selectedSection}" in "${workId}": ${err instanceof Error ? err.message : 'Unknown error'}`);
         setSectionLoading(false);
       }
     });
 
     return () => { isActive = false; };
-  }, [workId, work, selectedSection]);
+  }, [workId, work, selectedSection, sectionReloadKey]);
 
   useEffect(() => {
     if (section && topRef.current) {
@@ -148,13 +155,18 @@ export default function CompanionTextReader({ workId, sectionId, onSectionChange
     const last = selectedVerses[selectedVerses.length - 1];
     const sourceReference = `${first.bookId}:${selectedSection}:${first.verseNumber}-${last.verseNumber}`;
 
-    await highlightRepository.create({
-      id: createId('hl'),
-      sourceReference,
-      color,
-      selectedText: text,
-      createdAt: new Date().toISOString(),
-    });
+    setAnnotationBusy(true);
+    try {
+      await highlightRepository.create({
+        id: createId('hl'),
+        sourceReference,
+        color,
+        selectedText: text,
+        createdAt: new Date().toISOString(),
+      });
+    } finally {
+      setAnnotationBusy(false);
+    }
 
     setRefreshKey((k) => k + 1);
     clearSelection();
@@ -205,18 +217,24 @@ export default function CompanionTextReader({ workId, sectionId, onSectionChange
     const first = verses[0];
     const last = verses[verses.length - 1];
     const sourceReference = `${first.bookId}:${selectedSection}:${first.verseNumber}-${last.verseNumber}`;
-    const existing = await verseFavRepo.findBySourceReference(sourceReference);
-    if (existing) {
-      await verseFavRepo.delete(existing.id);
-    } else {
-      await verseFavRepo.create({
-        id: createId(),
-        sourceReference,
-        selectedText: text.length > 120 ? text.slice(0, 120) + '...' : text,
-        bookId: first.bookId,
-        chapterNumber: first.chapterNumber,
-        createdAt: new Date().toISOString(),
-      });
+
+    setAnnotationBusy(true);
+    try {
+      const existing = await verseFavRepo.findBySourceReference(sourceReference);
+      if (existing) {
+        await verseFavRepo.delete(existing.id);
+      } else {
+        await verseFavRepo.create({
+          id: createId(),
+          sourceReference,
+          selectedText: text.length > 120 ? text.slice(0, 120) + '...' : text,
+          bookId: first.bookId,
+          chapterNumber: first.chapterNumber,
+          createdAt: new Date().toISOString(),
+        });
+      }
+    } finally {
+      setAnnotationBusy(false);
     }
     setRefreshKey((k) => k + 1);
     clearSelection();
@@ -282,9 +300,13 @@ export default function CompanionTextReader({ workId, sectionId, onSectionChange
 
   if (error) {
     return (
-      <div className="mx-auto reading-width rounded-lg border p-6">
+      <div className="mx-auto reading-width rounded-lg border p-6 animate-fade-in">
         <h2 className="text-2xl font-semibold">{workId}</h2>
-        <p className="mt-4 text-sm text-red-600">{error}</p>
+        <ErrorRetry
+          message={error}
+          onRetry={() => setWorkReloadKey((k) => k + 1)}
+          className="py-6"
+        />
       </div>
     );
   }
@@ -300,13 +322,14 @@ export default function CompanionTextReader({ workId, sectionId, onSectionChange
       showSections={workId !== 'catechism' && workId !== 'confessions'}
       emptyMessage="Select a section to begin reading."
     >
-      {sectionLoading ? (
-        <div className="flex items-center justify-center gap-2 py-12 text-sm opacity-60">
-          <svg className="h-4 w-4 animate-spin-slow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M12 2v4m0 12v4m10-10h-4M6 12H2m15.07-5.07l-2.83 2.83M9.76 14.24l-2.83 2.83m11.14 0l-2.83-2.83M9.76 9.76L6.93 6.93" />
-          </svg>
-          Loading...
-        </div>
+      {sectionError ? (
+        <ErrorRetry
+          message={sectionError}
+          onRetry={() => setSectionReloadKey((k) => k + 1)}
+          className="py-12"
+        />
+      ) : sectionLoading ? (
+        <LoadingIndicator message="Turning the pages…" className="py-12" />
       ) : section && section.content.length > 0 ? (
         <div ref={setContainerElement} className="space-y-4">
           <div ref={topRef} />
@@ -352,6 +375,7 @@ export default function CompanionTextReader({ workId, sectionId, onSectionChange
           onNote={handleNote}
           onBookmark={handleBookmark}
           onAddFavorite={handleAddFavorite}
+          busy={annotationBusy}
         />
       )}
 

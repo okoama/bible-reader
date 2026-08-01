@@ -9,6 +9,7 @@ import { formatDate } from '../../../lib/utils/date';
 import PrayerViewer from '../../prayers/components/PrayerViewer';
 import { stripHtml } from '../../../lib/utils/text';
 import NoteViewer from '../../notes/components/NoteViewer';
+import LoadingIndicator from '../../shared/components/LoadingIndicator';
 
 const noteRepo = new NoteRepository();
 const bookmarkRepo = new BookmarkRepository();
@@ -22,22 +23,24 @@ type FavoritesPageProps = {
 };
 
 export default function FavoritesPage({ refreshKey, onRefresh, onCrossLinkNavigate, onNavigateToPassage }: FavoritesPageProps) {
-  const userPrayers = usePrayers(refreshKey);
+  const { prayers: userPrayers, loading: prayersLoading } = usePrayers(refreshKey);
   const [notes, setNotes] = useState<Note[]>([]);
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [verseFavorites, setVerseFavorites] = useState<VerseFavorite[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
   const [viewingPrayer, setViewingPrayer] = useState<Prayer | null>(null);
   const [viewingNote, setViewingNote] = useState<Note | null>(null);
 
   useEffect(() => {
     let active = true;
+    setDataLoading(true);
     void Promise.all([
       noteRepo.findFavorites(),
       bookmarkRepo.findFavorites(),
       verseFavRepo.findAll(),
     ]).then(([favNotes, favBms, favVerses]) => {
       if (active) { setNotes(favNotes); setBookmarks(favBms); setVerseFavorites(favVerses); }
-    });
+    }).finally(() => { if (active) setDataLoading(false); });
     return () => { active = false; };
   }, [refreshKey]);
 
@@ -51,13 +54,16 @@ export default function FavoritesPage({ refreshKey, onRefresh, onCrossLinkNaviga
   };
 
   const hasAny = prayers.length > 0 || notes.length > 0 || bookmarks.length > 0 || verseFavorites.length > 0;
+  const loading = dataLoading || prayersLoading;
 
   return (
     <div>
       <h2 className="text-2xl font-semibold">Favorites</h2>
       <p className="mt-1 text-sm opacity-50">All your starred items in one place.</p>
 
-      {!hasAny && (
+      {loading ? (
+        <LoadingIndicator message="Gathering your treasures…" className="mt-12" />
+      ) : !hasAny && (
         <p className="mt-12 text-center text-sm opacity-50 italic">
           Star items to add them to your favorites.
         </p>

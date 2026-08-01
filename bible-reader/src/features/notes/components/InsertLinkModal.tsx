@@ -4,6 +4,7 @@ import { NoteRepository } from '../../../lib/repositories/NoteRepository';
 import { PrayerRepository } from '../../../lib/repositories/PrayerRepository';
 import { CollectionRepository } from '../../../lib/repositories/CollectionRepository';
 import { formatCrossLink } from '../../../lib/utils/crossLinks';
+import LoadingIndicator from '../../shared/components/LoadingIndicator';
 
 const noteRepo = new NoteRepository();
 const prayerRepo = new PrayerRepository();
@@ -27,6 +28,7 @@ export default function InsertLinkModal({ onInsert, onClose }: InsertLinkModalPr
   const [notes, setNotes] = useState<Note[]>([]);
   const [prayers, setPrayers] = useState<Prayer[]>([]);
   const [collections, setCollections] = useState<Collection[]>([]);
+  const [loading, setLoading] = useState(true);
   const [manualId, setManualId] = useState('');
   const [query, setQuery] = useState('');
 
@@ -38,7 +40,7 @@ export default function InsertLinkModal({ onInsert, onClose }: InsertLinkModalPr
       collectionRepo.findAll(),
     ]).then(([n, p, c]) => {
       if (active) { setNotes(n); setPrayers(p); setCollections(c); }
-    });
+    }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, []);
 
@@ -118,46 +120,52 @@ export default function InsertLinkModal({ onInsert, onClose }: InsertLinkModalPr
               className="w-full rounded-md border px-3 py-2 text-sm outline-none focus-accent"
             />
             <div className="max-h-60 space-y-1 overflow-y-auto">
-              {linkType === 'note' && filteredNotes.map((n) => (
-                <button
-                  key={n.id}
-                  type="button"
-                  onClick={() => handleInsert(n.id, n.title)}
-                  className="w-full rounded-md border px-3 py-2 text-left text-sm transition-colors hover-bg"
-                >
-                  <p className="font-medium truncate">{n.title || 'Untitled'}</p>
-                  <p className="text-xs opacity-40 truncate">{n.sourceReference}</p>
-                </button>
-              ))}
-              {linkType === 'prayer' && filteredPrayers.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => handleInsert(p.id, p.title)}
-                  className="w-full rounded-md border px-3 py-2 text-left text-sm transition-colors hover-bg"
-                >
-                  <p className="font-medium truncate">{p.title}</p>
-                </button>
-              ))}
-              {linkType === 'collection' && filteredCollections.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => handleInsert(c.id, c.name)}
-                  className="w-full rounded-md border px-3 py-2 text-left text-sm transition-colors hover-bg"
-                >
-                  <p className="font-medium truncate">{c.name}</p>
-                  <p className="text-xs opacity-40">{c.items.length} items</p>
-                </button>
-              ))}
-              {linkType === 'note' && filteredNotes.length === 0 && (
-                <p className="text-sm italic opacity-50 py-2 text-center">No matching notes</p>
-              )}
-              {linkType === 'prayer' && filteredPrayers.length === 0 && (
-                <p className="text-sm italic opacity-50 py-2 text-center">No matching prayers</p>
-              )}
-              {linkType === 'collection' && filteredCollections.length === 0 && (
-                <p className="text-sm italic opacity-50 py-2 text-center">No matching collections</p>
+              {loading ? (
+                <LoadingIndicator compact message="Browsing the shelves…" className="py-6" />
+              ) : (
+                <>
+                  {linkType === 'note' && filteredNotes.map((n) => (
+                    <button
+                      key={n.id}
+                      type="button"
+                      onClick={() => handleInsert(n.id, n.title)}
+                      className="w-full rounded-md border px-3 py-2 text-left text-sm transition-colors hover-bg"
+                    >
+                      <p className="font-medium truncate">{n.title || 'Untitled'}</p>
+                      <p className="text-xs opacity-40 truncate">{n.sourceReference}</p>
+                    </button>
+                  ))}
+                  {linkType === 'prayer' && filteredPrayers.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => handleInsert(p.id, p.title)}
+                      className="w-full rounded-md border px-3 py-2 text-left text-sm transition-colors hover-bg"
+                    >
+                      <p className="font-medium truncate">{p.title}</p>
+                    </button>
+                  ))}
+                  {linkType === 'collection' && filteredCollections.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => handleInsert(c.id, c.name)}
+                      className="w-full rounded-md border px-3 py-2 text-left text-sm transition-colors hover-bg"
+                    >
+                      <p className="font-medium truncate">{c.name}</p>
+                      <p className="text-xs opacity-40">{c.items.length} items</p>
+                    </button>
+                  ))}
+                  {linkType === 'note' && filteredNotes.length === 0 && (
+                    <p className="text-sm italic opacity-50 py-2 text-center">No matching notes</p>
+                  )}
+                  {linkType === 'prayer' && filteredPrayers.length === 0 && (
+                    <p className="text-sm italic opacity-50 py-2 text-center">No matching prayers</p>
+                  )}
+                  {linkType === 'collection' && filteredCollections.length === 0 && (
+                    <p className="text-sm italic opacity-50 py-2 text-center">No matching collections</p>
+                  )}
+                </>
               )}
             </div>
           </div>

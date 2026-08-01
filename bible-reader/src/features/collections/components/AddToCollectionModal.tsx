@@ -3,6 +3,7 @@ import type { Collection, CollectionItem, CollectionItemType } from '../../../ty
 import { CollectionRepository } from '../../../lib/repositories/CollectionRepository';
 import { createId } from '../../../lib/utils/id';
 import { useStudySession } from '../../../lib/contexts/StudySessionContext';
+import LoadingIndicator from '../../shared/components/LoadingIndicator';
 
 const repo = new CollectionRepository();
 
@@ -24,30 +25,38 @@ export default function AddToCollectionModal({
   onAdded,
 }: AddToCollectionModalProps) {
   const [collections, setCollections] = useState<Collection[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [addingId, setAddingId] = useState<string | null>(null);
   const { session, logCollectionEvent } = useStudySession();
 
   useEffect(() => {
     let active = true;
     void repo.findAll().then((all) => {
       if (active) setCollections(all);
-    });
+    }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, []);
 
   const handleAdd = async (collectionId: string) => {
-    const item: CollectionItem = {
-      id: createId('ci'),
-      type: itemType,
-      sourceReference,
-      itemId,
-      label: itemLabel,
-      addedAt: new Date().toISOString(),
-    };
-    await repo.addItem(collectionId, item);
-    const col = collections.find((c) => c.id === collectionId);
-    if (session && !session.endTime && col) logCollectionEvent(collectionId, col.name, 'add_item');
-    onAdded();
-    onClose();
+    if (addingId) return;
+    setAddingId(collectionId);
+    try {
+      const item: CollectionItem = {
+        id: createId('ci'),
+        type: itemType,
+        sourceReference,
+        itemId,
+        label: itemLabel,
+        addedAt: new Date().toISOString(),
+      };
+      await repo.addItem(collectionId, item);
+      const col = collections.find((c) => c.id === collectionId);
+      if (session && !session.endTime && col) logCollectionEvent(collectionId, col.name, 'add_item');
+      onAdded();
+      onClose();
+    } finally {
+      setAddingId(null);
+    }
   };
 
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -66,7 +75,9 @@ export default function AddToCollectionModal({
         <h2 className="text-lg font-semibold">Add to Collection</h2>
         <p className="text-sm opacity-60 truncate">{itemLabel}</p>
 
-        {collections.length === 0 ? (
+        {loading ? (
+          <LoadingIndicator compact message="Fetching the chests…" className="py-6" />
+        ) : collections.length === 0 ? (
           <p className="text-sm italic opacity-50">No collections yet. Create one first.</p>
         ) : (
           <div className="max-h-60 space-y-1 overflow-y-auto">
@@ -75,9 +86,20 @@ export default function AddToCollectionModal({
                 key={col.id}
                 type="button"
                 onClick={() => handleAdd(col.id)}
-                className="w-full rounded-md border px-3 py-2 text-left text-sm transition-colors hover-bg"
+                disabled={addingId !== null}
+                aria-busy={addingId === col.id}
+                className="w-full rounded-md border px-3 py-2 text-left text-sm transition-colors hover-bg disabled:opacity-60"
               >
-                <p className="font-medium">{col.name}</p>
+                <p className="font-medium">
+                  {addingId === col.id ? (
+                    <span className="inline-flex items-center gap-1.5">
+                      <LoadingIndicator compact size="xs" />
+                      <span>Adding…</span>
+                    </span>
+                  ) : (
+                    col.name
+                  )}
+                </p>
                 {col.items.length > 0 && (
                   <p className="text-xs opacity-40">{col.items.length} items</p>
                 )}

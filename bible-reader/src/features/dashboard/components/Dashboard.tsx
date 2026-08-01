@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { BibleBook, Collection, Note, Prayer, ReadingProgress, ResearchProject } from '../../../types';
 import type { ActiveView } from '../../../layouts/AppLayout';
+import LoadingIndicator from '../../shared/components/LoadingIndicator';
 import { NoteRepository } from '../../../lib/repositories/NoteRepository';
 import { BookmarkRepository } from '../../../lib/repositories/BookmarkRepository';
 import { HighlightRepository } from '../../../lib/repositories/HighlightRepository';
@@ -171,9 +172,7 @@ export default function Dashboard({ books, onNavigateToPassage, onSelectView, on
       </header>
 
       {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <p className="text-sm opacity-50">Loading...</p>
-        </div>
+        <LoadingIndicator message="Preparing the table…" className="py-12" />
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {lastPosition && (

@@ -12,7 +12,7 @@ function formatElapsed(ms: number): string {
 }
 
 export default function StatusBar() {
-  const { session, elapsed, startSession, endSession } = useStudySession();
+  const { session, sessionLoading, elapsed, startSession, endSession } = useStudySession();
   const [showSummary, setShowSummary] = useState(false);
 
   const handleEnd = () => {
@@ -24,26 +24,34 @@ export default function StatusBar() {
     <footer className="flex items-center justify-between border-t border-theme bg-panel px-4 py-2 text-sm">
       <span className="opacity-60">Ready • Offline • Version 0.1.0</span>
       <div className="flex items-center gap-3">
-        {session && !session.endTime && (
+        {sessionLoading ? (
+          <span className="inline-flex items-center gap-1.5 text-xs opacity-50">
+            <span className="inline-block h-2 w-2 animate-spin rounded-full border border-[#B8962E] border-t-transparent" aria-hidden="true" />
+            Resuming your study…</span>
+        ) : (
           <>
-            <span className="font-mono text-xs tabular-nums">{formatElapsed(elapsed)}</span>
-            <button
-              type="button"
-              onClick={handleEnd}
-              className="btn-stained-danger rounded px-3 py-1 text-xs"
-            >
-              End Session
-            </button>
+            {session && !session.endTime && (
+              <>
+                <span className="font-mono text-xs tabular-nums">{formatElapsed(elapsed)}</span>
+                <button
+                  type="button"
+                  onClick={handleEnd}
+                  className="btn-stained-danger rounded px-3 py-1 text-xs"
+                >
+                  End Session
+                </button>
+              </>
+            )}
+            {(!session || session.endTime) && (
+                <button
+                  type="button"
+                  onClick={() => startSession()}
+                  className="btn-stained rounded px-3 py-1 text-xs"
+                >
+                  Start Session
+                </button>
+            )}
           </>
-        )}
-        {(!session || session.endTime) && (
-            <button
-              type="button"
-              onClick={() => startSession()}
-              className="btn-stained rounded px-3 py-1 text-xs"
-            >
-              Start Session
-            </button>
         )}
       </div>
       {showSummary && session && (

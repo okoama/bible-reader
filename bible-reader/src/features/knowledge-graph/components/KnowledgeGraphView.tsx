@@ -4,6 +4,7 @@ import { NODE_COLORS, NODE_LABELS } from '../../../types';
 import { buildGraphData, applyFilters } from '../services/KnowledgeGraphService';
 import type { GraphData } from '../services/KnowledgeGraphService';
 import GraphFilterPanel from './GraphFilterPanel';
+import LoadingIndicator from '../../shared/components/LoadingIndicator';
 
 const REPULSION = 8000, ATTRACTION = 0.005, IDEAL_LENGTH = 160, GRAVITY = 0.002, DAMPING = 0.85;
 const MAX_TICKS = 200, NODE_RADIUS = 7, MAX_VISIBLE_NODES = 300;
@@ -237,7 +238,7 @@ export default function KnowledgeGraphView({ onNodeClick }: KnowledgeGraphViewPr
             className="flex h-7 w-7 items-center justify-center rounded border border-theme bg-card text-xs shadow hover-bg focus-visible:ring-2 focus-visible:ring-accent">R</button>
         </div>
         {loading ? (
-          <div className="flex h-full items-center justify-center text-sm italic opacity-50" role="status" aria-live="polite">Building graph...</div>
+          <LoadingIndicator message="Charting the connections…" className="h-full" />
         ) : positionedNodes.length === 0 ? (
           <div className="flex h-full items-center justify-center text-sm italic opacity-50" role="status">No data matches the current filters.</div>
         ) : (

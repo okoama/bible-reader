@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Note } from '../../../types';
 import { NoteRepository } from '../../../lib/repositories/NoteRepository';
 import { stripHtml } from '../../../lib/utils/text';
+import LoadingIndicator from '../../shared/components/LoadingIndicator';
+import ErrorRetry from '../../shared/components/ErrorRetry';
 
 const noteRepository = new NoteRepository();
 const DEBOUNCE_MS = 200;
@@ -15,13 +17,25 @@ export default function GlobalSearchModal({ onSelectNote, onClose }: GlobalSearc
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [allNotes, setAllNotes] = useState<Note[]>([]);
+  const [notesLoading, setNotesLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const [activeIndex, setActiveIndex] = useState(-1);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
+  const handleRetry = () => {
+    setLoadError(false);
+    setNotesLoading(true);
+    setReloadKey((k) => k + 1);
+  };
+
   useEffect(() => {
-    noteRepository.findAll().then(setAllNotes);
-  }, []);
+    noteRepository.findAll()
+      .then(setAllNotes)
+      .catch(() => setLoadError(true))
+      .finally(() => setNotesLoading(false));
+  }, [reloadKey]);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -95,27 +109,42 @@ export default function GlobalSearchModal({ onSelectNote, onClose }: GlobalSearc
           />
         </div>
         <div className="max-h-80 overflow-y-auto" role="listbox" aria-label="Search results">
-          {debouncedQuery && results.length === 0 && (
-            <p className="p-4 text-center text-xs opacity-40" role="status">No matching notes found</p>
-          )}
-          {results.map((note, i) => (
-            <button
-              key={note.id}
-              id={`search-result-${i}`}
-              role="option"
-              aria-selected={i === activeIndex}
-              type="button"
-              className={`flex w-full flex-col gap-0.5 px-4 py-2.5 text-left text-sm transition-colors ${i === activeIndex ? 'bg-accent-light' : 'hover:bg-accent-lighter'}`}
-              onClick={() => { onSelectNote(note.id); onClose(); }}
-              onMouseEnter={() => setActiveIndex(i)}
-            >
-              <span className="font-medium">{note.title || 'Untitled'}</span>
-              <span className="truncate text-xs opacity-50">{stripHtml(note.content).slice(0, 120)}</span>
-              {note.sourceReference && (
-                <span className="text-xs opacity-30">{note.sourceReference}</span>
+          {loadError ? (
+            <ErrorRetry
+              message="Your notes could not be searched. Please try again."
+              onRetry={handleRetry}
+              className="py-8"
+            />
+          ) : notesLoading && allNotes.length === 0 ? (
+            <LoadingIndicator compact message="Searching the shelves…" className="py-6" />
+          ) : (
+            <>
+              {debouncedQuery && results.length === 0 && (
+                <p className="p-4 text-center text-xs opacity-40" role="status">No matching notes found</p>
               )}
-            </button>
-          ))}
+              {!debouncedQuery && (
+                <p className="p-4 text-center text-xs opacity-40" role="status">Type to search your notes…</p>
+              )}
+              {results.map((note, i) => (
+                <button
+                  key={note.id}
+                  id={`search-result-${i}`}
+                  role="option"
+                  aria-selected={i === activeIndex}
+                  type="button"
+                  className={`flex w-full flex-col gap-0.5 px-4 py-2.5 text-left text-sm transition-colors ${i === activeIndex ? 'bg-accent-light' : 'hover:bg-accent-lighter'}`}
+                  onClick={() => { onSelectNote(note.id); onClose(); }}
+                  onMouseEnter={() => setActiveIndex(i)}
+                >
+                  <span className="font-medium">{note.title || 'Untitled'}</span>
+                  <span className="truncate text-xs opacity-50">{stripHtml(note.content).slice(0, 120)}</span>
+                  {note.sourceReference && (
+                    <span className="text-xs opacity-30">{note.sourceReference}</span>
+                  )}
+                </button>
+              ))}
+            </>
+          )}
         </div>
       </div>
     </div>

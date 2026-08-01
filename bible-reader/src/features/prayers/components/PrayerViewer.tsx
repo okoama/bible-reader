@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import type { Prayer } from '../../../types';
 import { PRAYER_CATEGORIES } from '../../../types';
 import { formatDate } from '../../../lib/utils/date';
 import { PrayerRepository } from '../../../lib/repositories/PrayerRepository';
+import LoadingIndicator from '../../shared/components/LoadingIndicator';
 
 const prayerRepository = new PrayerRepository();
 
@@ -28,21 +30,37 @@ const CATEGORY_COLORS: Record<string, string> = {
 export default function PrayerViewer({ prayer, readOnly = false, onClose, onEdit, onRefresh }: PrayerViewerProps) {
   const catLabel = PRAYER_CATEGORIES.find((c) => c.value === prayer.category)?.label ?? prayer.category;
   const catColor = CATEGORY_COLORS[prayer.category] ?? 'bg-gray-100 text-gray-800';
+  const [busyAction, setBusyAction] = useState<'answered' | 'prayed' | 'delete' | null>(null);
 
   async function handleMarkAnswered() {
-    await prayerRepository.update({ ...prayer, answered: !prayer.answered, updatedAt: new Date().toISOString() });
-    onRefresh();
+    setBusyAction('answered');
+    try {
+      await prayerRepository.update({ ...prayer, answered: !prayer.answered, updatedAt: new Date().toISOString() });
+      onRefresh();
+    } finally {
+      setBusyAction(null);
+    }
   }
 
   async function handleMarkPrayed() {
-    await prayerRepository.markPrayed(prayer.id);
-    onRefresh();
+    setBusyAction('prayed');
+    try {
+      await prayerRepository.markPrayed(prayer.id);
+      onRefresh();
+    } finally {
+      setBusyAction(null);
+    }
   }
 
   async function handleDelete() {
-    await prayerRepository.delete(prayer.id);
-    onRefresh();
-    onClose();
+    setBusyAction('delete');
+    try {
+      await prayerRepository.delete(prayer.id);
+      onRefresh();
+      onClose();
+    } finally {
+      setBusyAction(null);
+    }
   }
 
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -101,25 +119,48 @@ export default function PrayerViewer({ prayer, readOnly = false, onClose, onEdit
               <button
                 type="button"
                 onClick={handleMarkPrayed}
-                className="btn-stained rounded px-3 py-1.5 text-sm"
+                disabled={busyAction !== null}
+                aria-busy={busyAction === 'prayed'}
+                className="btn-stained rounded px-3 py-1.5 text-sm disabled:opacity-60"
               >
-                {prayer.lastPrayed ? 'Prayed Again' : 'Mark Prayed'}
+                {busyAction === 'prayed' ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <LoadingIndicator compact size="xs" />
+                    <span>Sealing…</span>
+                  </span>
+                ) : prayer.lastPrayed ? 'Prayed Again' : 'Mark Prayed'}
               </button>
               <button
                 type="button"
                 onClick={handleMarkAnswered}
-                className={`rounded-md border px-3 py-1.5 text-sm transition-colors duration-150 ${
+                disabled={busyAction !== null}
+                aria-busy={busyAction === 'answered'}
+                className={`rounded-md border px-3 py-1.5 text-sm transition-colors duration-150 disabled:opacity-60 ${
                   prayer.answered ? 'bg-green-50 text-green-700 hover:bg-green-100' : 'hover-bg'
                 }`}
               >
-                {prayer.answered ? '✓ Answered' : 'Mark Answered'}
+                {busyAction === 'answered' ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <LoadingIndicator compact size="xs" />
+                    <span>Sealing…</span>
+                  </span>
+                ) : prayer.answered ? '✓ Answered' : 'Mark Answered'}
               </button>
               <button
                 type="button"
                 onClick={handleDelete}
-                className="ml-auto rounded-md border border-red-200 px-3 py-1.5 text-sm text-red-600 transition-colors duration-150 hover:bg-red-50"
+                disabled={busyAction !== null}
+                aria-busy={busyAction === 'delete'}
+                className="ml-auto rounded-md border border-red-200 px-3 py-1.5 text-sm text-red-600 transition-colors duration-150 hover:bg-red-50 disabled:opacity-60"
               >
-                Delete
+                {busyAction === 'delete' ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <LoadingIndicator compact size="xs" />
+                    <span>Removing…</span>
+                  </span>
+                ) : (
+                  'Delete'
+                )}
               </button>
             </>
           )}

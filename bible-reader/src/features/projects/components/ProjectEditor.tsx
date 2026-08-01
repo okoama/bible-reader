@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ResearchProject, ProjectStatus } from '../../../types';
 import { PROJECT_STATUSES, PROJECT_DEFAULT_ICONS } from '../../../types';
+import AsyncButton from '../../shared/components/AsyncButton';
 
 type ProjectEditorProps = {
   project?: ResearchProject;
-  onSave: (title: string, description: string, status: ProjectStatus, icon: string, color: string) => void;
+  onSave: (title: string, description: string, status: ProjectStatus, icon: string, color: string) => void | Promise<void>;
   onCancel: () => void;
 };
 
@@ -27,7 +28,7 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
   }, [onCancel]);
 
   const handleSubmit = useCallback(() => {
-    if (title.trim()) onSave(title.trim(), description.trim(), status, icon, color);
+    if (title.trim()) return onSave(title.trim(), description.trim(), status, icon, color);
   }, [title, description, status, icon, color, onSave]);
 
   return (
@@ -74,7 +75,7 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
 
         <div className="flex justify-end gap-2">
           <button type="button" onClick={onCancel} className="rounded-md border px-4 py-2 text-sm transition-colors hover-bg focus-visible:ring-2 focus-visible:ring-accent">Cancel</button>
-          <button type="button" disabled={!title.trim()} onClick={handleSubmit} className="rounded-md bg-accent px-4 py-2 text-sm text-white transition-colors hover:bg-accent-hover disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-accent">{project ? 'Save' : 'Create'}</button>
+          <AsyncButton onClick={handleSubmit} disabled={!title.trim()} busyLabel="Saving…" className="rounded-md bg-accent px-4 py-2 text-sm text-white transition-colors hover:bg-accent-hover disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-accent">{project ? 'Save' : 'Create'}</AsyncButton>
         </div>
       </div>
     </div>

@@ -7,6 +7,7 @@ const repo = new StudySessionRepository();
 
 type StudySessionContextValue = {
   session: StudySession | null;
+  sessionLoading: boolean;
   elapsed: number;
   startSession: (title?: string) => void;
   endSession: () => StudySession | null;
@@ -21,12 +22,17 @@ const StudySessionContext = createContext<StudySessionContextValue | null>(null)
 
 export function StudySessionProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<StudySession | null>(null);
+  const [sessionLoading, setSessionLoading] = useState(true);
   const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
+    let active = true;
     void repo.findActive().then((s) => {
-      if (s) setSession(s);
+      if (active && s) setSession(s);
+    }).finally(() => {
+      if (active) setSessionLoading(false);
     });
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {
@@ -116,7 +122,7 @@ export function StudySessionProvider({ children }: { children: React.ReactNode }
   }, [updateSession]);
 
   return (
-    <StudySessionContext.Provider value={{ session, elapsed, startSession, endSession, logVisit, logNote, logPrayer, logBookmark, logCollectionEvent }}>
+    <StudySessionContext.Provider value={{ session, sessionLoading, elapsed, startSession, endSession, logVisit, logNote, logPrayer, logBookmark, logCollectionEvent }}>
       {children}
     </StudySessionContext.Provider>
   );

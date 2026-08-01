@@ -4,16 +4,24 @@ import { NoteRepository } from '../repositories/NoteRepository';
 
 const noteRepository = new NoteRepository();
 
-export function useNotes(refreshKey = 0): Note[] {
+export function useNotes(refreshKey = 0): { notes: Note[]; loading: boolean } {
   const [notes, setNotes] = useState<Note[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let isActive = true;
+    setLoading(true);
 
     const load = async () => {
-      const all = await noteRepository.findAll();
-      if (isActive) {
-        setNotes(all);
+      try {
+        const all = await noteRepository.findAll();
+        if (isActive) {
+          setNotes(all);
+        }
+      } finally {
+        if (isActive) {
+          setLoading(false);
+        }
       }
     };
 
@@ -24,5 +32,5 @@ export function useNotes(refreshKey = 0): Note[] {
     };
   }, [refreshKey]);
 
-  return notes;
+  return { notes, loading };
 }

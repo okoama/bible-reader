@@ -22,6 +22,7 @@ import GlobalSearchModal from '../features/search/components/GlobalSearchModal';
 import { ResearchProjectRepository } from '../lib/repositories/ResearchProjectRepository';
 import { createId } from '../lib/utils/id';
 import KeyboardShortcutsHelp from '../features/help/components/KeyboardShortcutsHelp';
+import LoadingIndicator from '../features/shared/components/LoadingIndicator';
 import KnowledgeGraphView from '../features/knowledge-graph/components/KnowledgeGraphView';
 import TabBar from '../components/tabs/TabBar';
 import type { GraphNodeType } from '../types';
@@ -86,6 +87,7 @@ function persistActiveTabId(id: string): void {
 
 export default function AppLayout() {
   const [books, setBooks] = useState<BibleBook[]>([]);
+  const [booksLoading, setBooksLoading] = useState(true);
   const [selectedBook, setSelectedBook] = useState<BibleBook | null>(null);
   const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
   const [notesRefreshKey, setNotesRefreshKey] = useState(0);
@@ -100,7 +102,7 @@ export default function AppLayout() {
   const [viewingNote, setViewingNote] = useState<Note | null>(null);
   const { lastPosition, loaded, savePosition } = useReadingProgress();
   const { session, logVisit } = useStudySession();
-  const notes = useNotes(notesRefreshKey);
+  const { notes, loading: notesLoading } = useNotes(notesRefreshKey);
 
   const [showGlobalSearch, setShowGlobalSearch] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
@@ -173,8 +175,12 @@ export default function AppLayout() {
   useEffect(() => {
     let isActive = true;
     const load = async () => {
-      const loadedBooks = await bibleService.loadBooks();
-      if (isActive) setBooks(loadedBooks);
+      try {
+        const loadedBooks = await bibleService.loadBooks();
+        if (isActive) setBooks(loadedBooks);
+      } finally {
+        if (isActive) setBooksLoading(false);
+      }
     };
     void load();
     return () => { isActive = false; };
@@ -619,6 +625,7 @@ export default function AppLayout() {
               selectedBook={selectedBook}
               selectedChapter={selectedChapter}
               notes={notes}
+              notesLoading={notesLoading}
               books={books}
               refreshKey={notesRefreshKey}
               onNoteDeleted={handleNoteDeleted}
@@ -685,6 +692,12 @@ export default function AppLayout() {
           }}
           onCancel={() => setShowNewProject(false)}
         />
+      )}
+
+      {booksLoading && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[var(--bg)]">
+          <LoadingIndicator message="Opening the library…" />
+        </div>
       )}
     </div>
   );

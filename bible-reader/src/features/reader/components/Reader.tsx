@@ -26,6 +26,7 @@ import ProjectsPage from '../../projects/components/ProjectsPage';
 import ProjectViewer from '../../projects/components/ProjectViewer';
 import ProjectEditor from '../../projects/components/ProjectEditor';
 import { ResearchProjectRepository } from '../../../lib/repositories/ResearchProjectRepository';
+import ErrorRetry from '../../shared/components/ErrorRetry';
 
 const bibleService = new BibleService();
 const highlightRepository = new HighlightRepository();
@@ -120,7 +121,13 @@ export default function Reader({
   onNavigateToPassage,
 }: ReaderProps) {
   const [chapterNumbers, setChapterNumbers] = useState<number[]>([]);
+  const [chaptersLoading, setChaptersLoading] = useState(false);
+  const [chaptersError, setChaptersError] = useState<string | null>(null);
+  const [chaptersReloadKey, setChaptersReloadKey] = useState(0);
   const [verses, setVerses] = useState<BibleVerse[]>([]);
+  const [versesError, setVersesError] = useState<string | null>(null);
+  const [versesReloadKey, setVersesReloadKey] = useState(0);
+  const [annotationBusy, setAnnotationBusy] = useState(false);
   const [containerElement, setContainerElement] = useState<HTMLDivElement | null>(null);
   const mainRef = useRef<HTMLElement>(null);
   const verseRefs = useRef<Map<string, HTMLParagraphElement>>(new Map());
@@ -179,13 +186,18 @@ export default function Reader({
     const last = selectedVerses[selectedVerses.length - 1];
     const sourceReference = `${first.bookId}:${first.chapterNumber}:${first.verseNumber}-${last.verseNumber}`;
 
-    await highlightRepository.create({
-      id: createId('hl'),
-      sourceReference,
-      color,
-      selectedText: text,
-      createdAt: new Date().toISOString(),
-    });
+    setAnnotationBusy(true);
+    try {
+      await highlightRepository.create({
+        id: createId('hl'),
+        sourceReference,
+        color,
+        selectedText: text,
+        createdAt: new Date().toISOString(),
+      });
+    } finally {
+      setAnnotationBusy(false);
+    }
 
     setRefreshKey((k) => k + 1);
     clearSelection();
@@ -240,18 +252,24 @@ export default function Reader({
     const first = verses[0];
     const last = verses[verses.length - 1];
     const sourceReference = `${first.bookId}:${first.chapterNumber}:${first.verseNumber}-${last.verseNumber}`;
-    const existing = await verseFavRepo.findBySourceReference(sourceReference);
-    if (existing) {
-      await verseFavRepo.delete(existing.id);
-    } else {
-      await verseFavRepo.create({
-        id: createId(),
-        sourceReference,
-        selectedText: text.length > 120 ? text.slice(0, 120) + '...' : text,
-        bookId: first.bookId,
-        chapterNumber: first.chapterNumber,
-        createdAt: new Date().toISOString(),
-      });
+
+    setAnnotationBusy(true);
+    try {
+      const existing = await verseFavRepo.findBySourceReference(sourceReference);
+      if (existing) {
+        await verseFavRepo.delete(existing.id);
+      } else {
+        await verseFavRepo.create({
+          id: createId(),
+          sourceReference,
+          selectedText: text.length > 120 ? text.slice(0, 120) + '...' : text,
+          bookId: first.bookId,
+          chapterNumber: first.chapterNumber,
+          createdAt: new Date().toISOString(),
+        });
+      }
+    } finally {
+      setAnnotationBusy(false);
     }
     setRefreshKey((k) => k + 1);
     if (session && !session.endTime) logBookmark(createId(), sourceReference, text);
@@ -378,10 +396,24 @@ export default function Reader({
         return;
       }
 
-      const loadedChapters = await bibleService.loadChapters(selectedBook.id);
-
       if (isActive) {
-        setChapterNumbers(loadedChapters.map((c) => c.chapterNumber));
+        setChaptersLoading(true);
+        setChaptersError(null);
+      }
+      try {
+        const loadedChapters = await bibleService.loadChapters(selectedBook.id);
+
+        if (isActive) {
+          setChapterNumbers(loadedChapters.map((c) => c.chapterNumber));
+        }
+      } catch {
+        if (isActive) {
+          setChaptersError('Could not open this book. The scroll may be damaged; please try again.');
+        }
+      } finally {
+        if (isActive) {
+          setChaptersLoading(false);
+        }
       }
     };
 
@@ -390,7 +422,7 @@ export default function Reader({
     return () => {
       isActive = false;
     };
-  }, [selectedBook]);
+  }, [selectedBook, chaptersReloadKey]);
 
   useEffect(() => {
     let isActive = true;
@@ -405,15 +437,22 @@ export default function Reader({
 
       if (isActive) {
         setVerses([]);
+        setVersesError(null);
       }
 
-      const loadedVerses = await bibleService.loadVerses(
-        selectedBook.id,
-        selectedChapter,
-      );
+      try {
+        const loadedVerses = await bibleService.loadVerses(
+          selectedBook.id,
+          selectedChapter,
+        );
 
-      if (isActive) {
-        setVerses(loadedVerses);
+        if (isActive) {
+          setVerses(loadedVerses);
+        }
+      } catch {
+        if (isActive) {
+          setVersesError('Could not read this chapter. Please try again.');
+        }
       }
     };
 
@@ -422,7 +461,7 @@ export default function Reader({
     return () => {
       isActive = false;
     };
-  }, [selectedBook, selectedChapter]);
+  }, [selectedBook, selectedChapter, versesReloadKey]);
 
   useEffect(() => {
     if (!pendingNavigation || verses.length === 0) return;
@@ -517,7 +556,7 @@ export default function Reader({
   ]);
 
   const chapterSections = chapterNumbers.map((n) => ({ id: String(n), label: String(n) }));
-  const isLoading = selectedBook && selectedChapter && verses.length === 0;
+  const isLoading = selectedBook && !chaptersError && !versesError && (chaptersLoading || (selectedChapter && verses.length === 0));
 
   return (
     <main ref={mainRef} className="reading-text flex-1 overflow-y-auto bg-reader p-8" onScroll={handleMainScroll}>
@@ -565,6 +604,18 @@ export default function Reader({
           refreshKey={projectsRefreshKey}
           onSelectProject={handleSelectProject}
           onNewProject={handleNewProject}
+        />
+      ) : selectedBook && chaptersError ? (
+        <ErrorRetry
+          message={chaptersError}
+          onRetry={() => setChaptersReloadKey((k) => k + 1)}
+          className="mx-auto reading-width"
+        />
+      ) : selectedBook && versesError ? (
+        <ErrorRetry
+          message={versesError}
+          onRetry={() => setVersesReloadKey((k) => k + 1)}
+          className="mx-auto reading-width"
         />
       ) : selectedBook ? (
         <ContentReader
@@ -637,6 +688,7 @@ export default function Reader({
           onNote={handleNote}
           onBookmark={handleBookmark}
           onAddFavorite={handleAddFavorite}
+          busy={annotationBusy}
         />
       )}
 

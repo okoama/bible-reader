@@ -4,6 +4,7 @@ import { ACCENT_NAMES } from '../../../types';
 import { ACCENT_COLORS } from '../../../lib/utils/accent';
 import { BackupService } from '../../backup/services/BackupService';
 import type { WorkspaceSettings, WorkspaceBackup } from '../../../types';
+import LoadingIndicator from '../../shared/components/LoadingIndicator';
 
 type SettingsModalProps = { onClose: () => void };
 
@@ -26,17 +27,21 @@ const backupService = new BackupService();
 export default function SettingsModal({ onClose }: SettingsModalProps) {
   const { settings, updateSettings, resetSettings } = useWorkspaceSettings();
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [busy, setBusy] = useState<'export' | 'import' | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const set = (patch: Partial<WorkspaceSettings>) => updateSettings(patch);
 
   const handleExport = async () => {
+    setBusy('export');
     try {
       const backup = await backupService.exportBackup();
       backupService.downloadBackup(backup);
       setMessage({ text: 'Backup downloaded successfully.', type: 'success' });
     } catch (err) {
       setMessage({ text: `Export failed: ${err instanceof Error ? err.message : 'Unknown error'}`, type: 'error' });
+    } finally {
+      setBusy(null);
     }
   };
 
@@ -44,6 +49,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    setBusy('import');
     try {
       const text = await file.text();
       const backup: WorkspaceBackup = JSON.parse(text);
@@ -51,8 +57,10 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
       setMessage({ text: 'Import successful. Close settings and refresh the page to see your restored workspace.', type: 'success' });
     } catch (err) {
       setMessage({ text: `Import failed: ${err instanceof Error ? err.message : 'Invalid file'}`, type: 'error' });
+    } finally {
+      e.target.value = '';
+      setBusy(null);
     }
-    e.target.value = '';
   };
 
   return (
@@ -96,13 +104,27 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
         <div className="space-y-2">
           <h3 className="text-sm font-semibold">Backup & Restore</h3>
           <div className="flex gap-2">
-            <button type="button" onClick={handleExport} className="btn-stained-ghost rounded px-3 py-1.5 text-xs">
-              Export Backup
+            <button type="button" onClick={handleExport} disabled={busy !== null} aria-busy={busy === 'export'} className="btn-stained-ghost rounded px-3 py-1.5 text-xs disabled:opacity-60">
+              {busy === 'export' ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <LoadingIndicator compact size="xs" />
+                  <span>Preparing…</span>
+                </span>
+              ) : (
+                'Export Backup'
+              )}
             </button>
-            <button type="button" onClick={() => fileInputRef.current?.click()} className="btn-stained-ghost rounded px-3 py-1.5 text-xs">
-              Import Backup
+            <button type="button" onClick={() => fileInputRef.current?.click()} disabled={busy !== null} aria-busy={busy === 'import'} className="btn-stained-ghost rounded px-3 py-1.5 text-xs disabled:opacity-60">
+              {busy === 'import' ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <LoadingIndicator compact size="xs" />
+                  <span>Restoring…</span>
+                </span>
+              ) : (
+                'Import Backup'
+              )}
             </button>
-            <input ref={fileInputRef} type="file" accept=".json" onChange={handleImport} className="hidden" />
+            <input ref={fileInputRef} type="file" accept=".json" onChange={handleImport} className="hidden" disabled={busy !== null} />
           </div>
           {message && (
             <p className={`text-xs ${message.type === 'error' ? 'text-red-600' : 'text-green-700'}`}>

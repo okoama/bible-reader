@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Collection } from '../../../types';
 import ProjectPicker from '../../projects/components/ProjectPicker';
+import AsyncButton from '../../shared/components/AsyncButton';
 
 type CollectionEditorProps = {
   collection?: Collection;
-  onSave: (name: string, description: string, projectId?: string) => void;
+  onSave: (name: string, description: string, projectId?: string) => void | Promise<void>;
   onCancel: () => void;
 };
 
@@ -62,14 +63,14 @@ export default function CollectionEditor({ collection, onSave, onCancel }: Colle
           >
             Cancel
           </button>
-          <button
-            type="button"
-            disabled={!name.trim()}
+          <AsyncButton
             onClick={() => onSave(name.trim(), description.trim(), projectId)}
+            disabled={!name.trim()}
+            busyLabel="Saving…"
             className="rounded-md btn-stained px-4 py-2 text-sm transition-colors disabled:opacity-50"
           >
             {collection ? 'Save' : 'Create'}
-          </button>
+          </AsyncButton>
         </div>
       </div>
     </div>

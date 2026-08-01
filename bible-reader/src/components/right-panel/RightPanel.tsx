@@ -11,6 +11,7 @@ import { TextService } from '../../features/companion-texts/services/TextService
 import ConfirmDialog from '../../features/shared/components/ConfirmDialog';
 import NoteSearch from '../../features/notes/components/NoteSearch';
 import AddToCollectionModal from '../../features/collections/components/AddToCollectionModal';
+import LoadingIndicator from '../../features/shared/components/LoadingIndicator';
 import { useWorkspaceSettings } from '../../lib/contexts/WorkspaceSettingsContext';
 
 const highlightRepository = new HighlightRepository();
@@ -25,6 +26,7 @@ type RightPanelProps = {
   selectedBook: BibleBook | null;
   selectedChapter: number | null;
   notes: Note[];
+  notesLoading?: boolean;
   books: BibleBook[];
   refreshKey: number;
   onNoteDeleted: () => void;
@@ -49,6 +51,7 @@ export default function RightPanel({
   selectedBook,
   selectedChapter,
   notes,
+  notesLoading = false,
   books,
   refreshKey,
   onNoteDeleted,
@@ -64,6 +67,8 @@ export default function RightPanel({
   const [panelWidth, setPanelWidth] = useState(settings.rightPanelWidth);
   const [deletingHighlight, setDeletingHighlight] = useState<Highlight | null>(null);
   const [deletingBookmark, setDeletingBookmark] = useState<Bookmark | null>(null);
+  const [changingHighlightId, setChangingHighlightId] = useState<string | null>(null);
+  const [busyBookmarkId, setBusyBookmarkId] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set(['passage', 'highlights', 'notes', 'bookmarks']));
   const [addToCollectionTarget, setAddToCollectionTarget] = useState<{ type: CollectionItemType; label: string; sourceReference?: string; itemId?: string } | null>(null);
   const dragRef = useRef<{ startX: number; startWidth: number } | null>(null);
@@ -171,8 +176,14 @@ export default function RightPanel({
   }
 
   async function handleChangeHighlightColor(highlight: Highlight, color: string) {
-    await highlightRepository.update({ ...highlight, color });
-    onNoteDeleted();
+    if (changingHighlightId) return;
+    setChangingHighlightId(highlight.id);
+    try {
+      await highlightRepository.update({ ...highlight, color });
+      onNoteDeleted();
+    } finally {
+      setChangingHighlightId(null);
+    }
   }
 
   const handleToggleNoteFavorite = useCallback(async (note: Note) => {
@@ -181,9 +192,15 @@ export default function RightPanel({
   }, [onNoteDeleted]);
 
   const handleToggleBookmarkFavorite = useCallback(async (b: Bookmark) => {
-    await bookmarkRepository.update({ ...b, favorite: !b.favorite });
-    onNoteDeleted(); // re-trigger refresh
-  }, [onNoteDeleted]);
+    if (busyBookmarkId) return;
+    setBusyBookmarkId(b.id);
+    try {
+      await bookmarkRepository.update({ ...b, favorite: !b.favorite });
+      onNoteDeleted(); // re-trigger refresh
+    } finally {
+      setBusyBookmarkId(null);
+    }
+  }, [onNoteDeleted, busyBookmarkId]);
 
   async function handleConfirmDeleteBookmark() {
     if (!deletingBookmark) return;
@@ -266,12 +283,17 @@ export default function RightPanel({
                         type="button"
                         title={c.name}
                         onClick={() => handleChangeHighlightColor(h, c.value)}
-                        className={`h-3.5 w-3.5 rounded-full border hover:scale-125 ${
+                        disabled={changingHighlightId !== null}
+                        aria-busy={changingHighlightId === h.id}
+                        className={`h-3.5 w-3.5 rounded-full border hover:scale-125 disabled:cursor-not-allowed disabled:opacity-50 ${
                           h.color === c.value ? 'border-gray-800 ring-1 ring-gray-400' : 'border-gray-300'
                         }`}
                         style={{ backgroundColor: c.value }}
                       />
                     ))}
+                    {changingHighlightId === h.id && (
+                      <LoadingIndicator compact size="xs" className="ml-1" />
+                    )}
                   </div>
                 </div>
               ))}
@@ -288,7 +310,11 @@ export default function RightPanel({
           onToggle={() => toggleSection('notes')}
           count={notes.length}
         >
-          <NoteSearch notes={notes} books={books} onNavigate={onNavigateToNote} onSelectNote={onSelectNote} onToggleFavorite={handleToggleNoteFavorite} onAddToCollection={(type, label, ref, id) => setAddToCollectionTarget({ type, label, sourceReference: ref, itemId: id })} selectedNoteId={selectedNoteId} />
+          {notesLoading && notes.length === 0 ? (
+            <LoadingIndicator compact message="Consulting the concordance…" className="py-4" />
+          ) : (
+            <NoteSearch notes={notes} books={books} onNavigate={onNavigateToNote} onSelectNote={onSelectNote} onToggleFavorite={handleToggleNoteFavorite} onAddToCollection={(type, label, ref, id) => setAddToCollectionTarget({ type, label, sourceReference: ref, itemId: id })} selectedNoteId={selectedNoteId} />
+          )}
         </Section>
 
         <Section
@@ -337,12 +363,16 @@ export default function RightPanel({
                           e.stopPropagation();
                           handleToggleBookmarkFavorite(b);
                         }}
-                        className={`text-lg leading-none transition-colors ${
+                        disabled={busyBookmarkId !== null}
+                        aria-busy={busyBookmarkId === b.id}
+                        className={`text-lg leading-none transition-colors disabled:cursor-not-allowed ${
                           b.favorite ? 'text-yellow-500' : 'text-gray-300 hover:text-yellow-400'
                         }`}
                         title={b.favorite ? 'Remove from favorites' : 'Add to favorites'}
                       >
-                        {b.favorite ? '\u2605' : '\u2606'}
+                        {busyBookmarkId === b.id ? (
+                          <LoadingIndicator compact size="xs" />
+                        ) : b.favorite ? '\u2605' : '\u2606'}
                       </button>
                       <button
                         type="button"

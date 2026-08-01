@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { ResearchProject } from '../../../types';
 import { ResearchProjectRepository } from '../../../lib/repositories/ResearchProjectRepository';
+import LoadingIndicator from '../../shared/components/LoadingIndicator';
 
 const repo = new ResearchProjectRepository();
 
@@ -19,10 +20,13 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function ProjectsPage({ refreshKey, onSelectProject, onNewProject }: ProjectsPageProps) {
   const [projects, setProjects] = useState<ResearchProject[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
-    void repo.findAll().then((all) => { if (active) setProjects(all); });
+    void repo.findAll().then((all) => {
+      if (active) setProjects(all);
+    }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [refreshKey]);
 
@@ -33,7 +37,9 @@ export default function ProjectsPage({ refreshKey, onSelectProject, onNewProject
         <button type="button" onClick={onNewProject} className="rounded-md bg-accent px-4 py-2 text-sm text-white transition-colors hover:bg-accent-hover focus-visible:ring-2 focus-visible:ring-accent">+ New Project</button>
       </div>
 
-      {projects.length === 0 ? (
+      {loading ? (
+        <LoadingIndicator message="Raising the pillars…" className="mt-12" />
+      ) : projects.length === 0 ? (
         <p className="mt-12 text-center text-sm italic opacity-50">Research projects help you organize study around a theme or question.</p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2" role="list" aria-label="Research projects">

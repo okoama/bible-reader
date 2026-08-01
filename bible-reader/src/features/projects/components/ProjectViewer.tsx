@@ -8,6 +8,8 @@ import { CollectionRepository } from '../../../lib/repositories/CollectionReposi
 import { PROJECT_STATUSES } from '../../../types';
 import { createId } from '../../../lib/utils/id';
 import { formatDate } from '../../../lib/utils/date';
+import LoadingIndicator from '../../shared/components/LoadingIndicator';
+import ErrorRetry from '../../shared/components/ErrorRetry';
 
 const projectRepo = new ResearchProjectRepository();
 const noteRepo = new NoteRepository();
@@ -57,23 +59,35 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
   const [projectNotes, setProjectNotes] = useState('');
   const [notesSaved, setNotesSaved] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [showNewNote, setShowNewNote] = useState(false);
   const [showNewBookmark, setShowNewBookmark] = useState(false);
   const [showNewPrayer, setShowNewPrayer] = useState(false);
 
   const fetchData = useCallback(async () => {
-    const p = await projectRepo.findById(projectId);
-    if (p) { setProject(p); setProjectNotes(p.notes); }
-    const [ns, bms, ps, cs] = await Promise.all([
-      noteRepo.findByProjectId(projectId),
-      bookmarkRepo.findByProjectId(projectId),
-      prayerRepo.findByProjectId(projectId),
-      collectionRepo.findByProjectId(projectId),
-    ]);
-    setNotes(ns);
-    setBookmarks(bms);
-    setPrayers(ps);
-    setCollections(cs);
+    try {
+      const p = await projectRepo.findById(projectId);
+      if (p) {
+        setProject(p);
+        setProjectNotes(p.notes);
+        setLoadError(false);
+      } else {
+        setLoadError(true);
+        return;
+      }
+      const [ns, bms, ps, cs] = await Promise.all([
+        noteRepo.findByProjectId(projectId),
+        bookmarkRepo.findByProjectId(projectId),
+        prayerRepo.findByProjectId(projectId),
+        collectionRepo.findByProjectId(projectId),
+      ]);
+      setNotes(ns);
+      setBookmarks(bms);
+      setPrayers(ps);
+      setCollections(cs);
+    } catch {
+      setLoadError(true);
+    }
   }, [projectId]);
 
   useEffect(() => { void fetchData(); }, [fetchData, refreshKey]);
@@ -81,11 +95,14 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
   const handleSaveNotes = useCallback(async () => {
     if (!project || projectNotes === project.notes) return;
     setSaving(true);
-    const updated = { ...project, notes: projectNotes, updatedAt: new Date().toISOString() };
-    await projectRepo.create(updated);
-    setProject(updated);
-    setNotesSaved(true);
-    setSaving(false);
+    try {
+      const updated = { ...project, notes: projectNotes, updatedAt: new Date().toISOString() };
+      await projectRepo.create(updated);
+      setProject(updated);
+      setNotesSaved(true);
+    } finally {
+      setSaving(false);
+    }
   }, [project, projectNotes]);
 
   const handleCreateNote = useCallback(async (title: string, content: string, sourceReference: string) => {
@@ -127,8 +144,20 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
     return all.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 10);
   }, [notes, bookmarks, prayers, collections]);
 
+  if (loadError) {
+    return (
+      <div className="mx-auto reading-width animate-fade-in">
+        <button type="button" onClick={onBack} className="mb-3 text-sm text-accent hover:text-accent-hover">&larr; Projects</button>
+        <ErrorRetry
+          message="This project could not be found or loaded. It may have been deleted."
+          onRetry={() => { setLoadError(false); void fetchData(); }}
+        />
+      </div>
+    );
+  }
+
   if (!project) {
-    return <div className="mx-auto reading-width animate-fade-in"><p className="mt-12 text-center text-sm italic opacity-50">Loading...</p></div>;
+    return <div className="mx-auto reading-width animate-fade-in"><LoadingIndicator message="Laying the foundation…" className="mt-12" /></div>;
   }
 
   const statusColors: Record<ProjectStatus, string> = {
@@ -182,7 +211,14 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
             placeholder="Write notes, ideas, and findings..."
           />
           <div className="mt-2 flex items-center gap-2">
-            <button type="button" onClick={handleSaveNotes} disabled={notesSaved || saving} className="rounded bg-accent px-3 py-1 text-xs text-white transition-opacity hover:opacity-90 disabled:opacity-40">{saving ? 'Saving...' : 'Save Notes'}</button>
+            <button type="button" onClick={handleSaveNotes} disabled={notesSaved || saving} aria-busy={saving} className="inline-flex items-center gap-1.5 rounded bg-accent px-3 py-1 text-xs text-white transition-opacity hover:opacity-90 disabled:opacity-40">
+              {saving ? (
+                <>
+                  <LoadingIndicator compact size="xs" />
+                  <span>Saving…</span>
+                </>
+              ) : 'Save Notes'}
+            </button>
             {notesSaved && <span className="text-xs text-green-600">Saved</span>}
           </div>
         </SectionCard>

@@ -3,6 +3,7 @@ import type { Bookmark } from '../../../types';
 import { BookmarkRepository } from '../../../lib/repositories/BookmarkRepository';
 import { createId } from '../../../lib/utils/id';
 import ProjectPicker from '../../projects/components/ProjectPicker';
+import AsyncButton from '../../shared/components/AsyncButton';
 
 const bookmarkRepository = new BookmarkRepository();
 
@@ -107,13 +108,13 @@ export default function BookmarkEditor({
           >
             Cancel
           </button>
-          <button
-            type="button"
+          <AsyncButton
             onClick={handleSave}
+            busyLabel="Saving…"
             className="rounded-md btn-stained px-4 py-2 text-sm transition-colors duration-150"
           >
             Save
-          </button>
+          </AsyncButton>
         </div>
       </div>
     </div>

@@ -167,6 +167,34 @@ button:not([class*="btn-stained"]):not([class*="btn-stone"]):not(.tab-active):ac
   to { transform: rotate(360deg); }
 }
 
+@keyframes flicker {
+  0%, 100% { opacity: 0.95; transform: scale(1); }
+  25% { opacity: 0.5; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.08); }
+  75% { opacity: 0.65; transform: scale(0.94); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-flicker {
+  animation: flicker 1.1s ease-in-out infinite;
+  transform-origin: 50% 90%;
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--card-bg) 45%, transparent) 25%,
+    color-mix(in srgb, var(--card-bg) 80%, white) 37%,
+    color-mix(in srgb, var(--card-bg) 45%, transparent) 63%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
 .animate-fade-in {
   animation: fade-in 0.3s ease-out;
 }

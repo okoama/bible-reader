@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import type { BibleBook, Note } from '../../../types';
 import { truncateHtml, stripHtml } from '../../../lib/utils/text';
 import { formatDate } from '../../../lib/utils/date';
+import LoadingIndicator from '../../shared/components/LoadingIndicator';
 
 type DateFilter = 'all' | 'today' | 'week' | 'month' | 'year';
 
@@ -10,7 +11,7 @@ type NoteSearchProps = {
   books: BibleBook[];
   onNavigate: (sourceReference: string) => void;
   onSelectNote?: (noteId: string) => void;
-  onToggleFavorite?: (note: Note) => void;
+  onToggleFavorite?: (note: Note) => void | Promise<void>;
   onAddToCollection?: (type: 'note', label: string, sourceReference: string, itemId: string) => void;
   selectedNoteId?: string | null;
 };
@@ -58,6 +59,17 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onT
   const [filterTag, setFilterTag] = useState('');
   const [filterDate, setFilterDate] = useState<DateFilter>('all');
   const [showFilters, setShowFilters] = useState(false);
+  const [favoriteBusyId, setFavoriteBusyId] = useState<string | null>(null);
+
+  const handleToggleFavorite = async (note: Note) => {
+    if (favoriteBusyId) return;
+    setFavoriteBusyId(note.id);
+    try {
+      await onToggleFavorite?.(note);
+    } finally {
+      setFavoriteBusyId(null);
+    }
+  };
 
   const bookIdToName = useMemo(() => {
     const map = new Map<string, string>();
@@ -271,13 +283,17 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onT
               {onToggleFavorite && (
                 <button
                   type="button"
-                  onClick={(e) => { e.stopPropagation(); onToggleFavorite(note); }}
-                  className={`text-lg leading-none transition-colors ${
+                  onClick={(e) => { e.stopPropagation(); void handleToggleFavorite(note); }}
+                  disabled={favoriteBusyId !== null}
+                  aria-busy={favoriteBusyId === note.id}
+                  className={`text-lg leading-none transition-colors disabled:cursor-not-allowed ${
                     note.favorite ? 'text-yellow-500' : 'text-gray-300 hover:text-yellow-400'
                   }`}
                   title={note.favorite ? 'Remove from favorites' : 'Add to favorites'}
                 >
-                  {note.favorite ? '\u2605' : '\u2606'}
+                  {favoriteBusyId === note.id ? (
+                    <LoadingIndicator compact size="xs" />
+                  ) : note.favorite ? '\u2605' : '\u2606'}
                 </button>
               )}
             </div>

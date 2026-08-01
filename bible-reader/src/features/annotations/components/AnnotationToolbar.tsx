@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { SelectedVerse, TextSelection } from '../hooks/useTextSelection';
 import { HIGHLIGHT_COLORS } from '../../../lib/constants';
+import LoadingIndicator from '../../shared/components/LoadingIndicator';
 
 type AnnotationToolbarProps = {
   selection: TextSelection;
@@ -8,6 +9,7 @@ type AnnotationToolbarProps = {
   onNote: (text: string, verses: SelectedVerse[]) => void;
   onBookmark: (verses: SelectedVerse[]) => void;
   onAddFavorite: (text: string, verses: SelectedVerse[]) => void;
+  busy?: boolean;
 };
 
 const TOOLBAR_HEIGHT = 40;
@@ -19,6 +21,7 @@ export default function AnnotationToolbar({
   onNote,
   onBookmark,
   onAddFavorite,
+  busy = false,
 }: AnnotationToolbarProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState<{ left: number; top: number }>({
@@ -56,8 +59,13 @@ export default function AnnotationToolbar({
       ref={ref}
       onMouseDown={(e) => e.preventDefault()}
       style={{ position: 'fixed', left: position.left, top: position.top }}
-      className="z-50 flex items-center gap-0.5 rounded-lg border bg-white px-1.5 py-1 shadow-lg animate-fade-in"
+      className="relative z-50 flex items-center gap-0.5 rounded-lg border bg-white px-1.5 py-1 shadow-lg animate-fade-in"
     >
+      {busy && (
+        <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-white/85 backdrop-blur-[1px]" aria-hidden="true">
+          <LoadingIndicator compact size="xs" />
+        </div>
+      )}
       {showColors ? (
         <>
           <div className="flex items-center gap-1">
