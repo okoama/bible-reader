@@ -1,7 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useStudySession } from '../../lib/contexts/StudySessionContext';
 import { useToast } from '../../lib/contexts/ToastContext';
 import SessionSummary from '../../features/study-sessions/components/SessionSummary';
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
+}
 
 function formatElapsed(ms: number): string {
   const total = Math.floor(ms / 1000);
@@ -16,6 +21,39 @@ export default function StatusBar() {
   const { session, sessionLoading, elapsed, startSession, endSession } = useStudySession();
   const { showToast } = useToast();
   const [showSummary, setShowSummary] = useState(false);
+  const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
+  const [canInstall, setCanInstall] = useState(false);
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      event.preventDefault();
+      setInstallPromptEvent(event as BeforeInstallPromptEvent);
+      setCanInstall(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handler);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler);
+    };
+  }, []);
+
+  const handleInstall = async () => {
+    if (!installPromptEvent) {
+      showToast('Installation is unavailable in this browser or app mode.');
+      return;
+    }
+
+    installPromptEvent.prompt();
+    const choice = await installPromptEvent.userChoice;
+    if (choice.outcome === 'accepted') {
+      showToast('Install prompt accepted — you can now install the app.');
+    } else {
+      showToast('Install canceled.');
+    }
+    setInstallPromptEvent(null);
+    setCanInstall(false);
+  };
 
   const handleEnd = () => {
     endSession();
@@ -53,6 +91,15 @@ export default function StatusBar() {
                 >
                   Start Session
                 </button>
+            )}
+            {canInstall && (
+              <button
+                type="button"
+                onClick={handleInstall}
+                className="btn-stained rounded px-3 py-1 text-xs"
+              >
+                Install App
+              </button>
             )}
           </>
         )}
