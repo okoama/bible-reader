@@ -23,6 +23,7 @@ import { ResearchProjectRepository } from '../lib/repositories/ResearchProjectRe
 import { createId } from '../lib/utils/id';
 import KeyboardShortcutsHelp from '../features/help/components/KeyboardShortcutsHelp';
 import LoadingIndicator from '../features/shared/components/LoadingIndicator';
+import ErrorBoundary from '../features/shared/components/ErrorBoundary';
 import KnowledgeGraphView from '../features/knowledge-graph/components/KnowledgeGraphView';
 import TabBar from '../components/tabs/TabBar';
 import type { GraphNodeType } from '../types';
@@ -533,19 +534,26 @@ export default function AppLayout() {
     <div className="min-h-screen flex flex-col">
       <Header />
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar
-          books={books}
-          selectedBook={selectedBook}
-          onSelectBook={handleSelectBook}
-          activeView={activeView}
-          onSelectView={handleSelectView}
-          selectedWorkId={selectedWorkId}
-          selectedSectionId={selectedSectionId}
-          onSelectWork={handleSelectWork}
-          prayerFilter={prayerFilter}
-          onPrayerFilter={handlePrayerFilter}
-          onShowShortcuts={() => setShowShortcutsHelp(true)}
-        />
+        <ErrorBoundary
+          variant="card"
+          resetKey={`${activeView}-${selectedWorkId}`}
+          title="The library could not be displayed."
+          className="w-64"
+        >
+          <Sidebar
+            books={books}
+            selectedBook={selectedBook}
+            onSelectBook={handleSelectBook}
+            activeView={activeView}
+            onSelectView={handleSelectView}
+            selectedWorkId={selectedWorkId}
+            selectedSectionId={selectedSectionId}
+            onSelectWork={handleSelectWork}
+            prayerFilter={prayerFilter}
+            onPrayerFilter={handlePrayerFilter}
+            onShowShortcuts={() => setShowShortcutsHelp(true)}
+          />
+        </ErrorBoundary>
         <div className="flex flex-col flex-1 overflow-hidden">
           <TabBar
             tabs={tabs}
@@ -556,7 +564,13 @@ export default function AppLayout() {
           />
           <div className="flex flex-1 overflow-hidden">
             <div className="flex-1 overflow-auto">
-              <div key={activeView} className="animate-slide-in h-full">
+              <ErrorBoundary
+                variant="card"
+                resetKey={`${activeView}-${activeTabId}`}
+                title="This page could not be rendered."
+                className="flex h-full min-h-[360px] w-full"
+              >
+                <div key={activeView} className="animate-slide-in h-full">
                 {activeView === 'dashboard' ? (
                 <Dashboard
                   books={books}
@@ -618,24 +632,32 @@ export default function AppLayout() {
                   }}
                 />
               )}
+              </div>
+              </ErrorBoundary>
             </div>
-            </div>
-            <RightPanel
-              selectedVerse={selectedVerse}
-              selectedBook={selectedBook}
-              selectedChapter={selectedChapter}
-              notes={notes}
-              notesLoading={notesLoading}
-              books={books}
-              refreshKey={notesRefreshKey}
-              onNoteDeleted={handleNoteDeleted}
-              onNavigateToBookmark={handleNavigateToBookmark}
-              onNavigateToNote={handleNavigateToBookmark}
-              selectedNoteId={selectedNoteId}
-              onSelectNote={handleSelectNote}
-              workId={activeView === 'companion-text' ? selectedWorkId : null}
-              sectionId={activeView === 'companion-text' ? selectedSectionId : null}
-            />
+            <ErrorBoundary
+              variant="card"
+              resetKey={activeView}
+              title="The side panel could not be displayed."
+              className="h-full min-w-[260px]"
+            >
+              <RightPanel
+                selectedVerse={selectedVerse}
+                selectedBook={selectedBook}
+                selectedChapter={selectedChapter}
+                notes={notes}
+                notesLoading={notesLoading}
+                books={books}
+                refreshKey={notesRefreshKey}
+                onNoteDeleted={handleNoteDeleted}
+                onNavigateToBookmark={handleNavigateToBookmark}
+                onNavigateToNote={handleNavigateToBookmark}
+                selectedNoteId={selectedNoteId}
+                onSelectNote={handleSelectNote}
+                workId={activeView === 'companion-text' ? selectedWorkId : null}
+                sectionId={activeView === 'companion-text' ? selectedSectionId : null}
+              />
+            </ErrorBoundary>
           </div>
         </div>
       </div>
