@@ -275,7 +275,7 @@ export default function Dashboard({ books, onNavigateToPassage, onSelectView, on
                   <span>{p.icon}</span>
                   <span className="truncate">{p.title}</span>
                   <span className={`ml-auto shrink-0 rounded-full px-2 py-0.5 text-xs capitalize ${
-                    p.status === 'active' ? 'bg-accent-light text-accent' : 'bg-gray-100 text-gray-600'
+                    p.status === 'active' ? 'bg-accent text-white' : 'bg-gray-100 text-gray-600'
                   }`}>{p.status}</span>
                 </li>
               ))}

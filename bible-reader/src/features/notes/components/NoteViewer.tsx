@@ -61,7 +61,7 @@ export default function NoteViewer({ note, onClose, onCrossLinkNavigate }: NoteV
           {note.tags.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {note.tags.map((tag) => (
-                <span key={tag} className="rounded bg-accent-lighter px-1.5 py-0.5 text-accent">{tag}</span>
+                <span key={tag} className="rounded-full bg-accent px-1.5 py-0.5 text-white">{tag}</span>
               ))}
             </div>
           )}

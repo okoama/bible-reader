@@ -219,14 +219,14 @@ export default function NoteEditor({
             {tags.map((tag) => (
               <span
                 key={tag}
-                className="inline-flex items-center gap-1 rounded bg-accent-lighter px-2 py-0.5 text-xs text-accent"
+                className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-xs text-white"
               >
                 {tag}
                 <button
                   type="button"
                   onClick={() => removeTag(tag)}
                   aria-label={`Remove tag ${tag}`}
-                  className="text-accent hover:text-accent-hover"
+                  className="text-white/80 hover:text-white"
                 >
                   &times;
                 </button>
@@ -251,7 +251,7 @@ export default function NoteEditor({
           {showSuggestions && suggestions.length > 0 && (
             <div
               ref={suggestionsRef}
-              className="absolute z-10 mt-1 max-h-40 w-full overflow-y-auto rounded border bg-white shadow-lg"
+              className="absolute z-10 mt-1 max-h-40 w-full overflow-y-auto rounded border border-theme bg-card shadow-lg"
             >
               {suggestions.map((s) => (
                 <button

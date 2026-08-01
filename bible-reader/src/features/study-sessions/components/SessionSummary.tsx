@@ -28,7 +28,7 @@ export default function SessionSummary({ session, onClose }: SessionSummaryProps
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={onClose} role="dialog" aria-modal="true" aria-label="Session summary">
-      <div ref={panelRef} className="w-full max-w-md rounded-lg border bg-white p-6 shadow-lg" onClick={(e) => e.stopPropagation()}>
+      <div ref={panelRef} className="w-full max-w-md rounded-lg border bg-card p-6 shadow-lg" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-xl font-bold">Session Complete</h2>
         <p className="mt-1 text-sm opacity-60">{session.title}</p>
 

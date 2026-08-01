@@ -171,7 +171,7 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
   }
 
   const statusColors: Record<ProjectStatus, string> = {
-    active: 'bg-accent-light text-accent',
+    active: 'bg-accent text-white',
     draft: 'bg-gray-100 text-gray-600',
     completed: 'bg-green-100 text-green-700',
     archived: 'bg-gray-200 text-gray-500',

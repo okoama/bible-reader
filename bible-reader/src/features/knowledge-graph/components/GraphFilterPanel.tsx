@@ -104,9 +104,9 @@ export default function GraphFilterPanel({ filters, onChange, allTags, collectio
         <label className="font-medium opacity-70">Tags</label>
         <div className="mt-1 flex flex-wrap gap-1" role="list" aria-label="Active tag filters">
           {filters.tags.map((tag) => (
-            <span key={tag} role="listitem" className="inline-flex items-center gap-1 rounded bg-accent-lighter px-1.5 py-0.5 text-[11px] text-accent">
+            <span key={tag} role="listitem" className="inline-flex items-center gap-1 rounded-full bg-accent px-1.5 py-0.5 text-[11px] text-white">
               {tag}
-              <button type="button" onClick={() => removeTag(tag)} aria-label={`Remove tag ${tag}`} className="hover:text-accent-hover focus-visible:ring-2 focus-visible:ring-accent rounded">&times;</button>
+              <button type="button" onClick={() => removeTag(tag)} aria-label={`Remove tag ${tag}`} className="text-white/80 hover:text-white focus-visible:ring-2 focus-visible:ring-accent rounded">&times;</button>
             </span>
           ))}
         </div>

@@ -238,21 +238,21 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onT
       {hasActiveFilters && (
         <div className="mb-2 flex flex-wrap gap-1">
           {filterBook && (
-            <span className="inline-flex items-center gap-1 rounded bg-accent-lighter px-1.5 py-0.5 text-xs text-accent">
+            <span className="inline-flex items-center gap-1 rounded-full bg-accent px-1.5 py-0.5 text-xs text-white">
               {bookIdToName.get(filterBook) ?? filterBook}
-              <button type="button" onClick={() => setFilterBook('')} aria-label="Remove book filter" className="hover:text-accent-hover">&times;</button>
+              <button type="button" onClick={() => setFilterBook('')} aria-label="Remove book filter" className="text-white/80 hover:text-white">&times;</button>
             </span>
           )}
           {filterTag && (
-            <span className="inline-flex items-center gap-1 rounded bg-accent-lighter px-1.5 py-0.5 text-xs text-accent">
+            <span className="inline-flex items-center gap-1 rounded-full bg-accent px-1.5 py-0.5 text-xs text-white">
               {filterTag}
-              <button type="button" onClick={() => setFilterTag('')} aria-label="Remove tag filter" className="hover:text-accent-hover">&times;</button>
+              <button type="button" onClick={() => setFilterTag('')} aria-label="Remove tag filter" className="text-white/80 hover:text-white">&times;</button>
             </span>
           )}
           {filterDate !== 'all' && (
-            <span className="inline-flex items-center gap-1 rounded bg-accent-lighter px-1.5 py-0.5 text-xs text-accent">
+            <span className="inline-flex items-center gap-1 rounded-full bg-accent px-1.5 py-0.5 text-xs text-white">
               {filterDate === 'week' ? 'Last 7 days' : filterDate === 'month' ? 'Last 30 days' : filterDate === 'year' ? 'Last year' : 'Today'}
-              <button type="button" onClick={() => setFilterDate('all')} aria-label="Remove date filter" className="hover:text-accent-hover">&times;</button>
+              <button type="button" onClick={() => setFilterDate('all')} aria-label="Remove date filter" className="text-white/80 hover:text-white">&times;</button>
             </span>
           )}
         </div>
@@ -284,7 +284,7 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onT
             {note.tags.length > 0 && (
               <div className="mt-1 flex flex-wrap gap-1">
                 {note.tags.map((tag) => (
-                  <span key={tag} className="rounded bg-accent-lighter px-1.5 py-0.5 text-xs text-accent">
+                  <span key={tag} className="rounded-full bg-accent px-1.5 py-0.5 text-xs text-white">
                     {tag}
                   </span>
                 ))}

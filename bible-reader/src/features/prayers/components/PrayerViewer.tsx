@@ -20,7 +20,7 @@ type PrayerViewerProps = {
 
 const CATEGORY_COLORS: Record<string, string> = {
   thanksgiving: 'bg-green-100 text-green-800',
-  petitions: 'bg-accent-light text-accent',
+  petitions: 'bg-accent text-white',
   intercession: 'bg-purple-100 text-purple-800',
   rosary: 'bg-indigo-100 text-indigo-800',
   novena: 'bg-pink-100 text-pink-800',
