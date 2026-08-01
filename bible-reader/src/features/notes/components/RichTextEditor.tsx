@@ -62,7 +62,7 @@ export default function RichTextEditor({
 
   return (
     <div className="rounded-md border transition-colors duration-150 focus-within:border-[var(--accent)] focus-within:ring-[var(--accent-light)]">
-      <div className="flex flex-wrap items-center gap-0.5 border-b bg-gray-50 px-1 py-1">
+      <div className="flex flex-wrap items-center gap-0.5 border-b bg-gray-50 px-1 py-1" role="toolbar" aria-label="Text formatting">
         <ToolBtn onClick={() => exec('bold')} title="Bold (Ctrl+B)">
           <strong>B</strong>
         </ToolBtn>
@@ -108,6 +108,9 @@ export default function RichTextEditor({
       <div
         ref={ref}
         contentEditable
+        role="textbox"
+        aria-multiline="true"
+        aria-label={placeholder}
         onInput={handleInput}
         onKeyDown={handleKeyDown}
         data-placeholder={placeholder}
@@ -143,6 +146,7 @@ function ToolBtn({
       }}
       onMouseDown={(e) => e.preventDefault()}
       title={title}
+      aria-label={title}
       className="rounded px-1.5 py-0.5 text-xs leading-none transition-colors duration-150 hover-bg"
     >
       {children}

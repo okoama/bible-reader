@@ -83,6 +83,7 @@ export default function BookmarkEditor({
           ref={titleRef}
           type="text"
           placeholder="Label (optional)"
+          aria-label="Bookmark label"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           className="rounded-md border px-3 py-2 text-sm outline-none transition-colors duration-150 focus:border-blue-500 focus:ring-1 focus:ring-blue-200"

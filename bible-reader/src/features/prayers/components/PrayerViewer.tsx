@@ -110,7 +110,7 @@ export default function PrayerViewer({ prayer, readOnly = false, onClose, onEdit
               </div>
             )}
           </div>
-          <button type="button" onClick={onClose} className="text-lg leading-none opacity-50 hover:opacity-100">&times;</button>
+          <button type="button" onClick={onClose} aria-label="Close" className="text-lg leading-none opacity-50 hover:opacity-100">&times;</button>
         </div>
 
         <div

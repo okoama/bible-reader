@@ -93,6 +93,7 @@ export default function FavoritesPage({ refreshKey, onRefresh, onCrossLinkNaviga
                   onClick={() => handleRemoveVerseFavorite(v.id)}
                   className="shrink-0 self-start text-yellow-500 hover:text-yellow-600 transition-colors"
                   title="Remove from favorites"
+                  aria-label="Remove from favorites"
                 >
                   {'\u2605'}
                 </button>

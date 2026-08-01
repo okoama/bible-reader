@@ -50,6 +50,7 @@ export default function CollectionEditor({ collection, onSave, onCancel }: Colle
           ref={nameRef}
           type="text"
           placeholder="Collection name"
+          aria-label="Collection name"
           value={name}
           onChange={(e) => setName(e.target.value)}
           className="rounded-md border px-3 py-2 text-sm outline-none transition-colors focus-accent"
@@ -57,6 +58,7 @@ export default function CollectionEditor({ collection, onSave, onCancel }: Colle
 
         <textarea
           placeholder="Description (optional)"
+          aria-label="Collection description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}

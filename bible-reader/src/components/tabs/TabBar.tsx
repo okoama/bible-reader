@@ -52,8 +52,17 @@ export default function TabBar({ tabs, activeTabId, onSelectTab, onCloseTab, onN
             tabIndex={isActive ? 0 : -1}
             aria-selected={isActive}
             aria-label={`${tab.label} tab`}
+            id={`tab-${tab.id}`}
+            aria-controls={`tabpanel-${tab.id}`}
             onClick={() => onSelectTab(tab.id)}
-            onKeyDown={(e) => handleKeyDown(e, i)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onSelectTab(tab.id);
+                return;
+              }
+              handleKeyDown(e, i);
+            }}
             className={`group flex items-center gap-1.5 px-4 py-2 cursor-pointer whitespace-nowrap min-w-0 outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset transition-all duration-150 ${
               isActive
                 ? 'tab-active text-accent' : 'opacity-40 hover:opacity-70 hover-bg'

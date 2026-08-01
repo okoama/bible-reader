@@ -154,6 +154,7 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onT
       <input
         type="text"
         placeholder="Search notes..."
+        aria-label="Search notes"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         className="mb-2 w-full rounded-md border px-3 py-2 text-sm outline-none transition-colors duration-150 focus-accent"
@@ -173,8 +174,9 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onT
       {showFilters && (
         <div className="mb-3 space-y-2 rounded-md border p-2 animate-fade-in">
           <div>
-            <label className="mb-0.5 block text-xs opacity-60">Book</label>
+            <label htmlFor="note-filter-book" className="mb-0.5 block text-xs opacity-60">Book</label>
             <select
+              id="note-filter-book"
               value={filterBook}
               onChange={(e) => setFilterBook(e.target.value)}
               className="w-full rounded-md border px-2 py-1 text-xs outline-none transition-colors duration-150 focus-accent"
@@ -189,8 +191,9 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onT
           </div>
 
           <div>
-            <label className="mb-0.5 block text-xs opacity-60">Tag</label>
+            <label htmlFor="note-filter-tag" className="mb-0.5 block text-xs opacity-60">Tag</label>
             <select
+              id="note-filter-tag"
               value={filterTag}
               onChange={(e) => setFilterTag(e.target.value)}
               className="w-full rounded-md border px-2 py-1 text-xs outline-none transition-colors duration-150 focus-accent"
@@ -205,8 +208,9 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onT
           </div>
 
           <div>
-            <label className="mb-0.5 block text-xs opacity-60">Date</label>
+            <label htmlFor="note-filter-date" className="mb-0.5 block text-xs opacity-60">Date</label>
             <select
+              id="note-filter-date"
               value={filterDate}
               onChange={(e) => setFilterDate(e.target.value as DateFilter)}
               className="w-full rounded-md border px-2 py-1 text-xs outline-none transition-colors duration-150 focus-accent"
@@ -236,19 +240,19 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onT
           {filterBook && (
             <span className="inline-flex items-center gap-1 rounded bg-accent-lighter px-1.5 py-0.5 text-xs text-accent">
               {bookIdToName.get(filterBook) ?? filterBook}
-              <button type="button" onClick={() => setFilterBook('')} className="hover:text-accent-hover">&times;</button>
+              <button type="button" onClick={() => setFilterBook('')} aria-label="Remove book filter" className="hover:text-accent-hover">&times;</button>
             </span>
           )}
           {filterTag && (
             <span className="inline-flex items-center gap-1 rounded bg-accent-lighter px-1.5 py-0.5 text-xs text-accent">
               {filterTag}
-              <button type="button" onClick={() => setFilterTag('')} className="hover:text-accent-hover">&times;</button>
+              <button type="button" onClick={() => setFilterTag('')} aria-label="Remove tag filter" className="hover:text-accent-hover">&times;</button>
             </span>
           )}
           {filterDate !== 'all' && (
             <span className="inline-flex items-center gap-1 rounded bg-accent-lighter px-1.5 py-0.5 text-xs text-accent">
               {filterDate === 'week' ? 'Last 7 days' : filterDate === 'month' ? 'Last 30 days' : filterDate === 'year' ? 'Last year' : 'Today'}
-              <button type="button" onClick={() => setFilterDate('all')} className="hover:text-accent-hover">&times;</button>
+              <button type="button" onClick={() => setFilterDate('all')} aria-label="Remove date filter" className="hover:text-accent-hover">&times;</button>
             </span>
           )}
         </div>
@@ -294,6 +298,7 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onT
                   onClick={(e) => { e.stopPropagation(); onAddToCollection('note', note.title || 'Untitled', note.sourceReference, note.id); }}
                   className="text-sm leading-none text-gray-400 hover:text-green-600 transition-colors"
                   title="Add to collection"
+                  aria-label="Add to collection"
                 >
                   {'\u{1F4C1}'}
                 </button>
@@ -304,6 +309,7 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onT
                   onClick={(e) => { e.stopPropagation(); void handleToggleFavorite(note); }}
                   disabled={favoriteBusyId !== null}
                   aria-busy={favoriteBusyId === note.id}
+                  aria-label={note.favorite ? 'Remove from favorites' : 'Add to favorites'}
                   className={`text-lg leading-none transition-colors disabled:cursor-not-allowed ${
                     note.favorite ? 'text-yellow-500' : 'text-gray-300 hover:text-yellow-400'
                   }`}

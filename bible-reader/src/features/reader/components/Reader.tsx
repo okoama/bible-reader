@@ -567,7 +567,7 @@ export default function Reader({
   const isLoading = selectedBook && !chaptersError && !versesError && (chaptersLoading || (selectedChapter && verses.length === 0));
 
   return (
-    <main ref={mainRef} className="reading-text flex-1 overflow-y-auto bg-reader p-8" onScroll={handleMainScroll}>
+    <section ref={mainRef} className="reading-text flex-1 overflow-y-auto bg-reader p-8" onScroll={handleMainScroll} aria-label="Reading pane">
       {activeView === 'favorites' ? (
         <div className="mx-auto reading-width animate-fade-in">
           <FavoritesPage refreshKey={prayerRefreshKey} onRefresh={handlePrayerRefresh} onCrossLinkNavigate={onCrossLinkNavigate} onNavigateToPassage={onNavigateToPassage} />
@@ -650,6 +650,7 @@ export default function Reader({
                   data-book={selectedBook.id}
                   data-chapter={selectedChapter}
                   data-verse={verse.verseNumber}
+                  aria-current={selectedVerse?.verseNumber === verse.verseNumber ? 'true' : undefined}
                   onClick={() => handleVerseClick(verse.verseNumber)}
                   role="button"
                   tabIndex={0}
@@ -677,6 +678,7 @@ export default function Reader({
                       type="button"
                       onClick={(e) => { e.stopPropagation(); handleNoteIndicatorClick(note); }}
                       title={note.title}
+                      aria-label={`Open note: ${note.title}`}
                       className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-amber-500 align-super transition-transform duration-150 hover:scale-150"
                     />
                   ))}
@@ -741,6 +743,6 @@ export default function Reader({
           onCancel={() => { setShowProjectEditor(false); setEditingProject(null); }}
         />
       )}
-    </main>
+    </section>
   );
 }

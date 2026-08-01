@@ -28,14 +28,14 @@ export default function StatusBar() {
       <span className="opacity-60">Ready • Offline • Version 0.1.0</span>
       <div className="flex items-center gap-3">
         {sessionLoading ? (
-          <span className="inline-flex items-center gap-1.5 text-xs opacity-50">
+          <span className="inline-flex items-center gap-1.5 text-xs opacity-50" role="status">
             <span className="inline-block h-2 w-2 animate-spin rounded-full border border-[#B8962E] border-t-transparent" aria-hidden="true" />
             Resuming your study…</span>
         ) : (
           <>
             {session && !session.endTime && (
               <>
-                <span className="font-mono text-xs tabular-nums">{formatElapsed(elapsed)}</span>
+                <span className="font-mono text-xs tabular-nums" aria-label={`Session elapsed time ${formatElapsed(elapsed)}`}>{formatElapsed(elapsed)}</span>
                 <button
                   type="button"
                   onClick={handleEnd}

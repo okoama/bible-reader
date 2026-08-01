@@ -74,6 +74,7 @@ export default function AnnotationToolbar({
                 key={c.value}
                 type="button"
                 title={c.name}
+                aria-label={`Highlight in ${c.name}`}
                 onClick={() => {
                   onHighlight(selection.text, selection.verses, c.value);
                   setShowColors(false);

@@ -65,7 +65,7 @@ export default function ContentReader({
       )}
 
       {showSections && sections.length > 0 && onSelectSection && (
-        <div ref={sectionsRef} onKeyDown={handleSectionsKeyDown} className={`mb-6 ${sections.length > 60 ? 'max-h-60 overflow-y-auto border rounded-lg p-2' : 'flex flex-wrap gap-1'}`}>
+        <div ref={sectionsRef} onKeyDown={handleSectionsKeyDown} role="group" aria-label={`${title} sections`} className={`mb-6 ${sections.length > 60 ? 'max-h-60 overflow-y-auto border rounded-lg p-2' : 'flex flex-wrap gap-1'}`}>
           <div className={sections.length > 60 ? 'space-y-0.5' : 'flex flex-wrap gap-1'}>
             {sections.map((section) => {
               const isSelected = currentSectionId === section.id;
@@ -75,6 +75,7 @@ export default function ContentReader({
                   key={section.id}
                   type="button"
                   onClick={() => onSelectSection(section.id)}
+                  aria-current={isSelected ? 'true' : undefined}
                   className={`rounded-xl px-3 py-1.5 text-sm btn-stone ${
                     isSelected ? 'selected' : ''
                   } ${sections.length > 60 ? 'w-full text-left' : ''}`}

@@ -147,17 +147,17 @@ export default function Sidebar({
   }, [updateSettings]);
 
   return sidebarOpen ? (
-    <aside className="relative shrink-0 border-r border-theme bg-sidebar overflow-hidden flex flex-col" style={{ width: sidebarWidth }}>
+    <aside className="relative shrink-0 border-r border-theme bg-sidebar overflow-hidden flex flex-col" style={{ width: sidebarWidth }} aria-label="Library">
       <div className="flex items-center justify-between px-4 py-3">
         <h2 className="text-sm font-semibold uppercase tracking-wide opacity-35">Library</h2>
         <div className="flex items-center gap-1">
-          <button type="button" onClick={() => onShowShortcuts?.()} className="text-xs opacity-40 hover:opacity-80" title="Keyboard Shortcuts">
+          <button type="button" onClick={() => onShowShortcuts?.()} className="text-xs opacity-40 hover:opacity-80" title="Keyboard Shortcuts" aria-label="Keyboard shortcuts">
             ?
           </button>
-          <button type="button" onClick={() => setShowSettings(true)} className="text-sm opacity-60 hover:opacity-100" title="Workspace Settings">
+          <button type="button" onClick={() => setShowSettings(true)} className="text-sm opacity-60 hover:opacity-100" title="Workspace Settings" aria-label="Workspace settings">
             {'\u2699'}
           </button>
-          <button type="button" onClick={() => setSidebarOpen(false)} className="text-xs opacity-40 hover:opacity-80 ml-1" title="Collapse sidebar">
+          <button type="button" onClick={() => setSidebarOpen(false)} className="text-xs opacity-40 hover:opacity-80 ml-1" title="Collapse sidebar" aria-label="Collapse sidebar">
             {'\u2715'}
           </button>
         </div>
@@ -169,6 +169,7 @@ export default function Sidebar({
           <button
             type="button"
             onClick={() => onSelectView('dashboard')}
+            aria-current={activeView === 'dashboard' ? 'page' : undefined}
             className={`flex w-full items-center gap-2 rounded px-3 py-1.5 text-left text-sm transition-colors duration-150 ${
               activeView === 'dashboard' ? 'nav-active' : 'hover-bg'
             }`}
@@ -179,6 +180,7 @@ export default function Sidebar({
           <button
             type="button"
             onClick={() => onSelectView('favorites')}
+            aria-current={activeView === 'favorites' ? 'page' : undefined}
             className={`flex w-full items-center gap-2 rounded px-3 py-1.5 text-left text-sm transition-colors duration-150 ${
               activeView === 'favorites' ? 'nav-active' : 'hover-bg'
             }`}
@@ -189,6 +191,7 @@ export default function Sidebar({
           <button
             type="button"
             onClick={() => onSelectView('collections')}
+            aria-current={activeView === 'collections' ? 'page' : undefined}
             className={`flex w-full items-center gap-2 rounded px-3 py-1.5 text-left text-sm transition-colors duration-150 ${
               activeView === 'collections' ? 'nav-active' : 'hover-bg'
             }`}
@@ -199,6 +202,7 @@ export default function Sidebar({
           <button
             type="button"
             onClick={() => onSelectView('graph')}
+            aria-current={activeView === 'graph' ? 'page' : undefined}
             className={`flex w-full items-center gap-2 rounded px-3 py-1.5 text-left text-sm transition-colors duration-150 ${
               activeView === 'graph' ? 'nav-active' : 'hover-bg'
             }`}
@@ -209,6 +213,7 @@ export default function Sidebar({
           <button
             type="button"
             onClick={() => onSelectView('projects')}
+            aria-current={activeView === 'projects' ? 'page' : undefined}
             className={`flex w-full items-center gap-2 rounded px-3 py-1.5 text-left text-sm transition-colors duration-150 ${
               activeView === 'projects' ? 'nav-active' : 'hover-bg'
             }`}
@@ -228,6 +233,7 @@ export default function Sidebar({
                   key={book.id}
                   type="button"
                   onClick={() => onSelectBook(book)}
+                  aria-current={isSelected ? 'true' : undefined}
                   className={`w-full rounded px-3 py-1 text-left text-sm transition-colors duration-150 ${
                     isSelected ? 'nav-active' : 'hover-bg'
                   }`}
@@ -449,6 +455,7 @@ export default function Sidebar({
       onClick={() => setSidebarOpen(true)}
       className="shrink-0 border-r border-theme bg-sidebar px-1 py-3 text-xs text-muted hover:text-text hover-bg transition-colors duration-150"
       title="Expand sidebar"
+      aria-label="Expand sidebar"
       style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
     >
       Library

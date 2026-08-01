@@ -246,7 +246,7 @@ export default function RightPanel({
       />
       <div className="flex items-center justify-between px-4 pt-2">
         <span className="text-[10px] font-semibold uppercase tracking-widest opacity-40">Panel</span>
-        <button type="button" onClick={() => setPanelOpen(false)} className="text-xs opacity-40 hover:opacity-80" title="Collapse panel">
+        <button type="button" onClick={() => setPanelOpen(false)} className="text-xs opacity-40 hover:opacity-80" title="Collapse panel" aria-label="Collapse panel">
           {'\u2715'}
         </button>
       </div>
@@ -302,6 +302,7 @@ export default function RightPanel({
                         key={c.value}
                         type="button"
                         title={c.name}
+                        aria-label={`${c.name} highlight`}
                         onClick={() => handleChangeHighlightColor(h, c.value)}
                         disabled={changingHighlightId !== null}
                         aria-busy={changingHighlightId === h.id}
@@ -374,6 +375,7 @@ export default function RightPanel({
                         }}
                         className="text-sm text-gray-400 hover:text-green-600 transition-colors"
                         title="Add to collection"
+                        aria-label="Add to collection"
                       >
                         {'\u{1F4C1}'}
                       </button>
@@ -385,6 +387,7 @@ export default function RightPanel({
                         }}
                         disabled={busyBookmarkId !== null}
                         aria-busy={busyBookmarkId === b.id}
+                        aria-label={b.favorite ? 'Remove from favorites' : 'Add to favorites'}
                         className={`text-lg leading-none transition-colors disabled:cursor-not-allowed ${
                           b.favorite ? 'text-yellow-500' : 'text-gray-300 hover:text-yellow-400'
                         }`}
@@ -447,6 +450,7 @@ export default function RightPanel({
       onClick={() => setPanelOpen(true)}
       className="shrink-0 border-l border-theme bg-panel px-1 py-3 text-xs text-muted hover:text-text hover-bg transition-colors duration-150"
       title="Expand panel"
+      aria-label="Expand panel"
       style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
     >
       Panel
@@ -494,6 +498,7 @@ function Section({
         id={`section-${id}`}
         role="region"
         aria-hidden={collapsed}
+        inert={collapsed}
         className={`grid transition-[grid-template-rows] duration-200 ease-out ${collapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]'}`}
       >
         <div className="min-h-0 overflow-hidden">

@@ -193,6 +193,7 @@ export default function PrayerLibrary({ filter, refreshKey, onRefresh }: PrayerL
                   onClick={(e) => { e.stopPropagation(); setAddToCollectionPrayer(prayer); }}
                   className="ml-auto text-xs text-gray-400 hover:text-green-600 transition-colors"
                   title="Add to collection"
+                  aria-label="Add to collection"
                 >
                   {'\u{1F4C1}'}
                 </button>

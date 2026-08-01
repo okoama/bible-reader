@@ -135,6 +135,7 @@ export default function PrayerEditor({ prayer, onSave, onCancel, initialProjectI
           ref={titleRef}
           type="text"
           placeholder="Title"
+          aria-label="Prayer title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           className="rounded-md border px-3 py-2 text-sm outline-none transition-colors duration-150 focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
@@ -143,6 +144,7 @@ export default function PrayerEditor({ prayer, onSave, onCancel, initialProjectI
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value as PrayerCategory)}
+          aria-label="Category"
           className="rounded-md border px-3 py-2 text-sm outline-none transition-colors duration-150 focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
         >
           {PRAYER_CATEGORIES.map((c) => (
@@ -153,6 +155,7 @@ export default function PrayerEditor({ prayer, onSave, onCancel, initialProjectI
         <input
           type="text"
           placeholder="Tags (comma-separated)"
+          aria-label="Tags (comma-separated)"
           value={tagsInput}
           onChange={(e) => setTagsInput(e.target.value)}
           className="rounded-md border px-3 py-2 text-sm outline-none transition-colors duration-150 focus:border-blue-500 focus:ring-1 focus:ring-blue-200"

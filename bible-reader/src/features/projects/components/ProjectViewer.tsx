@@ -258,7 +258,7 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
                 <div className="flex items-center gap-2 text-sm">
                   <button type="button" onClick={() => onNavigateToReference?.(n.sourceReference)} className="flex-1 truncate text-left hover:text-accent focus-visible:ring-2 focus-visible:ring-accent rounded" title={n.sourceReference}>{n.title || 'Untitled'}</button>
                   <span className="text-xs opacity-40">{n.sourceReference}</span>
-                  <button type="button" onClick={() => setConfirmingLinkDelete({ type: 'note', itemId: n.id, label: n.title || 'Untitled' })} className="text-xs text-red-400 hover:text-red-600">&times;</button>
+                  <button type="button" onClick={() => setConfirmingLinkDelete({ type: 'note', itemId: n.id, label: n.title || 'Untitled' })} className="text-xs text-red-400 hover:text-red-600" aria-label={`Remove note ${n.title || 'Untitled'}`}>&times;</button>
                 </div>
               )} />
               {notes.length === 0 && <EmptyState hint="No linked notes." action={<button type="button" onClick={() => setShowNewNote(true)} className="text-xs text-accent hover:underline">+ Add Note</button>} />}
@@ -276,7 +276,7 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
                 <div className="flex items-center gap-2 text-sm">
                   <button type="button" onClick={() => onNavigateToReference?.(b.sourceReference)} className="flex-1 truncate text-left hover:text-accent focus-visible:ring-2 focus-visible:ring-accent rounded" title={b.sourceReference}>{b.title ?? b.sourceReference}</button>
                   <span className="text-xs opacity-40">{b.sourceReference}</span>
-                  <button type="button" onClick={() => setConfirmingLinkDelete({ type: 'bookmark', itemId: b.id, label: b.title ?? b.sourceReference })} className="text-xs text-red-400 hover:text-red-600">&times;</button>
+                  <button type="button" onClick={() => setConfirmingLinkDelete({ type: 'bookmark', itemId: b.id, label: b.title ?? b.sourceReference })} className="text-xs text-red-400 hover:text-red-600" aria-label={`Remove bookmark ${b.title ?? b.sourceReference}`}>&times;</button>
                 </div>
               )} />
               {bookmarks.length === 0 && <EmptyState hint="No linked passages." action={<button type="button" onClick={() => setShowNewBookmark(true)} className="text-xs text-accent hover:underline">+ Add Passage Reference</button>} />}
@@ -324,7 +324,7 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
                 <div className="flex items-center gap-2 text-sm">
                   <span className="flex-1 truncate">{p.title}</span>
                   <span className="text-xs opacity-40">{p.category}</span>
-                  <button type="button" onClick={() => setConfirmingLinkDelete({ type: 'prayer', itemId: p.id, label: p.title })} className="text-xs text-red-400 hover:text-red-600">&times;</button>
+                  <button type="button" onClick={() => setConfirmingLinkDelete({ type: 'prayer', itemId: p.id, label: p.title })} className="text-xs text-red-400 hover:text-red-600" aria-label={`Remove prayer ${p.title}`}>&times;</button>
                 </div>
               )} />
               {prayers.length === 0 && <EmptyState hint="No linked prayers." action={<button type="button" onClick={() => setShowNewPrayer(true)} className="text-xs text-accent hover:underline">+ Add Prayer</button>} />}

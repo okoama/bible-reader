@@ -190,6 +190,7 @@ export default function NoteEditor({
           ref={titleRef}
           type="text"
           placeholder="Title"
+          aria-label="Note title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           className="rounded-md border px-3 py-2 text-sm outline-none transition-colors duration-150 focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
@@ -213,7 +214,7 @@ export default function NoteEditor({
         </label>
 
         <div className="relative">
-          <label className="mb-1 block text-xs font-medium opacity-70">Tags</label>
+          <label htmlFor="note-tags-input" className="mb-1 block text-xs font-medium opacity-70">Tags</label>
           <div className="flex flex-wrap gap-1 rounded border px-2 py-1.5 focus-within:border-blue-500">
             {tags.map((tag) => (
               <span
@@ -224,6 +225,7 @@ export default function NoteEditor({
                 <button
                   type="button"
                   onClick={() => removeTag(tag)}
+                  aria-label={`Remove tag ${tag}`}
                   className="text-accent hover:text-accent-hover"
                 >
                   &times;
@@ -232,6 +234,7 @@ export default function NoteEditor({
             ))}
             <input
               ref={tagInputRef}
+              id="note-tags-input"
               type="text"
               placeholder={tags.length === 0 ? 'Add tags...' : ''}
               value={tagInput}

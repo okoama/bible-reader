@@ -80,6 +80,7 @@ export default function InsertLinkModal({ onInsert, onClose }: InsertLinkModalPr
         <select
           value={linkType}
           onChange={(e) => setLinkType(e.target.value as CrossLinkType)}
+          aria-label="Link type"
           className="rounded-md border px-3 py-2 text-sm outline-none focus-accent"
         >
           {LINK_TYPES.map((t) => (
@@ -92,6 +93,7 @@ export default function InsertLinkModal({ onInsert, onClose }: InsertLinkModalPr
             <input
               type="text"
               placeholder={linkType === 'passage' ? 'e.g. gen:1:1' : 'e.g. catechism:part-1'}
+              aria-label="Reference"
               value={manualId}
               onChange={(e) => setManualId(e.target.value)}
               className="w-full rounded-md border px-3 py-2 text-sm outline-none focus-accent"
@@ -115,6 +117,7 @@ export default function InsertLinkModal({ onInsert, onClose }: InsertLinkModalPr
             <input
               type="text"
               placeholder="Search..."
+              aria-label="Search items"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="w-full rounded-md border px-3 py-2 text-sm outline-none focus-accent"

@@ -42,6 +42,7 @@ export default function NoteViewer({ note, onClose, onCrossLinkNavigate }: NoteV
           <button
             type="button"
             onClick={onClose}
+            aria-label="Close"
             className="shrink-0 rounded px-2 py-1 text-sm text-gray-500 hover-bg"
           >
             &times;

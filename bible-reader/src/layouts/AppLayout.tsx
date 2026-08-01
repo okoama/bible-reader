@@ -544,8 +544,14 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[70] focus:rounded focus:bg-[var(--accent)] focus:px-3 focus:py-2 focus:text-white"
+      >
+        Skip to main content
+      </a>
       <Header />
-      <div className="flex flex-1 overflow-hidden">
+      <main id="main-content" tabIndex={-1} className="flex flex-1 overflow-hidden outline-none">
         <ErrorBoundary
           variant="card"
           resetKey={`${activeView}-${selectedWorkId}`}
@@ -582,7 +588,7 @@ export default function AppLayout() {
                 title="This page could not be rendered."
                 className="flex h-full min-h-[360px] w-full"
               >
-                <div key={activeView} className="animate-slide-in h-full">
+              <div key={activeView} className="animate-slide-in h-full" role="tabpanel" id={`tabpanel-${activeTabId}`} aria-labelledby={`tab-${activeTabId}`}>
                 {activeView === 'dashboard' ? (
                 <Dashboard
                   books={books}
@@ -672,7 +678,7 @@ export default function AppLayout() {
             </ErrorBoundary>
           </div>
         </div>
-      </div>
+      </main>
 
       <StatusBar />
 

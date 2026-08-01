@@ -167,7 +167,7 @@ export default function Dashboard({ books, onNavigateToPassage, onSelectView, on
   return (
     <div className="reading-text mx-auto max-w-4xl animate-fade-in p-6 space-y-8">
       <header>
-        <h1 className="text-3xl font-bold">Study Desk</h1>
+        <h2 className="text-3xl font-bold">Study Desk</h2>
         <p className="mt-1 opacity-60">Your Catholic study workspace</p>
       </header>
 
@@ -336,7 +336,7 @@ function SectionCard({ title, children, onAction, actionLabel, variant = 'defaul
   return (
     <div className={`rounded-lg border p-4 ${variant === 'default' ? 'border-theme bg-card' : `card-${variant}`}`}>
       <div className="mb-2 flex items-center justify-between">
-        <h2 className={`text-sm font-semibold uppercase tracking-wide opacity-70 ${variant === 'default' ? '' : 'card-title-serif'}`}>{title}</h2>
+        <h3 className={`text-sm font-semibold uppercase tracking-wide opacity-70 ${variant === 'default' ? '' : 'card-title-serif'}`}>{title}</h3>
         {onAction && actionLabel && (
           <button type="button" onClick={onAction} className="text-xs text-accent hover:underline">{actionLabel}</button>
         )}
