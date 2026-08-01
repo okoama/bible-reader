@@ -242,7 +242,8 @@ export class TextService {
       return cached;
     }
 
-    const dataUrl = new URL(entry.dataPath.replace(/^\//, ''), import.meta.env.BASE_URL).toString();
+    const baseUrl = import.meta.env.BASE_URL ?? '/';
+    const dataUrl = `${baseUrl.replace(/\/$/, '')}/${entry.dataPath.replace(/^\//, '')}`;
     const response = await fetch(dataUrl);
     if (!response.ok) {
       throw new Error(`Failed to load ${workId}: ${response.statusText}`);

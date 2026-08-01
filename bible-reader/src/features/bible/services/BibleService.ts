@@ -123,7 +123,8 @@ export class BibleService {
       return cached;
     }
 
-    const url = new URL(`data/bible/${bookId}.json`, import.meta.env.BASE_URL).toString();
+    const baseUrl = import.meta.env.BASE_URL ?? '/';
+    const url = `${baseUrl.replace(/\/$/, '')}/data/bible/${bookId}.json`;
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`Failed to load book: ${bookId}`);
