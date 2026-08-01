@@ -1,4 +1,4 @@
-import type { Bookmark, Collection, Highlight, Note, Prayer, ReadingProgress, WorkspaceSettings } from './index';
+import type { Bookmark, Collection, Highlight, Note, Prayer, ReadingProgress, ResearchProject, WorkspaceSettings } from './index';
 
 export interface WorkspaceBackup {
   version: 1;
@@ -10,6 +10,7 @@ export interface WorkspaceBackup {
     prayers: Prayer[];
     readingProgress: ReadingProgress[];
     collections: Collection[];
+    projects?: ResearchProject[];
     workspaceSettings: WorkspaceSettings | null;
   };
 }

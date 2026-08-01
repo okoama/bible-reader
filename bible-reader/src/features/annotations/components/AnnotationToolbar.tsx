@@ -58,8 +58,8 @@ export default function AnnotationToolbar({
     <div
       ref={ref}
       onMouseDown={(e) => e.preventDefault()}
-      style={{ position: 'fixed', left: position.left, top: position.top }}
-      className="relative z-50 flex items-center gap-0.5 rounded-lg border bg-white px-1.5 py-1 shadow-lg animate-fade-in"
+      style={{ position: 'fixed', left: position.left, top: position.top, boxShadow: '0 0 18px rgba(212, 175, 55, 0.18)' }}
+      className="relative z-50 flex items-center gap-0.5 rounded-lg border border-[#D4AF37] bg-[#20283A] px-1.5 py-1 backdrop-blur-sm animate-fade-in text-white"
     >
       {busy && (
         <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-white/85 backdrop-blur-[1px]" aria-hidden="true">

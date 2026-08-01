@@ -1,15 +1,16 @@
-import type { WorkspaceBackup } from '../../../types';
+import type { ResearchProject, WorkspaceBackup } from '../../../types';
 import { db } from '../../../lib/database/database';
 
 export class BackupService {
   async exportBackup(): Promise<WorkspaceBackup> {
-    const [notes, highlights, bookmarks, prayers, readingProgress, collections] = await Promise.all([
+    const [notes, highlights, bookmarks, prayers, readingProgress, collections, projects] = await Promise.all([
       db.notes.toArray(),
       db.highlights.toArray(),
       db.bookmarks.toArray(),
       db.prayers.toArray(),
       db.readingProgress.toArray(),
       db.collections.toArray(),
+      db.projects.toArray(),
     ]);
 
     let workspaceSettings = null;
@@ -21,7 +22,7 @@ export class BackupService {
     return {
       version: 1,
       exportedAt: new Date().toISOString(),
-      data: { notes, highlights, bookmarks, prayers, readingProgress, collections, workspaceSettings },
+      data: { notes, highlights, bookmarks, prayers, readingProgress, collections, projects, workspaceSettings },
     };
   }
 
@@ -30,7 +31,7 @@ export class BackupService {
 
     await db.transaction(
       'rw',
-      [db.notes, db.highlights, db.bookmarks, db.prayers, db.readingProgress, db.collections],
+      [db.notes, db.highlights, db.bookmarks, db.prayers, db.readingProgress, db.collections, db.projects],
       async () => {
         await Promise.all([
           db.notes.clear(),
@@ -39,6 +40,7 @@ export class BackupService {
           db.prayers.clear(),
           db.readingProgress.clear(),
           db.collections.clear(),
+          db.projects.clear(),
         ]);
         await Promise.all([
           db.notes.bulkAdd(backup.data.notes),
@@ -47,6 +49,7 @@ export class BackupService {
           db.prayers.bulkAdd(backup.data.prayers),
           db.readingProgress.bulkAdd(backup.data.readingProgress),
           db.collections.bulkAdd(backup.data.collections),
+          db.projects.bulkAdd(backup.data.projects ?? []),
         ]);
       },
     );
