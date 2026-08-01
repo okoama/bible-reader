@@ -1,7 +1,5 @@
-function App() {
-  return (
-    <h1>Catholic Study Desk</h1>
-  );
-}
+import AppLayout from "./layouts/AppLayout";
 
-export default App;
+export default function App() {
+  return <AppLayout />;
+}
