@@ -654,7 +654,15 @@ export default function Reader({
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') handleVerseClick(verse.verseNumber);
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      handleVerseClick(verse.verseNumber);
+                    } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      const next = e.key === 'ArrowDown' ? verse.verseNumber + 1 : verse.verseNumber - 1;
+                      verseRefs.current
+                        .get(`${selectedBook.id}:${selectedChapter}:${next}`)
+                        ?.focus();
+                    }
                   }}
                 >
                   {verse.verseNumber === 1 && (

@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import type { StudySession } from '../../../types';
+import { useModalFocus } from '../../../lib/hooks/useModalFocus';
 
 function formatDuration(minutes: number): string {
   if (minutes < 60) return `${minutes} min`;
@@ -14,10 +16,19 @@ type SessionSummaryProps = {
 
 export default function SessionSummary({ session, onClose }: SessionSummaryProps) {
   const duration = session.duration ?? Math.round((Date.now() - new Date(session.startTime).getTime()) / 60000);
+  const panelRef = useModalFocus<HTMLDivElement>();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={onClose}>
-      <div className="w-full max-w-md rounded-lg border bg-white p-6 shadow-lg" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={onClose} role="dialog" aria-modal="true" aria-label="Session summary">
+      <div ref={panelRef} className="w-full max-w-md rounded-lg border bg-white p-6 shadow-lg" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-xl font-bold">Session Complete</h2>
         <p className="mt-1 text-sm opacity-60">{session.title}</p>
 

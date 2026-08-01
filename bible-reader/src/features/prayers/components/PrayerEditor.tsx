@@ -4,6 +4,7 @@ import { PRAYER_CATEGORIES } from '../../../types';
 import { PrayerRepository } from '../../../lib/repositories/PrayerRepository';
 import { createId } from '../../../lib/utils/id';
 import { useDraft } from '../../../lib/hooks/useDraft';
+import { useModalFocus } from '../../../lib/hooks/useModalFocus';
 import { useToast } from '../../../lib/contexts/ToastContext';
 import RichTextEditor from '../../notes/components/RichTextEditor';
 import ProjectPicker from '../../projects/components/ProjectPicker';
@@ -27,6 +28,7 @@ export default function PrayerEditor({ prayer, onSave, onCancel, initialProjectI
   const [favorite, setFavorite] = useState(prayer?.favorite ?? false);
   const [projectId, setProjectId] = useState<string | undefined>(initialProjectId);
   const titleRef = useRef<HTMLInputElement>(null);
+  const panelRef = useModalFocus<HTMLDivElement>();
 
   const { hasDraft, restoreDraft, clearDraft } = useDraft(draftKey, title, content);
   const { showToast } = useToast();
@@ -102,7 +104,7 @@ export default function PrayerEditor({ prayer, onSave, onCancel, initialProjectI
       aria-modal="true"
       aria-label={prayer ? 'Edit prayer' : 'New prayer'}
     >
-      <div className="mx-4 flex w-full max-w-lg flex-col gap-4 rounded-lg bg-card border border-theme p-6 shadow-xl animate-slide-up max-h-[90vh] overflow-y-auto">
+      <div ref={panelRef} className="mx-4 flex w-full max-w-lg flex-col gap-4 rounded-lg bg-card border border-theme p-6 shadow-xl animate-slide-up max-h-[90vh] overflow-y-auto">
         <h2 className="text-lg font-semibold">
           {prayer ? 'Edit Prayer' : 'New Prayer'}
         </h2>

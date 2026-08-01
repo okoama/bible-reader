@@ -1,7 +1,8 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useWorkspaceSettings } from '../../../lib/contexts/WorkspaceSettingsContext';
 import { ACCENT_NAMES } from '../../../types';
 import { ACCENT_COLORS } from '../../../lib/utils/accent';
+import { useModalFocus } from '../../../lib/hooks/useModalFocus';
 import { BackupService } from '../../backup/services/BackupService';
 import type { WorkspaceSettings, WorkspaceBackup } from '../../../types';
 import LoadingIndicator from '../../shared/components/LoadingIndicator';
@@ -32,7 +33,16 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
   const [busy, setBusy] = useState<'export' | 'import' | null>(null);
   const [pendingBackup, setPendingBackup] = useState<WorkspaceBackup | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const panelRef = useModalFocus<HTMLDivElement>();
   const { showToast } = useToast();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !pendingBackup) onClose();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onClose, pendingBackup]);
 
   const set = (patch: Partial<WorkspaceSettings>) => updateSettings(patch);
 
@@ -82,9 +92,13 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
     }
   };
 
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget && !pendingBackup) onClose();
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={onClose}>
-      <div className="mx-4 w-full max-w-sm rounded-lg bg-card border border-theme p-6 shadow-lg" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={handleBackdropClick} role="dialog" aria-modal="true" aria-label="Workspace settings">
+      <div ref={panelRef} className="mx-4 w-full max-w-sm rounded-lg bg-card border border-theme p-6 shadow-lg" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-bold">Workspace Settings</h2>
 
         <div className="mt-5 space-y-5">

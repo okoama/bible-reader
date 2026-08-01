@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import type { Note, CrossLinkType } from '../../../types';
 import { formatDate } from '../../../lib/utils/date';
+import { useModalFocus } from '../../../lib/hooks/useModalFocus';
 import CrossLinkRenderer from './CrossLinkRenderer';
 
 type NoteViewerProps = {
@@ -9,6 +11,16 @@ type NoteViewerProps = {
 };
 
 export default function NoteViewer({ note, onClose, onCrossLinkNavigate }: NoteViewerProps) {
+  const panelRef = useModalFocus<HTMLDivElement>();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) onClose();
   };
@@ -21,7 +33,7 @@ export default function NoteViewer({ note, onClose, onCrossLinkNavigate }: NoteV
       aria-modal="true"
       aria-label={note.title || 'Note'}
     >
-      <div className="mx-4 flex w-full max-w-2xl max-h-[85vh] flex-col gap-4 rounded-lg bg-card border border-theme p-6 shadow-xl animate-slide-up overflow-y-auto">
+      <div ref={panelRef} className="mx-4 flex w-full max-w-2xl max-h-[85vh] flex-col gap-4 rounded-lg bg-card border border-theme p-6 shadow-xl animate-slide-up overflow-y-auto">
         <div className="flex items-start justify-between">
           <div>
             <h2 className="text-xl font-semibold">{note.title || 'Untitled'}</h2>

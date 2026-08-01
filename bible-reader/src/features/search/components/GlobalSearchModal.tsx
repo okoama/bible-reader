@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Note } from '../../../types';
 import { NoteRepository } from '../../../lib/repositories/NoteRepository';
 import { stripHtml } from '../../../lib/utils/text';
+import { useModalFocus } from '../../../lib/hooks/useModalFocus';
 import LoadingIndicator from '../../shared/components/LoadingIndicator';
 import ErrorRetry from '../../shared/components/ErrorRetry';
 
@@ -21,6 +22,7 @@ export default function GlobalSearchModal({ onSelectNote, onClose }: GlobalSearc
   const [loadError, setLoadError] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const panelRef = useModalFocus<HTMLDivElement>();
   const [activeIndex, setActiveIndex] = useState(-1);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -96,7 +98,7 @@ export default function GlobalSearchModal({ onSelectNote, onClose }: GlobalSearc
       className="fixed inset-0 z-50 flex items-start justify-center bg-black/30 pt-[15vh]"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="mx-4 w-full max-w-lg rounded-lg bg-card border border-theme shadow-lg">
+      <div ref={panelRef} className="mx-4 w-full max-w-lg rounded-lg bg-card border border-theme shadow-lg">
         <div className="border-b p-3">
           <input
             ref={inputRef}

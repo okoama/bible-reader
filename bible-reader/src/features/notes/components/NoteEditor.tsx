@@ -3,6 +3,7 @@ import type { Note } from '../../../types';
 import { NoteRepository } from '../../../lib/repositories/NoteRepository';
 import { createId } from '../../../lib/utils/id';
 import { useDraft } from '../../../lib/hooks/useDraft';
+import { useModalFocus } from '../../../lib/hooks/useModalFocus';
 import { useToast } from '../../../lib/contexts/ToastContext';
 import RichTextEditor from './RichTextEditor';
 import ProjectPicker from '../../projects/components/ProjectPicker';
@@ -39,6 +40,7 @@ export default function NoteEditor({
   const titleRef = useRef<HTMLInputElement>(null);
   const tagInputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const panelRef = useModalFocus<HTMLDivElement>();
 
   const { hasDraft, restoreDraft, clearDraft } = useDraft(draftKey, title, content);
   const { showToast } = useToast();
@@ -157,7 +159,7 @@ export default function NoteEditor({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-fade-in" onClick={handleBackdropClick} role="dialog" aria-modal="true" aria-label={note ? 'Edit note' : 'New note'}>
-      <div className="mx-4 flex w-full max-w-lg flex-col gap-4 rounded-lg bg-card border border-theme p-6 shadow-xl animate-slide-up">
+      <div ref={panelRef} className="mx-4 flex w-full max-w-lg flex-col gap-4 rounded-lg bg-card border border-theme p-6 shadow-xl animate-slide-up">
         <h2 className="text-lg font-semibold">
           {note ? 'Edit Note' : 'New Note'}
         </h2>

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useModalFocus } from '../../../lib/hooks/useModalFocus';
 
 type ShortcutEntry = { keys: string; label: string };
 
@@ -18,6 +19,7 @@ type KeyboardShortcutsHelpProps = { onClose: () => void };
 
 export default function KeyboardShortcutsHelp({ onClose }: KeyboardShortcutsHelpProps) {
   const doneRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useModalFocus<HTMLDivElement>();
 
   useEffect(() => {
     doneRef.current?.focus();
@@ -36,7 +38,7 @@ export default function KeyboardShortcutsHelp({ onClose }: KeyboardShortcutsHelp
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-fade-in"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="mx-4 w-full max-w-sm rounded-lg bg-card border border-theme p-6 shadow-xl animate-slide-up">
+      <div ref={panelRef} className="mx-4 w-full max-w-sm rounded-lg bg-card border border-theme p-6 shadow-xl animate-slide-up">
         <h2 className="text-lg font-bold">Keyboard Shortcuts</h2>
         <div className="mt-4 space-y-2">
           {SHORTCUTS.map(({ keys, label }) => (

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { Bookmark } from '../../../types';
 import { BookmarkRepository } from '../../../lib/repositories/BookmarkRepository';
 import { createId } from '../../../lib/utils/id';
+import { useModalFocus } from '../../../lib/hooks/useModalFocus';
 import ProjectPicker from '../../projects/components/ProjectPicker';
 import AsyncButton from '../../shared/components/AsyncButton';
 import { useToast } from '../../../lib/contexts/ToastContext';
@@ -25,7 +26,7 @@ export default function BookmarkEditor({
   const [favorite, setFavorite] = useState(false);
   const [projectId, setProjectId] = useState<string | undefined>(initialProjectId);
   const titleRef = useRef<HTMLInputElement>(null);
-  const dialogRef = useRef<HTMLDivElement>(null);
+  const panelRef = useModalFocus<HTMLDivElement>();
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -73,7 +74,7 @@ export default function BookmarkEditor({
       aria-label="New bookmark"
     >
       <div
-        ref={dialogRef}
+        ref={panelRef}
         className="mx-4 flex w-full max-w-lg flex-col gap-4 rounded-lg bg-card border border-theme p-6 shadow-xl animate-slide-up"
       >
         <h2 className="text-lg font-semibold">New Bookmark</h2>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Collection, CollectionItem, CollectionItemType } from '../../../types';
 import { CollectionRepository } from '../../../lib/repositories/CollectionRepository';
 import { createId } from '../../../lib/utils/id';
+import { useModalFocus } from '../../../lib/hooks/useModalFocus';
 import { useStudySession } from '../../../lib/contexts/StudySessionContext';
 import { useToast } from '../../../lib/contexts/ToastContext';
 import LoadingIndicator from '../../shared/components/LoadingIndicator';
@@ -28,8 +29,17 @@ export default function AddToCollectionModal({
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);
   const [addingId, setAddingId] = useState<string | null>(null);
+  const panelRef = useModalFocus<HTMLDivElement>();
   const { session, logCollectionEvent } = useStudySession();
   const { showToast } = useToast();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   useEffect(() => {
     let active = true;
@@ -74,7 +84,7 @@ export default function AddToCollectionModal({
       aria-modal="true"
       aria-label="Add to collection"
     >
-      <div className="mx-4 flex w-full max-w-sm flex-col gap-3 rounded-lg bg-card border border-theme p-6 shadow-xl animate-slide-up">
+      <div ref={panelRef} className="mx-4 flex w-full max-w-sm flex-col gap-3 rounded-lg bg-card border border-theme p-6 shadow-xl animate-slide-up">
         <h2 className="text-lg font-semibold">Add to Collection</h2>
         <p className="text-sm opacity-60 truncate">{itemLabel}</p>
 

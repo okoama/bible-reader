@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ResearchProject, ProjectStatus } from '../../../types';
 import { PROJECT_STATUSES, PROJECT_DEFAULT_ICONS } from '../../../types';
+import { useModalFocus } from '../../../lib/hooks/useModalFocus';
 import AsyncButton from '../../shared/components/AsyncButton';
 
 type ProjectEditorProps = {
@@ -18,6 +19,7 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
   const [icon, setIcon] = useState(project?.icon ?? PROJECT_DEFAULT_ICONS[0]);
   const [color, setColor] = useState(project?.color ?? COLOR_OPTIONS[0]);
   const nameRef = useRef<HTMLInputElement>(null);
+  const panelRef = useModalFocus<HTMLDivElement>();
 
   useEffect(() => { nameRef.current?.focus(); }, []);
 
@@ -39,7 +41,7 @@ export default function ProjectEditor({ project, onSave, onCancel }: ProjectEdit
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-fade-in"
       onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}
     >
-      <div className="mx-4 flex w-full max-w-lg flex-col gap-4 rounded-lg border bg-white p-6 shadow-xl animate-slide-up" onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(); } }}>
+      <div ref={panelRef} className="mx-4 flex w-full max-w-lg flex-col gap-4 rounded-lg border bg-white p-6 shadow-xl animate-slide-up" onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { const tag = (e.target as HTMLElement).tagName; if (tag === 'BUTTON' || tag === 'A' || tag === 'SELECT') return; e.preventDefault(); handleSubmit(); } }}>
         <h2 className="text-lg font-semibold">{project ? 'Edit Project' : 'New Project'}</h2>
 
         <input ref={nameRef} type="text" placeholder="Project title" value={title} onChange={(e) => setTitle(e.target.value)} aria-label="Project title" className="focus-accent rounded-md border px-3 py-2 text-sm outline-none" />

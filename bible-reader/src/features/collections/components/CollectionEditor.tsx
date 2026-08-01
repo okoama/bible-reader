@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Collection } from '../../../types';
+import { useModalFocus } from '../../../lib/hooks/useModalFocus';
 import ProjectPicker from '../../projects/components/ProjectPicker';
 import AsyncButton from '../../shared/components/AsyncButton';
 
@@ -14,10 +15,19 @@ export default function CollectionEditor({ collection, onSave, onCancel }: Colle
   const [description, setDescription] = useState(collection?.description ?? '');
   const [projectId, setProjectId] = useState<string | undefined>(collection?.projectId);
   const nameRef = useRef<HTMLInputElement>(null);
+  const panelRef = useModalFocus<HTMLDivElement>();
 
   useEffect(() => {
     nameRef.current?.focus();
   }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCancel();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onCancel]);
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) onCancel();
@@ -31,7 +41,7 @@ export default function CollectionEditor({ collection, onSave, onCancel }: Colle
       aria-modal="true"
       aria-label={collection ? 'Edit collection' : 'New collection'}
     >
-      <div className="mx-4 flex w-full max-w-lg flex-col gap-4 rounded-lg bg-card border border-theme p-6 shadow-xl animate-slide-up">
+      <div ref={panelRef} className="mx-4 flex w-full max-w-lg flex-col gap-4 rounded-lg bg-card border border-theme p-6 shadow-xl animate-slide-up">
         <h2 className="text-lg font-semibold">
           {collection ? 'Edit Collection' : 'New Collection'}
         </h2>

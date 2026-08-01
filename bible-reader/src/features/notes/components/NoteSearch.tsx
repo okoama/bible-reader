@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { BibleBook, Note } from '../../../types';
 import { truncateHtml, stripHtml } from '../../../lib/utils/text';
 import { formatDate } from '../../../lib/utils/date';
@@ -60,6 +60,23 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onT
   const [filterDate, setFilterDate] = useState<DateFilter>('all');
   const [showFilters, setShowFilters] = useState(false);
   const [favoriteBusyId, setFavoriteBusyId] = useState<string | null>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
+
+  const handleResultsKeyDown = (e: React.KeyboardEvent) => {
+    const container = resultsRef.current;
+    if (!container) return;
+    if (!['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key)) return;
+    const targets = Array.from(container.querySelectorAll<HTMLElement>('[data-note-nav]'));
+    if (targets.length === 0) return;
+    const currentIndex = targets.indexOf(document.activeElement as HTMLElement);
+    e.preventDefault();
+    let nextIndex = currentIndex;
+    if (e.key === 'Home') nextIndex = 0;
+    else if (e.key === 'End') nextIndex = targets.length - 1;
+    else if (e.key === 'ArrowDown') nextIndex = currentIndex < targets.length - 1 ? currentIndex + 1 : 0;
+    else if (e.key === 'ArrowUp') nextIndex = currentIndex > 0 ? currentIndex - 1 : targets.length - 1;
+    targets[nextIndex]?.focus();
+  };
 
   const handleToggleFavorite = async (note: Note) => {
     if (favoriteBusyId) return;
@@ -237,7 +254,7 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onT
         </div>
       )}
 
-      <div className="space-y-2">
+      <div ref={resultsRef} onKeyDown={handleResultsKeyDown} className="space-y-2">
         {filtered.map((note) => (
           <div
             key={note.id}
@@ -247,6 +264,7 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onT
           >
             <button
               type="button"
+              data-note-nav
               onClick={() => {
                 onNavigate(note.sourceReference);
                 onSelectNote?.(note.id);

@@ -228,8 +228,21 @@ export default function RightPanel({
         className="absolute left-0 top-0 z-10 h-full w-1 cursor-col-resize transition-colors duration-150 hover:bg-accent-light active:bg-accent-lighter"
         onMouseDown={handleDragStart}
         role="separator"
+        tabIndex={0}
         aria-orientation="vertical"
         aria-label="Resize panel"
+        aria-valuemin={MIN_WIDTH}
+        aria-valuemax={MAX_WIDTH}
+        aria-valuenow={panelWidth}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+            e.preventDefault();
+            const next = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, panelWidth + (e.key === 'ArrowRight' ? -8 : 8)));
+            setPanelWidth(next);
+            currentWidthRef.current = next;
+            updateSettings({ rightPanelWidth: next });
+          }
+        }}
       />
       <div className="flex items-center justify-between px-4 pt-2">
         <span className="text-[10px] font-semibold uppercase tracking-widest opacity-40">Panel</span>

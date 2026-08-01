@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Prayer } from '../../../types';
 import { PRAYER_CATEGORIES } from '../../../types';
 import { formatDate } from '../../../lib/utils/date';
+import { useModalFocus } from '../../../lib/hooks/useModalFocus';
 import { PrayerRepository } from '../../../lib/repositories/PrayerRepository';
 import LoadingIndicator from '../../shared/components/LoadingIndicator';
 import ConfirmDialog from '../../shared/components/ConfirmDialog';
@@ -34,7 +35,16 @@ export default function PrayerViewer({ prayer, readOnly = false, onClose, onEdit
   const catColor = CATEGORY_COLORS[prayer.category] ?? 'bg-gray-100 text-gray-800';
   const [busyAction, setBusyAction] = useState<'answered' | 'prayed' | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const panelRef = useModalFocus<HTMLDivElement>();
   const { showToast } = useToast();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !confirmingDelete) onClose();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onClose, confirmingDelete]);
 
   async function handleMarkAnswered() {
     setBusyAction('answered');
@@ -77,7 +87,7 @@ export default function PrayerViewer({ prayer, readOnly = false, onClose, onEdit
       aria-modal="true"
       aria-label={prayer.title}
     >
-      <div className="mx-4 flex w-full max-w-2xl flex-col gap-4 rounded-lg bg-card border border-theme p-6 shadow-xl animate-slide-up max-h-[85vh] overflow-y-auto">
+      <div ref={panelRef} className="mx-4 flex w-full max-w-2xl flex-col gap-4 rounded-lg bg-card border border-theme p-6 shadow-xl animate-slide-up max-h-[85vh] overflow-y-auto">
         <div className="flex items-start justify-between">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">

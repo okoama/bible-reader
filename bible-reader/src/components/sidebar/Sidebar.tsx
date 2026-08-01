@@ -84,7 +84,24 @@ export default function Sidebar({
   const [showSettings, setShowSettings] = useState(false);
   const dragRef = useRef<{ startX: number; startWidth: number } | null>(null);
   const currentWidthRef = useRef(sidebarWidth);
+  const navRef = useRef<HTMLDivElement>(null);
   currentWidthRef.current = sidebarWidth;
+
+  const handleNavKeyDown = (e: React.KeyboardEvent) => {
+    const container = navRef.current;
+    if (!container) return;
+    if (!['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key)) return;
+    const targets = Array.from(container.querySelectorAll<HTMLElement>('button'));
+    if (targets.length === 0) return;
+    const currentIndex = targets.indexOf(document.activeElement as HTMLElement);
+    e.preventDefault();
+    let nextIndex = currentIndex;
+    if (e.key === 'Home') nextIndex = 0;
+    else if (e.key === 'End') nextIndex = targets.length - 1;
+    else if (e.key === 'ArrowDown') nextIndex = currentIndex < targets.length - 1 ? currentIndex + 1 : 0;
+    else if (e.key === 'ArrowUp') nextIndex = currentIndex > 0 ? currentIndex - 1 : targets.length - 1;
+    targets[nextIndex]?.focus();
+  };
 
   useEffect(() => {
     setSidebarWidth(settings.sidebarWidth);
@@ -146,7 +163,7 @@ export default function Sidebar({
         </div>
       </div>
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
-      <div className="flex-1 overflow-y-auto px-4 pb-4">
+      <div ref={navRef} onKeyDown={handleNavKeyDown} className="flex-1 overflow-y-auto px-4 pb-4">
         <div className="space-y-1.5">
           {/* Dashboard */}
           <button
@@ -409,8 +426,21 @@ export default function Sidebar({
         className="absolute right-0 top-0 z-10 h-full w-1 cursor-col-resize transition-colors duration-150 hover:bg-accent-light active:bg-accent-lighter"
         onMouseDown={handleDragStart}
         role="separator"
+        tabIndex={0}
         aria-orientation="vertical"
         aria-label="Resize sidebar"
+        aria-valuemin={MIN_WIDTH}
+        aria-valuemax={MAX_WIDTH}
+        aria-valuenow={sidebarWidth}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+            e.preventDefault();
+            const next = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, sidebarWidth + (e.key === 'ArrowRight' ? 8 : -8)));
+            setSidebarWidth(next);
+            currentWidthRef.current = next;
+            updateSettings({ sidebarWidth: next });
+          }
+        }}
       />
     </aside>
   ) : (

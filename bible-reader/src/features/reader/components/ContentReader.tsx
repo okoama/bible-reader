@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import type { ReactNode } from 'react';
 import LoadingIndicator from '../../shared/components/LoadingIndicator';
 
@@ -31,6 +32,24 @@ export default function ContentReader({
   emptyMessage = 'Select a section to begin reading.',
   children,
 }: ContentReaderProps) {
+  const sectionsRef = useRef<HTMLDivElement>(null);
+
+  const handleSectionsKeyDown = (e: React.KeyboardEvent) => {
+    const container = sectionsRef.current;
+    if (!container) return;
+    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key)) return;
+    const buttons = Array.from(container.querySelectorAll<HTMLButtonElement>('button'));
+    if (buttons.length === 0) return;
+    const currentIndex = buttons.indexOf(document.activeElement as HTMLButtonElement);
+    e.preventDefault();
+    let nextIndex = currentIndex;
+    if (e.key === 'Home') nextIndex = 0;
+    else if (e.key === 'End') nextIndex = buttons.length - 1;
+    else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') nextIndex = currentIndex < buttons.length - 1 ? currentIndex + 1 : 0;
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') nextIndex = currentIndex > 0 ? currentIndex - 1 : buttons.length - 1;
+    buttons[nextIndex]?.focus();
+  };
+
   return (
     <div className="mx-auto reading-width reader-card py-8 px-12">
       <h2 className="heading-book">{title}</h2>
@@ -46,7 +65,7 @@ export default function ContentReader({
       )}
 
       {showSections && sections.length > 0 && onSelectSection && (
-        <div className={`mb-6 ${sections.length > 60 ? 'max-h-60 overflow-y-auto border rounded-lg p-2' : 'flex flex-wrap gap-1'}`}>
+        <div ref={sectionsRef} onKeyDown={handleSectionsKeyDown} className={`mb-6 ${sections.length > 60 ? 'max-h-60 overflow-y-auto border rounded-lg p-2' : 'flex flex-wrap gap-1'}`}>
           <div className={sections.length > 60 ? 'space-y-0.5' : 'flex flex-wrap gap-1'}>
             {sections.map((section) => {
               const isSelected = currentSectionId === section.id;

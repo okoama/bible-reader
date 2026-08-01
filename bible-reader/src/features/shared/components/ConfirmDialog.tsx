@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useModalFocus } from '../../../lib/hooks/useModalFocus';
 import LoadingIndicator from './LoadingIndicator';
 
 type ConfirmDialogProps = {
@@ -17,6 +18,7 @@ export default function ConfirmDialog({
   onCancel,
 }: ConfirmDialogProps) {
   const [busy, setBusy] = useState(false);
+  const panelRef = useModalFocus<HTMLDivElement>();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -49,7 +51,7 @@ export default function ConfirmDialog({
       aria-modal="true"
       aria-label="Confirm delete"
     >
-      <div className="mx-4 w-full max-w-sm rounded-lg bg-card border border-theme p-6 shadow-xl animate-slide-up">
+      <div ref={panelRef} className="mx-4 w-full max-w-sm rounded-lg bg-card border border-theme p-6 shadow-xl animate-slide-up">
         <p className="text-sm">{message}</p>
         <div className="mt-5 flex justify-end gap-2">
           <button
