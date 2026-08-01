@@ -1,4 +1,4 @@
-import type { ResearchProject, WorkspaceBackup } from '../../../types';
+import type { WorkspaceBackup } from '../../../types';
 import { db } from '../../../lib/database/database';
 import { APP_VERSION, BACKUP_VERSION } from '../../../lib/appInfo';
 
