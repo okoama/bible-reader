@@ -1,0 +1,35 @@
+{
+  "name": "Catholic Study Desk",
+  "short_name": "Study Desk",
+  "description": "A local-first Catholic study and annotation library: the full Catholic Bible, Summa Theologiae, Catechism, and spiritual classics, with notes, prayers, highlights, and more.",
+  "id": "/",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "lang": "en",
+  "categories": ["books", "education", "productivity"],
+  "background_color": "#151A24",
+  "theme_color": "#151A24",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

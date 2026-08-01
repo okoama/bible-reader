@@ -3,8 +3,11 @@ import type { Note } from '../../../types';
 import { NoteRepository } from '../../../lib/repositories/NoteRepository';
 import { createId } from '../../../lib/utils/id';
 import { useDraft } from '../../../lib/hooks/useDraft';
-import RichTextEditor from '../../../components/RichTextEditor';
-import ProjectPicker from '../../../components/projects/ProjectPicker';
+import { useModalFocus } from '../../../lib/hooks/useModalFocus';
+import { useToast } from '../../../lib/contexts/ToastContext';
+import RichTextEditor from './RichTextEditor';
+import ProjectPicker from '../../projects/components/ProjectPicker';
+import AsyncButton from '../../shared/components/AsyncButton';
 
 const noteRepository = new NoteRepository();
 
@@ -37,8 +40,10 @@ export default function NoteEditor({
   const titleRef = useRef<HTMLInputElement>(null);
   const tagInputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const panelRef = useModalFocus<HTMLDivElement>();
 
   const { hasDraft, restoreDraft, clearDraft } = useDraft(draftKey, title, content);
+  const { showToast } = useToast();
 
   const handleRestore = useCallback(() => {
     const data = restoreDraft();
@@ -147,13 +152,14 @@ export default function NoteEditor({
       await noteRepository.create(saved);
     }
 
+    showToast(note ? 'Note updated' : 'Note saved');
     clearDraft();
     onSave(saved);
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-fade-in" onClick={handleBackdropClick} role="dialog" aria-modal="true" aria-label={note ? 'Edit note' : 'New note'}>
-      <div className="mx-4 flex w-full max-w-lg flex-col gap-4 rounded-lg border bg-white p-6 shadow-xl animate-slide-up">
+      <div ref={panelRef} className="mx-4 flex w-full max-w-lg flex-col gap-4 rounded-lg bg-card border border-theme p-6 shadow-xl animate-slide-up">
         <h2 className="text-lg font-semibold">
           {note ? 'Edit Note' : 'New Note'}
         </h2>
@@ -184,6 +190,7 @@ export default function NoteEditor({
           ref={titleRef}
           type="text"
           placeholder="Title"
+          aria-label="Note title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           className="rounded-md border px-3 py-2 text-sm outline-none transition-colors duration-150 focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
@@ -207,7 +214,7 @@ export default function NoteEditor({
         </label>
 
         <div className="relative">
-          <label className="mb-1 block text-xs font-medium opacity-70">Tags</label>
+          <label htmlFor="note-tags-input" className="mb-1 block text-xs font-medium opacity-70">Tags</label>
           <div className="flex flex-wrap gap-1 rounded border px-2 py-1.5 focus-within:border-blue-500">
             {tags.map((tag) => (
               <span
@@ -218,6 +225,7 @@ export default function NoteEditor({
                 <button
                   type="button"
                   onClick={() => removeTag(tag)}
+                  aria-label={`Remove tag ${tag}`}
                   className="text-accent hover:text-accent-hover"
                 >
                   &times;
@@ -226,6 +234,7 @@ export default function NoteEditor({
             ))}
             <input
               ref={tagInputRef}
+              id="note-tags-input"
               type="text"
               placeholder={tags.length === 0 ? 'Add tags...' : ''}
               value={tagInput}
@@ -271,18 +280,18 @@ export default function NoteEditor({
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-md border px-4 py-2 text-sm transition-colors duration-150 hover:bg-gray-100"
+            className="rounded-md border px-4 py-2 text-sm btn-stained-ghost"
           >
             Cancel
           </button>
-          <button
-            type="button"
+          <AsyncButton
             onClick={handleSave}
             disabled={!title.trim()}
-            className="rounded-md bg-accent px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
+            busyLabel="Saving…"
+            className="rounded-md btn-stained px-4 py-2 text-sm transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Save
-          </button>
+          </AsyncButton>
         </div>
       </div>
     </div>

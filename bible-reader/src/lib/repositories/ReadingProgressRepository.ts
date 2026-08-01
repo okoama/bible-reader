@@ -16,9 +16,18 @@ export class ReadingProgressRepository {
     return this.database.readingProgress.get(`last:${workId}`);
   }
 
-  async save(progress: ReadingProgress): Promise<string> {
+  async create(progress: ReadingProgress): Promise<string> {
     await this.database.readingProgress.put(progress);
     return progress.id;
+  }
+
+  async findRecentHistory(limit: number): Promise<ReadingProgress[]> {
+    return this.database.readingProgress
+      .orderBy('updatedAt')
+      .reverse()
+      .filter((r) => !r.id.startsWith('last:'))
+      .limit(limit)
+      .toArray();
   }
 
   async delete(id: string): Promise<void> {

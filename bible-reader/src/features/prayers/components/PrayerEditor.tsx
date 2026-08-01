@@ -4,8 +4,11 @@ import { PRAYER_CATEGORIES } from '../../../types';
 import { PrayerRepository } from '../../../lib/repositories/PrayerRepository';
 import { createId } from '../../../lib/utils/id';
 import { useDraft } from '../../../lib/hooks/useDraft';
-import RichTextEditor from '../../../components/RichTextEditor';
-import ProjectPicker from '../../../components/projects/ProjectPicker';
+import { useModalFocus } from '../../../lib/hooks/useModalFocus';
+import { useToast } from '../../../lib/contexts/ToastContext';
+import RichTextEditor from '../../notes/components/RichTextEditor';
+import ProjectPicker from '../../projects/components/ProjectPicker';
+import AsyncButton from '../../shared/components/AsyncButton';
 
 const prayerRepository = new PrayerRepository();
 
@@ -25,8 +28,10 @@ export default function PrayerEditor({ prayer, onSave, onCancel, initialProjectI
   const [favorite, setFavorite] = useState(prayer?.favorite ?? false);
   const [projectId, setProjectId] = useState<string | undefined>(initialProjectId);
   const titleRef = useRef<HTMLInputElement>(null);
+  const panelRef = useModalFocus<HTMLDivElement>();
 
   const { hasDraft, restoreDraft, clearDraft } = useDraft(draftKey, title, content);
+  const { showToast } = useToast();
 
   const handleRestore = useCallback(() => {
     const data = restoreDraft();
@@ -86,6 +91,7 @@ export default function PrayerEditor({ prayer, onSave, onCancel, initialProjectI
       await prayerRepository.create(saved);
     }
 
+    showToast(prayer ? 'Prayer updated' : 'Prayer saved');
     clearDraft();
     onSave(saved);
   };
@@ -98,7 +104,7 @@ export default function PrayerEditor({ prayer, onSave, onCancel, initialProjectI
       aria-modal="true"
       aria-label={prayer ? 'Edit prayer' : 'New prayer'}
     >
-      <div className="mx-4 flex w-full max-w-lg flex-col gap-4 rounded-lg border bg-white p-6 shadow-xl animate-slide-up max-h-[90vh] overflow-y-auto">
+      <div ref={panelRef} className="mx-4 flex w-full max-w-lg flex-col gap-4 rounded-lg bg-card border border-theme p-6 shadow-xl animate-slide-up max-h-[90vh] overflow-y-auto">
         <h2 className="text-lg font-semibold">
           {prayer ? 'Edit Prayer' : 'New Prayer'}
         </h2>
@@ -129,6 +135,7 @@ export default function PrayerEditor({ prayer, onSave, onCancel, initialProjectI
           ref={titleRef}
           type="text"
           placeholder="Title"
+          aria-label="Prayer title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           className="rounded-md border px-3 py-2 text-sm outline-none transition-colors duration-150 focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
@@ -137,6 +144,7 @@ export default function PrayerEditor({ prayer, onSave, onCancel, initialProjectI
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value as PrayerCategory)}
+          aria-label="Category"
           className="rounded-md border px-3 py-2 text-sm outline-none transition-colors duration-150 focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
         >
           {PRAYER_CATEGORIES.map((c) => (
@@ -147,6 +155,7 @@ export default function PrayerEditor({ prayer, onSave, onCancel, initialProjectI
         <input
           type="text"
           placeholder="Tags (comma-separated)"
+          aria-label="Tags (comma-separated)"
           value={tagsInput}
           onChange={(e) => setTagsInput(e.target.value)}
           className="rounded-md border px-3 py-2 text-sm outline-none transition-colors duration-150 focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
@@ -175,18 +184,18 @@ export default function PrayerEditor({ prayer, onSave, onCancel, initialProjectI
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-md border px-4 py-2 text-sm transition-colors duration-150 hover:bg-gray-100"
+            className="rounded-md border px-4 py-2 text-sm btn-stained-ghost"
           >
             Cancel
           </button>
-          <button
-            type="button"
+          <AsyncButton
             onClick={handleSave}
             disabled={!title.trim()}
-            className="rounded-md bg-accent px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
+            busyLabel="Saving…"
+            className="rounded-md btn-stained px-4 py-2 text-sm transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Save
-          </button>
+          </AsyncButton>
         </div>
       </div>
     </div>

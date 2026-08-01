@@ -56,7 +56,7 @@ export function useReadingProgress() {
     const position: ReadingPosition = { bookId, chapter };
     setLastPosition(position);
 
-    await repo.save({
+    await repo.create({
       id: `last:${WORK_ID}`,
       sourceReference: serializeSourceReference(bookId, chapter),
       progress: chapter,

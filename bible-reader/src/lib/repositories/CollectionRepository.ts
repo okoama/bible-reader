@@ -9,6 +9,10 @@ export class CollectionRepository {
     return this.database.collections.toArray();
   }
 
+  async findRecent(limit: number): Promise<Collection[]> {
+    return this.database.collections.orderBy('updatedAt').reverse().limit(limit).toArray();
+  }
+
   async findById(id: string): Promise<Collection | undefined> {
     return this.database.collections.get(id);
   }

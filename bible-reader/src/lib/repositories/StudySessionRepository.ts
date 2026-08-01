@@ -13,12 +13,17 @@ export class StudySessionRepository {
   }
 
   async findActive(): Promise<StudySession | undefined> {
-    const all = await this.database.sessions.toArray();
-    return all.find((s) => !s.endTime);
+    const latest = await this.database.sessions.orderBy('startTime').reverse().first();
+    return latest && !latest.endTime ? latest : undefined;
   }
 
-  async save(session: StudySession): Promise<void> {
+  async findRecentCompleted(limit: number): Promise<StudySession[]> {
+    return this.database.sessions.orderBy('startTime').reverse().filter((s) => Boolean(s.endTime)).limit(limit).toArray();
+  }
+
+  async create(session: StudySession): Promise<string> {
     await this.database.sessions.put(session);
+    return session.id;
   }
 
   async delete(id: string): Promise<void> {

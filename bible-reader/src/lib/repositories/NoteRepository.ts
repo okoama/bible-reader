@@ -25,21 +25,14 @@ export class NoteRepository {
     await this.database.notes.put(note);
   }
 
-  async findByPassage(sourceReference: string): Promise<Note[]> {
-    return this.database.notes
-      .where('sourceReference')
-      .equals(sourceReference)
-      .toArray();
-  }
-
   async findFavorites(): Promise<Note[]> {
     return this.database.notes.toCollection().filter((n) => n.favorite).toArray();
   }
 
-  async findByBook(bookId: string): Promise<Note[]> {
+  async findBySection(bookId: string, section: string): Promise<Note[]> {
     return this.database.notes
       .where('sourceReference')
-      .startsWith(`${bookId}:`)
+      .startsWith(`${bookId}:${section}:`)
       .toArray();
   }
 

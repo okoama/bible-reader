@@ -6,7 +6,7 @@ const repo = new BookmarkRepository();
 
 export function useBookmarks(
   bookId: string | null,
-  chapterNumber: number | null,
+  section: string | number | null,
   refreshKey = 0,
 ): Bookmark[] {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
@@ -15,27 +15,18 @@ export function useBookmarks(
     let isActive = true;
 
     const load = async () => {
-      if (!bookId) {
+      if (!bookId || section === null || section === undefined) {
         if (isActive) setBookmarks([]);
         return;
       }
 
-      const all = await repo.findByBook(bookId);
-      const chapterBookmarks = chapterNumber === null
-        ? all
-        : all.filter((b) => {
-            const match = b.sourceReference.match(/^[^:]+:(\d+):(\d+)(?:-(\d+))?$/);
-            if (!match) return false;
-            const refChapter = Number.parseInt(match[1], 10);
-            return refChapter === chapterNumber;
-          });
-
-      if (isActive) setBookmarks(chapterBookmarks);
+      const sectionBookmarks = await repo.findBySection(bookId, String(section));
+      if (isActive) setBookmarks(sectionBookmarks);
     };
 
     void load();
     return () => { isActive = false; };
-  }, [bookId, chapterNumber, refreshKey]);
+  }, [bookId, section, refreshKey]);
 
   return bookmarks;
 }

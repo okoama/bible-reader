@@ -21,7 +21,7 @@ export class PrayerRepository {
   }
 
   async findAnswered(): Promise<Prayer[]> {
-    return this.database.prayers.where('answered').equals(1).toArray();
+    return this.database.prayers.toCollection().filter((p) => p.answered).toArray();
   }
 
   async findByTag(tag: string): Promise<Prayer[]> {
@@ -47,7 +47,7 @@ export class PrayerRepository {
   }
 
   async findRecentPrayed(limit = 10): Promise<Prayer[]> {
-    return this.database.prayers.orderBy('lastPrayed').reverse().filter((p) => p.lastPrayed != null).limit(limit).toArray();
+    return this.database.prayers.orderBy('lastPrayed').reverse().limit(limit).toArray();
   }
 
   async delete(id: string): Promise<void> {

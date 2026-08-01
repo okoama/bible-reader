@@ -6,7 +6,7 @@ const repo = new HighlightRepository();
 
 export function useHighlights(
   bookId: string | null,
-  chapterNumber: number | null,
+  section: string | number | null,
   refreshKey = 0,
 ): Highlight[] {
   const [highlights, setHighlights] = useState<Highlight[]>([]);
@@ -15,25 +15,18 @@ export function useHighlights(
     let isActive = true;
 
     const load = async () => {
-      if (!bookId || chapterNumber === null) {
+      if (!bookId || section === null || section === undefined) {
         if (isActive) setHighlights([]);
         return;
       }
 
-      const all = await repo.findByBook(bookId);
-      const chapterHighlights = all.filter((h) => {
-        const match = h.sourceReference.match(/^[^:]+:(\d+):(\d+)(?:-(\d+))?$/);
-        if (!match) return false;
-        const refChapter = Number.parseInt(match[1], 10);
-        return refChapter === chapterNumber;
-      });
-
-      if (isActive) setHighlights(chapterHighlights);
+      const sectionHighlights = await repo.findBySection(bookId, String(section));
+      if (isActive) setHighlights(sectionHighlights);
     };
 
     void load();
     return () => { isActive = false; };
-  }, [bookId, chapterNumber, refreshKey]);
+  }, [bookId, section, refreshKey]);
 
   return highlights;
 }

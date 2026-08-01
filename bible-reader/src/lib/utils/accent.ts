@@ -6,4 +6,6 @@ export const ACCENT_COLORS: Record<AccentName, { base: string; hover: string; li
   violet: { base: '#7c3aed', hover: '#6d28d9', light: '#f5f3ff', lighter: '#ede9fe', ring: '#8b5cf6' },
   amber: { base: '#d97706', hover: '#b45309', light: '#fffbeb', lighter: '#fef3c7', ring: '#f59e0b' },
   rose: { base: '#e11d48', hover: '#be123c', light: '#fff1f2', lighter: '#fce7f3', ring: '#f43f5e' },
+  crimson: { base: '#b91c1c', hover: '#991b1b', light: '#fef2f2', lighter: '#fee2e2', ring: '#dc2626' },
+  sapphire: { base: '#3F72AF', hover: '#2E5B96', light: '#eaf1f9', lighter: '#d4e3f3', ring: '#5A8FD4' },
 };

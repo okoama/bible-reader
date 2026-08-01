@@ -39,14 +39,14 @@ export interface GraphPosition {
 export type PositionedNode = GraphNode & GraphPosition;
 
 export const NODE_COLORS: Record<GraphNodeType, string> = {
-  passage: '#3b82f6',
-  note: '#6b7280',
-  bookmark: '#14b8a6',
-  prayer: '#a855f7',
-  collection: '#f59e0b',
-  project: '#ef4444',
-  catechism: '#22c55e',
-  summa: '#f97316',
+  passage: '#6b8fc9',
+  note: '#8b96a5',
+  bookmark: '#6fb5ab',
+  prayer: '#9d86bd',
+  collection: '#c9a45c',
+  project: '#c27070',
+  catechism: '#7fb58a',
+  summa: '#c98f5f',
 };
 
 export const NODE_LABELS: Record<GraphNodeType, string> = {

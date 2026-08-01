@@ -16,20 +16,20 @@ export class BookmarkRepository {
     return this.database.bookmarks.toCollection().filter((b) => b.favorite).toArray();
   }
 
-  async findByBook(bookId: string): Promise<Bookmark[]> {
+  async findBySection(bookId: string, section: string): Promise<Bookmark[]> {
     return this.database.bookmarks
       .where('sourceReference')
-      .startsWith(`${bookId}:`)
+      .startsWith(`${bookId}:${section}:`)
       .toArray();
-  }
-
-  async update(bookmark: Bookmark): Promise<void> {
-    await this.database.bookmarks.put(bookmark);
   }
 
   async create(bookmark: Bookmark): Promise<string> {
     await this.database.bookmarks.put(bookmark);
     return bookmark.id;
+  }
+
+  async update(bookmark: Bookmark): Promise<void> {
+    await this.database.bookmarks.put(bookmark);
   }
 
   async delete(id: string): Promise<void> {

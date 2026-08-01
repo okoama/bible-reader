@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Header from '../components/header/Header';
 import Sidebar from '../components/sidebar/Sidebar';
-import Reader from '../components/reader/Reader';
+import Reader from '../features/reader/components/Reader';
 import RightPanel from '../components/right-panel/RightPanel';
 import StatusBar from '../components/status-bar/StatusBar';
 import { BibleService } from '../features/bible/services/BibleService';
@@ -9,20 +9,24 @@ import { useReadingProgress } from '../lib/hooks/useReadingProgress';
 import { useNotes } from '../lib/hooks/useNotes';
 import { NoteRepository } from '../lib/repositories/NoteRepository';
 import type { BibleBook, Note, PrayerFilter, Tab, VerseRef } from '../types';
-import NoteViewer from '../components/reader/NoteViewer';
+import NoteViewer from '../features/notes/components/NoteViewer';
 import NoteEditor from '../features/notes/components/NoteEditor';
 import PrayerEditor from '../features/prayers/components/PrayerEditor';
-import CollectionEditor from '../components/reader/CollectionEditor';
-import ProjectEditor from '../components/projects/ProjectEditor';
-import Dashboard from '../components/dashboard/Dashboard';
+import CollectionEditor from '../features/collections/components/CollectionEditor';
+import ProjectEditor from '../features/projects/components/ProjectEditor';
+import Dashboard from '../features/dashboard/components/Dashboard';
 import { addRecentlyOpened } from '../lib/utils/recentlyOpened';
 import { TextService } from '../features/companion-texts/services/TextService';
 import { useStudySession } from '../lib/contexts/StudySessionContext';
-import GlobalSearchModal from '../components/search/GlobalSearchModal';
+import GlobalSearchModal from '../features/search/components/GlobalSearchModal';
 import { ResearchProjectRepository } from '../lib/repositories/ResearchProjectRepository';
 import { createId } from '../lib/utils/id';
-import KeyboardShortcutsHelp from '../components/help/KeyboardShortcutsHelp';
-import KnowledgeGraphView from '../components/graph/KnowledgeGraphView';
+import KeyboardShortcutsHelp from '../features/help/components/KeyboardShortcutsHelp';
+import LoadingIndicator from '../features/shared/components/LoadingIndicator';
+import ConfirmDialog from '../features/shared/components/ConfirmDialog';
+import ErrorBoundary from '../features/shared/components/ErrorBoundary';
+import { useToast } from '../lib/contexts/ToastContext';
+import KnowledgeGraphView from '../features/knowledge-graph/components/KnowledgeGraphView';
 import TabBar from '../components/tabs/TabBar';
 import type { GraphNodeType } from '../types';
 
@@ -86,6 +90,7 @@ function persistActiveTabId(id: string): void {
 
 export default function AppLayout() {
   const [books, setBooks] = useState<BibleBook[]>([]);
+  const [booksLoading, setBooksLoading] = useState(true);
   const [selectedBook, setSelectedBook] = useState<BibleBook | null>(null);
   const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
   const [notesRefreshKey, setNotesRefreshKey] = useState(0);
@@ -100,7 +105,8 @@ export default function AppLayout() {
   const [viewingNote, setViewingNote] = useState<Note | null>(null);
   const { lastPosition, loaded, savePosition } = useReadingProgress();
   const { session, logVisit } = useStudySession();
-  const notes = useNotes(notesRefreshKey);
+  const { notes, loading: notesLoading } = useNotes(notesRefreshKey);
+  const { showToast } = useToast();
 
   const [showGlobalSearch, setShowGlobalSearch] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
@@ -173,8 +179,12 @@ export default function AppLayout() {
   useEffect(() => {
     let isActive = true;
     const load = async () => {
-      const loadedBooks = await bibleService.loadBooks();
-      if (isActive) setBooks(loadedBooks);
+      try {
+        const loadedBooks = await bibleService.loadBooks();
+        if (isActive) setBooks(loadedBooks);
+      } finally {
+        if (isActive) setBooksLoading(false);
+      }
     };
     void load();
     return () => { isActive = false; };
@@ -183,14 +193,19 @@ export default function AppLayout() {
   useEffect(() => {
     if (books.length === 0) return;
     const activeTab = tabs.find((t) => t.id === activeTabId);
-    if (activeTab && activeTab.type === 'bible' && activeTab.bookId && !selectedBook) {
+    if (!activeTab) return;
+    if (activeTab.type === 'bible' && activeTab.bookId && !selectedBook) {
       const book = books.find((b) => b.id === activeTab.bookId);
       if (book) {
         setSelectedBook(book);
         setSelectedChapter(activeTab.chapterNumber ?? null);
       }
+    } else if (activeTab.type === 'companion-text' && activeTab.workId && !selectedWorkId) {
+      setSelectedWorkId(activeTab.workId);
+      setSelectedSectionId(activeTab.sectionId ?? null);
+      setActiveView('companion-text');
     }
-  }, [books, tabs, activeTabId, selectedBook]);
+  }, [books, tabs, activeTabId, selectedBook, selectedWorkId]);
 
   useEffect(() => {
     if (!loaded || !lastPosition || books.length === 0 || selectedBook) return;
@@ -232,16 +247,23 @@ export default function AppLayout() {
     setPrayerFilter(s.prayerFilter);
   }, []);
 
-  const ensureTab = useCallback((type: Tab['type'], label: string, extra?: Partial<Tab>) => {
-    const tabId = extra?.id ?? type;
+  const navigateInTab = useCallback((type: Tab['type'], label: string, extra?: Partial<Tab>) => {
     setTabs((prev) => {
-      const existing = prev.find((t) => t.id === tabId);
-      if (existing) return prev;
-      const newTab: Tab = { id: tabId, type, label, ...extra };
-      return [...prev, newTab];
+      if (prev.length === 0) return [{ id: type, type, label, ...extra }];
+      return prev.map((t) => {
+        if (t.id !== activeTabId) return t;
+        return {
+          ...t,
+          type,
+          label,
+          bookId: type === 'bible' ? (extra?.bookId ?? undefined) : undefined,
+          chapterNumber: type === 'bible' ? (extra?.chapterNumber ?? undefined) : undefined,
+          workId: type === 'companion-text' ? (extra?.workId ?? undefined) : undefined,
+          sectionId: type === 'companion-text' ? (extra?.sectionId ?? undefined) : undefined,
+        };
+      });
     });
-    setActiveTabId(tabId);
-  }, []);
+  }, [activeTabId]);
 
   const handleSelectTab = useCallback((tabId: string) => {
     if (tabId === activeTabId) return;
@@ -266,21 +288,33 @@ export default function AppLayout() {
     });
   }, [activeTabId, activateTab]);
 
+  const handleNewTab = useCallback(() => {
+    const id = `dashboard-${Date.now()}`;
+    setTabs((prev) => [...prev, { id, type: 'dashboard', label: 'Dashboard' }]);
+    setActiveTabId(id);
+    pushNavSnapshot();
+    setActiveView('dashboard');
+    setSelectedBook(null);
+    setSelectedChapter(null);
+    setSelectedVerse(null);
+    setSelectedWorkId(null);
+    setSelectedSectionId(null);
+    setPrayerFilter({ type: 'all' });
+  }, [pushNavSnapshot]);
+
   const handleSelectBook = useCallback((book: BibleBook) => {
     pushNavSnapshot();
-    const tabId = `bible:${book.id}`;
-    ensureTab('bible', book.name, { id: tabId, bookId: book.id });
+    navigateInTab('bible', book.name, { bookId: book.id });
     setSelectedBook(book);
     setSelectedChapter(null);
     setSelectedVerse(null);
     setActiveView('bible');
     addRecentlyOpened({ id: `bible:${book.id}`, label: book.name, subtitle: book.testament, type: 'bible' });
-  }, [pushNavSnapshot, ensureTab]);
+  }, [pushNavSnapshot, navigateInTab]);
 
   const handleSelectView = useCallback((view: ActiveView) => {
     pushNavSnapshot();
-    const tabId = view;
-    ensureTab(view, view.charAt(0).toUpperCase() + view.slice(1).replace(/-/g, ' '), { id: tabId });
+    navigateInTab(view, view.charAt(0).toUpperCase() + view.slice(1).replace(/-/g, ' '));
     setActiveView(view);
     if (view === 'prayer-journal') {
       setSelectedBook(null);
@@ -288,7 +322,7 @@ export default function AppLayout() {
       setSelectedVerse(null);
       setSelectedWorkId(null);
     }
-  }, [pushNavSnapshot, ensureTab]);
+  }, [pushNavSnapshot, navigateInTab]);
 
   const handlePrayerFilter = (filter: PrayerFilter) => {
     setPrayerFilter(filter);
@@ -305,17 +339,16 @@ export default function AppLayout() {
     }
     const textService = new TextService();
     const manifest = textService.getManifestEntry(workId);
-    const tabId = `companion:${workId}`;
-    ensureTab('companion-text', manifest?.name ?? workId, { id: tabId, workId, sectionId });
+    const targetSectionId = sectionId ?? companionPositions[workId] ?? null;
+    navigateInTab('companion-text', manifest?.name ?? workId, { workId, sectionId: targetSectionId ?? undefined });
     setActiveView('companion-text');
     setSelectedBook(null);
     setSelectedChapter(null);
     setSelectedVerse(null);
     setSelectedWorkId(workId);
-    const targetSectionId = sectionId ?? companionPositions[workId] ?? null;
     setSelectedSectionId(targetSectionId);
     addRecentlyOpened({ id: `${workId}${targetSectionId ? `:${targetSectionId}` : ''}`, label: manifest?.name ?? workId, subtitle: targetSectionId ?? '', type: 'companion' });
-  }, [pushNavSnapshot, activeView, selectedWorkId, selectedSectionId, companionPositions, ensureTab]);
+  }, [pushNavSnapshot, activeView, selectedWorkId, selectedSectionId, companionPositions, navigateInTab]);
 
   const handleSelectChapter = (chapter: number) => {
     pushNavSnapshot();
@@ -349,8 +382,7 @@ export default function AppLayout() {
     if (!book) return;
     const target: VerseRef = { bookId, chapterNumber: Number.parseInt(chapterStr, 10), verseNumber: Number.parseInt(verseStr, 10) };
     pushNavSnapshot();
-    const tabId = `bible:${bookId}`;
-    ensureTab('bible', book.name, { id: tabId, bookId, chapterNumber: target.chapterNumber });
+    navigateInTab('bible', book.name, { bookId, chapterNumber: target.chapterNumber });
     setSelectedBook(book);
     setSelectedChapter(target.chapterNumber);
     setSelectedVerse(target);
@@ -361,7 +393,7 @@ export default function AppLayout() {
     setPendingNavigation(null);
   };
 
-  const handleSelectSection = (sectionId: string) => {
+  const handleSelectSection = useCallback((sectionId: string) => {
     pushNavSnapshot();
     setSelectedSectionId(sectionId);
     if (selectedWorkId) {
@@ -376,7 +408,7 @@ export default function AppLayout() {
       if (session && !session.endTime) logVisit(selectedWorkId, sectionId, `${manifest?.name ?? selectedWorkId} - ${sectionId}`);
     }
     scheduleSync();
-  };
+  }, [pushNavSnapshot, selectedWorkId, session, logVisit, scheduleSync]);
 
   const handleSelectNote = (noteId: string | null) => {
     setSelectedNoteId(noteId);
@@ -442,11 +474,20 @@ export default function AppLayout() {
     }
   }, [pushNavSnapshot, handleSelectView, handleNavigateToBookmark]);
 
-  const handleDeleteSelectedNote = async () => {
+  const [confirmingNoteDelete, setConfirmingNoteDelete] = useState(false);
+
+  const handleDeleteSelectedNote = () => {
+    if (!selectedNoteId) return;
+    setConfirmingNoteDelete(true);
+  };
+
+  const handleConfirmDeleteSelectedNote = async () => {
     if (!selectedNoteId) return;
     await noteRepository.delete(selectedNoteId);
+    showToast('Note deleted');
     setSelectedNoteId(null);
     setNotesRefreshKey((k) => k + 1);
+    setConfirmingNoteDelete(false);
   };
 
   useEffect(() => {
@@ -503,91 +544,141 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[70] focus:rounded focus:bg-[var(--accent)] focus:px-3 focus:py-2 focus:text-white"
+      >
+        Skip to main content
+      </a>
       <Header />
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar
-          books={books}
-          selectedBook={selectedBook}
-          onSelectBook={handleSelectBook}
-          activeView={activeView}
-          onSelectView={handleSelectView}
-          selectedWorkId={selectedWorkId}
-          selectedSectionId={selectedSectionId}
-          onSelectWork={handleSelectWork}
-          prayerFilter={prayerFilter}
-          onPrayerFilter={handlePrayerFilter}
-          onShowShortcuts={() => setShowShortcutsHelp(true)}
-        />
+      <main id="main-content" tabIndex={-1} className="flex flex-1 overflow-hidden outline-none">
+        <ErrorBoundary
+          variant="card"
+          resetKey={`${activeView}-${selectedWorkId}`}
+          title="The library could not be displayed."
+          className="w-64"
+        >
+          <Sidebar
+            books={books}
+            selectedBook={selectedBook}
+            onSelectBook={handleSelectBook}
+            activeView={activeView}
+            onSelectView={handleSelectView}
+            selectedWorkId={selectedWorkId}
+            selectedSectionId={selectedSectionId}
+            onSelectWork={handleSelectWork}
+            prayerFilter={prayerFilter}
+            onPrayerFilter={handlePrayerFilter}
+            onShowShortcuts={() => setShowShortcutsHelp(true)}
+          />
+        </ErrorBoundary>
         <div className="flex flex-col flex-1 overflow-hidden">
           <TabBar
             tabs={tabs}
             activeTabId={activeTabId}
             onSelectTab={handleSelectTab}
             onCloseTab={handleCloseTab}
+            onNewTab={handleNewTab}
           />
-          {activeView === 'dashboard' ? (
-            <Dashboard
-              books={books}
-              onNavigateToPassage={(bookId, chapter) => {
-                const book = books.find((b) => b.id === bookId);
-                if (book) {
-                  pushNavSnapshot();
-                  const tabId = `bible:${bookId}`;
-                  ensureTab('bible', book.name, { id: tabId, bookId, chapterNumber: chapter });
-                  setActiveView('bible');
-                  setSelectedBook(book);
-                  setSelectedChapter(chapter);
-                  setSelectedVerse(null);
-                  void savePosition(bookId, chapter);
-                }
-              }}
-              onSelectView={handleSelectView}
-              onNavigateToWork={handleSelectWork}
-            />
-          ) : activeView === 'graph' ? (
-            <KnowledgeGraphView onNodeClick={handleGraphNodeClick} />
-          ) : (
-            <Reader
-              selectedBook={selectedBook}
-              selectedChapter={selectedChapter}
-              selectedVerse={selectedVerse}
-              onSelectChapter={handleSelectChapter}
-              onSelectVerse={handleSelectVerse}
-              onNoteSaved={handleNoteSaved}
-              pendingNavigation={pendingNavigation}
-              onPendingNavigationClear={handlePendingNavigationClear}
-              activeView={activeView}
-              selectedWorkId={selectedWorkId}
-              selectedSectionId={selectedSectionId}
-              onSelectWork={handleSelectWork}
-              onSelectSection={handleSelectSection}
-              prayerRefreshKey={notesRefreshKey}
-              prayerFilter={prayerFilter}
-              selectedNoteId={selectedNoteId}
-              onSelectNote={handleSelectNote}
-              onDeleteSelectedNote={handleDeleteSelectedNote}
-              onCrossLinkNavigate={handleCrossLinkNavigate}
-            />
-          )}
-          {(activeView === 'bible' || activeView === 'companion-text') && (
-            <RightPanel
-              selectedVerse={selectedVerse}
-              selectedBook={selectedBook}
-              selectedChapter={selectedChapter}
-              notes={notes}
-              books={books}
-              refreshKey={notesRefreshKey}
-              onNoteDeleted={handleNoteDeleted}
-              onNavigateToBookmark={handleNavigateToBookmark}
-              onNavigateToNote={handleNavigateToBookmark}
-              selectedNoteId={selectedNoteId}
-              onSelectNote={handleSelectNote}
-              workId={activeView === 'companion-text' ? selectedWorkId : null}
-              sectionId={activeView === 'companion-text' ? selectedSectionId : null}
-            />
-          )}
+          <div className="flex flex-1 overflow-hidden">
+            <div className="flex-1 overflow-auto">
+              <ErrorBoundary
+                variant="card"
+                resetKey={`${activeView}-${activeTabId}`}
+                title="This page could not be rendered."
+                className="flex h-full min-h-[360px] w-full"
+              >
+              <div key={activeView} className="animate-slide-in h-full" role="tabpanel" id={`tabpanel-${activeTabId}`} aria-labelledby={`tab-${activeTabId}`}>
+                {activeView === 'dashboard' ? (
+                <Dashboard
+                  books={books}
+                  onNavigateToPassage={(bookId, chapter) => {
+                    const book = books.find((b) => b.id === bookId);
+                    if (book) {
+                      pushNavSnapshot();
+                      navigateInTab('bible', book.name, { bookId, chapterNumber: chapter });
+                      setActiveView('bible');
+                      setSelectedBook(book);
+                      setSelectedChapter(chapter);
+                      setSelectedVerse(null);
+                      void savePosition(bookId, chapter);
+                    }
+                  }}
+                  onSelectView={handleSelectView}
+                  onNavigateToWork={handleSelectWork}
+                />
+              ) : activeView === 'graph' ? (
+                <KnowledgeGraphView onNodeClick={handleGraphNodeClick} />
+              ) : (
+                <Reader
+                  selectedBook={selectedBook}
+                  selectedChapter={selectedChapter}
+                  selectedVerse={selectedVerse}
+                  onSelectChapter={handleSelectChapter}
+                  onSelectVerse={handleSelectVerse}
+                  onNoteSaved={handleNoteSaved}
+                  pendingNavigation={pendingNavigation}
+                  onPendingNavigationClear={handlePendingNavigationClear}
+                  activeView={activeView}
+                  selectedWorkId={selectedWorkId}
+                  selectedSectionId={selectedSectionId}
+                  onSelectWork={handleSelectWork}
+                  onSelectSection={handleSelectSection}
+                  prayerRefreshKey={notesRefreshKey}
+                  prayerFilter={prayerFilter}
+                  selectedNoteId={selectedNoteId}
+                  onSelectNote={handleSelectNote}
+                  onDeleteSelectedNote={handleDeleteSelectedNote}
+                  onCrossLinkNavigate={handleCrossLinkNavigate}
+                  onNavigateToPassage={(bookId, chapter, verse) => {
+                    const book = books.find((b) => b.id === bookId);
+                    if (book) {
+                      pushNavSnapshot();
+                      navigateInTab('bible', book.name, { bookId, chapterNumber: chapter });
+                      setActiveView('bible');
+                      setSelectedBook(book);
+                      setSelectedChapter(chapter);
+                      if (verse) {
+                        const target: VerseRef = { bookId, chapterNumber: chapter, verseNumber: verse };
+                        setSelectedVerse(target);
+                        setPendingNavigation(target);
+                      } else {
+                        setSelectedVerse(null);
+                      }
+                      void savePosition(bookId, chapter);
+                    }
+                  }}
+                />
+              )}
+              </div>
+              </ErrorBoundary>
+            </div>
+            <ErrorBoundary
+              variant="card"
+              resetKey={activeView}
+              title="The side panel could not be displayed."
+              className="h-full min-w-[260px]"
+            >
+              <RightPanel
+                selectedVerse={selectedVerse}
+                selectedBook={selectedBook}
+                selectedChapter={selectedChapter}
+                notes={notes}
+                notesLoading={notesLoading}
+                books={books}
+                refreshKey={notesRefreshKey}
+                onNoteDeleted={handleNoteDeleted}
+                onNavigateToBookmark={handleNavigateToBookmark}
+                onNavigateToNote={handleNavigateToBookmark}
+                selectedNoteId={selectedNoteId}
+                onSelectNote={handleSelectNote}
+                workId={activeView === 'companion-text' ? selectedWorkId : null}
+                sectionId={activeView === 'companion-text' ? selectedSectionId : null}
+              />
+            </ErrorBoundary>
+          </div>
         </div>
-      </div>
+      </main>
 
       <StatusBar />
 
@@ -636,11 +727,26 @@ export default function AppLayout() {
         <ProjectEditor
           onSave={(title, description, status, icon, color) => {
             const repo = new ResearchProjectRepository();
-            void repo.save({ id: createId('project'), title, description, status, icon, color, notes: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+            void repo.create({ id: createId('project'), title, description, status, icon, color, notes: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+            showToast('Project created');
             setShowNewProject(false);
           }}
           onCancel={() => setShowNewProject(false)}
         />
+      )}
+
+      {confirmingNoteDelete && (
+        <ConfirmDialog
+          message={`Delete note "${notes.find((n) => n.id === selectedNoteId)?.title ?? 'this note'}"? This cannot be undone.`}
+          onConfirm={handleConfirmDeleteSelectedNote}
+          onCancel={() => setConfirmingNoteDelete(false)}
+        />
+      )}
+
+      {booksLoading && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[var(--bg)]">
+          <LoadingIndicator message="Opening the library…" />
+        </div>
       )}
     </div>
   );

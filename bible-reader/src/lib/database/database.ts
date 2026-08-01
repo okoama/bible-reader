@@ -1,6 +1,6 @@
 import Dexie, { type Table } from 'dexie';
 import { DATABASE_NAME } from '../constants';
-import type { Bookmark, Collection, Highlight, Note, Prayer, ReadingProgress, ResearchProject, StudySession } from '../../types';
+import type { Bookmark, Collection, Highlight, Note, Prayer, ReadingProgress, ResearchProject, StudySession, VerseFavorite } from '../../types';
 
 export class BibleReaderDatabase extends Dexie {
   notes!: Table<Note, string>;
@@ -11,6 +11,7 @@ export class BibleReaderDatabase extends Dexie {
   collections!: Table<Collection, string>;
   sessions!: Table<StudySession, string>;
   projects!: Table<ResearchProject, string>;
+  verseFavorites!: Table<VerseFavorite, string>;
 
   constructor() {
     super(DATABASE_NAME);
@@ -100,6 +101,30 @@ export class BibleReaderDatabase extends Dexie {
       collections: 'id, name, projectId, createdAt, updatedAt',
       sessions: 'id, startTime, endTime',
       projects: 'id, title, status, createdAt, updatedAt',
+    });
+
+    this.version(10).stores({
+      notes: 'id, sourceReference, title, favorite, projectId, createdAt, updatedAt',
+      highlights: 'id, sourceReference, color, createdAt',
+      bookmarks: 'id, sourceReference, favorite, projectId, createdAt',
+      prayers: 'id, title, category, favorite, answered, *tags, projectId, createdAt, updatedAt, lastPrayed',
+      readingProgress: 'id, sourceReference, updatedAt',
+      collections: 'id, name, projectId, createdAt, updatedAt',
+      sessions: 'id, startTime, endTime',
+      projects: 'id, title, status, createdAt, updatedAt',
+      verseFavorites: 'id, sourceReference, bookId, createdAt',
+    });
+
+    this.version(11).stores({
+      notes: 'id, sourceReference, title, projectId, createdAt, updatedAt',
+      highlights: 'id, sourceReference, color, createdAt',
+      bookmarks: 'id, sourceReference, projectId, createdAt',
+      prayers: 'id, title, category, *tags, projectId, createdAt, updatedAt, lastPrayed',
+      readingProgress: 'id, sourceReference, updatedAt',
+      collections: 'id, name, projectId, createdAt, updatedAt',
+      sessions: 'id, startTime, endTime',
+      projects: 'id, title, status, createdAt, updatedAt',
+      verseFavorites: 'id, sourceReference, bookId, createdAt',
     });
   }
 }

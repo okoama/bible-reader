@@ -2,7 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import type { Bookmark } from '../../../types';
 import { BookmarkRepository } from '../../../lib/repositories/BookmarkRepository';
 import { createId } from '../../../lib/utils/id';
-import ProjectPicker from '../../../components/projects/ProjectPicker';
+import { useModalFocus } from '../../../lib/hooks/useModalFocus';
+import ProjectPicker from '../../projects/components/ProjectPicker';
+import AsyncButton from '../../shared/components/AsyncButton';
+import { useToast } from '../../../lib/contexts/ToastContext';
 
 const bookmarkRepository = new BookmarkRepository();
 
@@ -23,7 +26,8 @@ export default function BookmarkEditor({
   const [favorite, setFavorite] = useState(false);
   const [projectId, setProjectId] = useState<string | undefined>(initialProjectId);
   const titleRef = useRef<HTMLInputElement>(null);
-  const dialogRef = useRef<HTMLDivElement>(null);
+  const panelRef = useModalFocus<HTMLDivElement>();
+  const { showToast } = useToast();
 
   useEffect(() => {
     titleRef.current?.focus();
@@ -57,6 +61,7 @@ export default function BookmarkEditor({
     };
 
     await bookmarkRepository.create(bookmark);
+    showToast('Bookmark added');
     onSave(bookmark);
   };
 
@@ -69,8 +74,8 @@ export default function BookmarkEditor({
       aria-label="New bookmark"
     >
       <div
-        ref={dialogRef}
-        className="mx-4 flex w-full max-w-lg flex-col gap-4 rounded-lg border bg-white p-6 shadow-xl animate-slide-up"
+        ref={panelRef}
+        className="mx-4 flex w-full max-w-lg flex-col gap-4 rounded-lg bg-card border border-theme p-6 shadow-xl animate-slide-up"
       >
         <h2 className="text-lg font-semibold">New Bookmark</h2>
 
@@ -78,6 +83,7 @@ export default function BookmarkEditor({
           ref={titleRef}
           type="text"
           placeholder="Label (optional)"
+          aria-label="Bookmark label"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           className="rounded-md border px-3 py-2 text-sm outline-none transition-colors duration-150 focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
@@ -103,17 +109,17 @@ export default function BookmarkEditor({
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-md border px-4 py-2 text-sm transition-colors duration-150 hover:bg-gray-100"
+            className="rounded-md border px-4 py-2 text-sm transition-colors duration-150 hover-bg"
           >
             Cancel
           </button>
-          <button
-            type="button"
+          <AsyncButton
             onClick={handleSave}
-            className="rounded-md bg-accent px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-accent-hover"
+            busyLabel="Saving…"
+            className="rounded-md btn-stained px-4 py-2 text-sm transition-colors duration-150"
           >
             Save
-          </button>
+          </AsyncButton>
         </div>
       </div>
     </div>
