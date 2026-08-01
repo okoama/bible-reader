@@ -1,8 +1,10 @@
 import type { Bookmark, Collection, Highlight, Note, Prayer, ReadingProgress, ResearchProject, WorkspaceSettings } from './index';
 
 export interface WorkspaceBackup {
-  version: 1;
-  exportedAt: string;
+  version: number;
+  appVersion: string;
+  createdAt: string;
+  exportedAt?: string;
   data: {
     notes: Note[];
     highlights: Highlight[];

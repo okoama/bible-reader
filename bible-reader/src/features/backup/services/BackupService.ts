@@ -1,7 +1,35 @@
 import type { ResearchProject, WorkspaceBackup } from '../../../types';
 import { db } from '../../../lib/database/database';
+import { APP_VERSION, BACKUP_VERSION } from '../../../lib/appInfo';
 
 export class BackupService {
+  private normalizeBackup(raw: unknown): WorkspaceBackup {
+    const backup = raw as WorkspaceBackup & { exportedAt?: string; appVersion?: string; createdAt?: string };
+    if (!backup || typeof backup !== 'object' || typeof backup.version !== 'number' || !backup.data || typeof backup.data !== 'object') {
+      throw new Error('Invalid backup file');
+    }
+
+    const createdAt = backup.createdAt ?? backup.exportedAt ?? new Date().toISOString();
+    const appVersion = backup.appVersion ?? '0.0.0';
+
+    return {
+      version: backup.version,
+      appVersion,
+      createdAt,
+      exportedAt: backup.exportedAt,
+      data: {
+        notes: backup.data.notes ?? [],
+        highlights: backup.data.highlights ?? [],
+        bookmarks: backup.data.bookmarks ?? [],
+        prayers: backup.data.prayers ?? [],
+        readingProgress: backup.data.readingProgress ?? [],
+        collections: backup.data.collections ?? [],
+        projects: backup.data.projects ?? [],
+        workspaceSettings: backup.data.workspaceSettings ?? null,
+      },
+    };
+  }
+
   async exportBackup(): Promise<WorkspaceBackup> {
     const [notes, highlights, bookmarks, prayers, readingProgress, collections, projects] = await Promise.all([
       db.notes.toArray(),
@@ -20,14 +48,35 @@ export class BackupService {
     } catch {}
 
     return {
-      version: 1,
-      exportedAt: new Date().toISOString(),
+      version: BACKUP_VERSION,
+      appVersion: APP_VERSION,
+      createdAt: new Date().toISOString(),
       data: { notes, highlights, bookmarks, prayers, readingProgress, collections, projects, workspaceSettings },
     };
   }
 
-  async importBackup(backup: WorkspaceBackup): Promise<void> {
-    if (!backup || backup.version !== 1) throw new Error('Invalid backup file');
+  private migrateBackup(backup: WorkspaceBackup): WorkspaceBackup {
+    if (backup.version === BACKUP_VERSION) {
+      return backup;
+    }
+
+    // Future backup migration steps go here.
+    // Example:
+    // if (backup.version === 1) {
+    //   backup = migrateFromV1ToV2(backup);
+    // }
+
+    return backup;
+  }
+
+  async importBackup(rawBackup: unknown): Promise<void> {
+    let backup = this.normalizeBackup(rawBackup);
+    if (backup.version !== BACKUP_VERSION) {
+      // Add future migrations here when backup schema changes.
+      // eslint-disable-next-line no-console
+      console.warn(`Importing backup version ${backup.version} into app version ${APP_VERSION}`);
+      backup = this.migrateBackup(backup);
+    }
 
     await db.transaction(
       'rw',
