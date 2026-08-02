@@ -152,8 +152,8 @@ export default function CollectionViewer({
             <span className="mt-0.5 text-lg">{typeIcon(item.type)}</span>
             <div className="min-w-0 flex-1">
               <p className="font-medium truncate">{item.label}</p>
-              <div className="mt-0.5 flex items-center gap-2 text-xs opacity-50">
-                <span className="rounded bg-gray-100 px-1.5 py-0.5 capitalize">{item.type}</span>
+              <div className="mt-0.5 flex items-center gap-2 text-xs opacity-80">
+                <span className="rounded-full bg-accent px-1.5 py-0.5 text-white capitalize">{item.type}</span>
                 {item.sourceReference && <span className="truncate">{item.sourceReference}</span>}
                 <span>{formatDate(item.addedAt)}</span>
               </div>

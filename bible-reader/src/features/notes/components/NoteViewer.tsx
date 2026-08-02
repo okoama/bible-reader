@@ -43,8 +43,11 @@ export default function NoteViewer({ note, onClose, onCrossLinkNavigate }: NoteV
             {note.sourceReference && (
               <button
                 type="button"
-                onClick={() => onCrossLinkNavigate?.('bible-passage', note.sourceReference)}
-                className="rounded border border-theme bg-card px-3 py-1 text-sm text-accent transition-colors hover:bg-accent-light hover:text-accent-hover"
+                onClick={() => {
+                  onCrossLinkNavigate?.('bible-passage', note.sourceReference);
+                  onClose();
+                }}
+                className="rounded bg-accent px-3 py-1 text-sm text-white transition-colors hover:bg-accent-hover"
               >
                 Go to passage
               </button>
@@ -60,7 +63,10 @@ export default function NoteViewer({ note, onClose, onCrossLinkNavigate }: NoteV
           </div>
         </div>
 
-        <div className="rounded-md border bg-gray-50 p-4 text-sm leading-relaxed">
+        <div
+          className="rounded-md border p-4 text-sm leading-relaxed"
+          style={{ backgroundColor: 'var(--paper-bg)', color: 'var(--paper-text)' }}
+        >
           {note.content ? (
             <CrossLinkRenderer html={note.content} onNavigate={(t, id) => onCrossLinkNavigate?.(t, id)} />
           ) : (
