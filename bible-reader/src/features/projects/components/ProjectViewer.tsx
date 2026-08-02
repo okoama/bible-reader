@@ -12,7 +12,6 @@ import { formatDate } from '../../../lib/utils/date';
 import LoadingIndicator from '../../shared/components/LoadingIndicator';
 import ErrorRetry from '../../shared/components/ErrorRetry';
 import ConfirmDialog from '../../shared/components/ConfirmDialog';
-import CrossLinkRenderer from '../../notes/components/CrossLinkRenderer';
 import { useToast } from '../../../lib/contexts/ToastContext';
 
 const projectRepo = new ResearchProjectRepository();
@@ -30,7 +29,6 @@ type ProjectViewerProps = {
   onDelete: (id: string) => void | Promise<void>;
   onStatusChange: (id: string, status: ProjectStatus) => void;
   onNavigateToReference?: (sourceReference: string) => void;
-  onCrossLinkNavigate?: (type: string, id: string) => void;
   onSelectCollection: (collectionId: string) => void;
 };
 
@@ -57,7 +55,7 @@ function ItemList<T>({ items, render }: { items: T[]; render: (item: T) => React
   return <ul className="space-y-1">{items.map((item, i) => <li key={i}>{render(item)}</li>)}</ul>;
 }
 
-export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, onDelete, onStatusChange, onNavigateToReference, onCrossLinkNavigate, onSelectCollection }: ProjectViewerProps) {
+export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, onDelete, onStatusChange, onNavigateToReference, onSelectCollection }: ProjectViewerProps) {
   const { showToast } = useToast();
   const [project, setProject] = useState<ResearchProject | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
@@ -147,23 +145,20 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
 
   const handleDeleteLink = useCallback(async (type: string, itemId: string) => {
     if (type === 'note') { await noteRepo.delete(itemId); setNotes((prev) => prev.filter((n) => n.id !== itemId)); }
-    if (type === 'highlight') { await highlightRepo.delete(itemId); setHighlights((prev) => prev.filter((h) => h.id !== itemId)); }
     if (type === 'bookmark') { await bookmarkRepo.delete(itemId); setBookmarks((prev) => prev.filter((b) => b.id !== itemId)); }
     if (type === 'prayer') { await prayerRepo.delete(itemId); setPrayers((prev) => prev.filter((p) => p.id !== itemId)); }
-    const labels: Record<string, string> = { note: 'Note deleted', highlight: 'Highlight deleted', bookmark: 'Bookmark deleted', prayer: 'Prayer deleted' };
-    showToast(labels[type] ?? 'Deleted');
+    showToast(type === 'note' ? 'Note deleted' : type === 'bookmark' ? 'Bookmark deleted' : 'Prayer deleted');
   }, [showToast]);
 
   const recentActivity = useMemo(() => {
     const all: { date: string; label: string; type: string }[] = [
       ...notes.map((n) => ({ date: n.createdAt, label: n.title, type: 'note' })),
-      ...highlights.map((h) => ({ date: h.createdAt, label: h.sourceReference, type: 'highlight' })),
       ...bookmarks.map((b) => ({ date: b.createdAt, label: b.title ?? b.sourceReference, type: 'bookmark' })),
       ...prayers.map((p) => ({ date: p.createdAt, label: p.title, type: 'prayer' })),
       ...collections.map((c) => ({ date: c.createdAt, label: c.name, type: 'collection' })),
     ];
     return all.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 10);
-  }, [notes, highlights, bookmarks, prayers, collections]);
+  }, [notes, bookmarks, prayers, collections]);
 
   if (loadError) {
     return (
@@ -251,7 +246,7 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
             <ul className="space-y-1">
               {recentActivity.map((act, i) => (
                 <li key={i} className="flex items-center gap-2 text-sm">
-                  <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${act.type === 'note' ? 'bg-blue-400' : act.type === 'highlight' ? 'bg-rose-400' : act.type === 'prayer' ? 'bg-purple-400' : act.type === 'bookmark' ? 'bg-green-400' : 'bg-amber-400'}`} />
+                  <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${act.type === 'note' ? 'bg-blue-400' : act.type === 'prayer' ? 'bg-purple-400' : act.type === 'bookmark' ? 'bg-green-400' : 'bg-amber-400'}`} />
                   <span className="flex-1 truncate">{act.label}</span>
                   <span className="shrink-0 text-xs opacity-40">{formatDate(act.date)}</span>
                 </li>
@@ -265,69 +260,40 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
             <NewNoteForm onSubmit={handleCreateNote} onCancel={() => setShowNewNote(false)} />
           ) : (
             <>
-              {notes.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-wide opacity-50">Notes</p>
+              {notes.length === 0 && highlights.length === 0 ? (
+                <EmptyState hint="No linked notes or highlights." action={<button type="button" onClick={() => setShowNewNote(true)} className="text-xs text-accent hover:underline">+ Add Note</button>} />
+              ) : (
+                <div className="space-y-3">
                   {notes.map((n) => (
-                    <div key={n.id} className="rounded border p-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <button
-                          type="button"
-                          onClick={() => onNavigateToReference?.(n.sourceReference)}
-                          className="min-w-0 flex-1 truncate rounded text-left text-sm font-medium hover:text-accent focus-visible:ring-2 focus-visible:ring-accent"
-                          title={n.sourceReference}
-                        >
-                          {n.title || 'Untitled'}
-                        </button>
-                        <span className="shrink-0 text-xs opacity-40">{n.sourceReference}</span>
-                      </div>
-                      {n.content && (
-                        <div className="mt-1 line-clamp-3 text-xs leading-relaxed opacity-80">
-                          <CrossLinkRenderer html={n.content} onNavigate={(type, id) => onCrossLinkNavigate?.(type, id)} />
+                    <div key={n.id} className="rounded border border-gray-200 p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium">{n.title || 'Untitled note'}</p>
+                          <p className="mt-1 text-sm leading-relaxed opacity-70 whitespace-pre-wrap">{n.content || 'No note text added.'}</p>
                         </div>
-                      )}
-                      <div className="mt-2 flex gap-3">
-                        <button type="button" onClick={() => onNavigateToReference?.(n.sourceReference)} className="text-xs text-accent hover:underline">Go to passage</button>
-                        <button type="button" onClick={() => setConfirmingLinkDelete({ type: 'note', itemId: n.id, label: n.title || 'Untitled' })} className="text-xs text-red-400 hover:text-red-600">Remove</button>
+                        <div className="flex shrink-0 items-center gap-2">
+                          <button type="button" onClick={() => onNavigateToReference?.(n.sourceReference)} className="rounded border px-2 py-1 text-xs text-accent hover:bg-accent/5" title={`Go to ${n.sourceReference}`}>Go to passage</button>
+                          <button type="button" onClick={() => setConfirmingLinkDelete({ type: 'note', itemId: n.id, label: n.title || 'Untitled' })} className="text-xs text-red-400 hover:text-red-600" aria-label={`Remove note ${n.title || 'Untitled'}`}>&times;</button>
+                        </div>
                       </div>
+                      <p className="mt-2 text-xs opacity-40">{n.sourceReference}</p>
                     </div>
                   ))}
-                </div>
-              )}
-
-              {highlights.length > 0 && (
-                <div className="mt-3 space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-wide opacity-50">Highlights</p>
                   {highlights.map((h) => (
-                    <div key={h.id} className="rounded border p-2">
-                      <p className="text-sm leading-relaxed" style={{ borderLeft: `3px solid ${h.color}`, paddingLeft: 8 }}>
-                        {h.selectedText}
-                      </p>
-                      <p className="mt-1 text-xs opacity-40">{h.sourceReference}</p>
-                      <div className="mt-2 flex gap-3">
-                        <button type="button" onClick={() => onNavigateToReference?.(h.sourceReference)} className="text-xs text-accent hover:underline">Go to passage</button>
-                        <button
-                          type="button"
-                          onClick={() => setConfirmingLinkDelete({ type: 'highlight', itemId: h.id, label: h.selectedText.length > 40 ? `${h.selectedText.slice(0, 40)}…` : h.selectedText })}
-                          className="text-xs text-red-400 hover:text-red-600"
-                        >
-                          Remove
-                        </button>
+                    <div key={h.id} className="rounded border border-amber-200 bg-amber-50/50 p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium">Highlight</p>
+                          <p className="mt-1 text-sm leading-relaxed italic opacity-80">“{h.selectedText}”</p>
+                        </div>
+                        <button type="button" onClick={() => onNavigateToReference?.(h.sourceReference)} className="shrink-0 rounded border border-amber-300 px-2 py-1 text-xs text-amber-700 hover:bg-amber-100" title={`Go to ${h.sourceReference}`}>Go to passage</button>
                       </div>
+                      <p className="mt-2 text-xs opacity-40">{h.sourceReference}</p>
                     </div>
                   ))}
                 </div>
               )}
-
-              {notes.length === 0 && highlights.length === 0 && (
-                <EmptyState
-                  hint="Notes and highlights linked to this project appear here."
-                  action={<button type="button" onClick={() => setShowNewNote(true)} className="text-xs text-accent hover:underline">+ Add Note</button>}
-                />
-              )}
-              {(notes.length > 0 || highlights.length > 0) && (
-                <button type="button" onClick={() => setShowNewNote(true)} className="mt-3 text-xs text-accent hover:underline">+ Add Note</button>
-              )}
+              <button type="button" onClick={() => setShowNewNote(true)} className="mt-3 text-xs text-accent hover:underline">+ Add Note</button>
             </>
           )}
         </SectionCard>
@@ -446,7 +412,7 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
 
       {confirmingLinkDelete && (
         <ConfirmDialog
-          message={`Delete ${confirmingLinkDelete.type === 'note' ? 'note' : confirmingLinkDelete.type === 'highlight' ? 'highlight' : confirmingLinkDelete.type === 'bookmark' ? 'bookmark' : 'prayer'} "${confirmingLinkDelete.label}"? This cannot be undone.`}
+          message={`Delete ${confirmingLinkDelete.type === 'note' ? 'note' : confirmingLinkDelete.type === 'bookmark' ? 'bookmark' : 'prayer'} "${confirmingLinkDelete.label}"? This cannot be undone.`}
           onConfirm={() => handleDeleteLink(confirmingLinkDelete.type, confirmingLinkDelete.itemId)}
           onCancel={() => setConfirmingLinkDelete(null)}
         />

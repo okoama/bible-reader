@@ -1,15 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import type { SelectedVerse, TextSelection } from '../hooks/useTextSelection';
 import { HIGHLIGHT_COLORS } from '../../../lib/constants';
-import { ResearchProjectRepository } from '../../../lib/repositories/ResearchProjectRepository';
-import type { ResearchProject } from '../../../types';
 import LoadingIndicator from '../../shared/components/LoadingIndicator';
-
-const LAST_PROJECT_KEY = 'last-highlight-project';
 
 type AnnotationToolbarProps = {
   selection: TextSelection;
-  onHighlight: (text: string, verses: SelectedVerse[], color: string, projectId?: string) => void;
+  onHighlight: (text: string, verses: SelectedVerse[], color: string) => void;
   onNote: (text: string, verses: SelectedVerse[]) => void;
   onBookmark: (verses: SelectedVerse[]) => void;
   onAddFavorite: (text: string, verses: SelectedVerse[]) => void;
@@ -18,14 +14,6 @@ type AnnotationToolbarProps = {
 
 const TOOLBAR_HEIGHT = 40;
 const VIEWPORT_PADDING = 8;
-
-function loadLastProject(): string {
-  try {
-    return localStorage.getItem(LAST_PROJECT_KEY) ?? '';
-  } catch {
-    return '';
-  }
-}
 
 export default function AnnotationToolbar({
   selection,
@@ -41,24 +29,6 @@ export default function AnnotationToolbar({
     top: 0,
   });
   const [showColors, setShowColors] = useState(false);
-  const [projectId, setProjectId] = useState<string>(loadLastProject);
-  const [projects, setProjects] = useState<ResearchProject[]>([]);
-
-  useEffect(() => {
-    let active = true;
-    void new ResearchProjectRepository().findAll().then((all) => {
-      if (active) setProjects(all);
-    });
-    return () => { active = false; };
-  }, []);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(LAST_PROJECT_KEY, projectId);
-    } catch {
-      void 0;
-    }
-  }, [projectId]);
 
   useEffect(() => {
     if (!ref.current) {
@@ -82,12 +52,7 @@ export default function AnnotationToolbar({
     }
 
     setPosition({ left, top });
-  }, [selection, showColors, projects.length]);
-
-  const applyHighlight = (color: string) => {
-    onHighlight(selection.text, selection.verses, color, projectId || undefined);
-    setShowColors(false);
-  };
+  }, [selection, showColors]);
 
   return (
     <div
@@ -103,22 +68,6 @@ export default function AnnotationToolbar({
       )}
       {showColors ? (
         <>
-          {projects.length > 0 && (
-            <>
-              <select
-                value={projectId}
-                onChange={(e) => setProjectId(e.target.value)}
-                aria-label="Project for highlight"
-                className="rounded border border-[#D4AF37]/40 bg-[#20283A] px-2 py-1 text-xs text-white focus-accent"
-              >
-                <option value="">No project</option>
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>{p.icon} {p.title}</option>
-                ))}
-              </select>
-              <div className="mx-1 h-4 w-px bg-gray-200" />
-            </>
-          )}
           <div className="flex items-center gap-1">
             {HIGHLIGHT_COLORS.map((c) => (
               <button
@@ -127,7 +76,8 @@ export default function AnnotationToolbar({
                 title={c.name}
                 aria-label={`Highlight in ${c.name}`}
                 onClick={() => {
-                  applyHighlight(c.value);
+                  onHighlight(selection.text, selection.verses, c.value);
+                  setShowColors(false);
                 }}
                 className="h-5 w-5 rounded-full border border-gray-300 transition-all duration-150 hover:scale-125 hover:shadow-sm"
                 style={{ backgroundColor: c.value }}
