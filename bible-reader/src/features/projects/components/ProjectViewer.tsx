@@ -265,14 +265,14 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
               ) : (
                 <div className="space-y-3">
                   {notes.map((n) => (
-                    <div key={n.id} className="rounded border border-gray-200 p-3">
+                    <div key={n.id} className="p-3">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium">{n.title || 'Untitled note'}</p>
                           <p className="mt-1 text-sm leading-relaxed opacity-70 whitespace-pre-wrap">{n.content || 'No note text added.'}</p>
                         </div>
                         <div className="flex shrink-0 items-center gap-2">
-                          <button type="button" onClick={() => onNavigateToReference?.(n.sourceReference)} className="rounded border px-2 py-1 text-xs text-accent hover:bg-accent/5" title={`Go to ${n.sourceReference}`}>Go to passage</button>
+                          <button type="button" onClick={() => onNavigateToReference?.(n.sourceReference)} className="rounded px-2 py-1 text-xs text-accent hover:bg-accent/5" title={`Go to ${n.sourceReference}`}>Go to passage</button>
                           <button type="button" onClick={() => setConfirmingLinkDelete({ type: 'note', itemId: n.id, label: n.title || 'Untitled' })} className="text-xs text-red-400 hover:text-red-600" aria-label={`Remove note ${n.title || 'Untitled'}`}>&times;</button>
                         </div>
                       </div>
@@ -286,7 +286,7 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
                           <p className="text-sm font-medium">Highlight</p>
                           <p className="mt-1 text-sm leading-relaxed italic opacity-80">“{h.selectedText}”</p>
                         </div>
-                        <button type="button" onClick={() => onNavigateToReference?.(h.sourceReference)} className="shrink-0 rounded border border-amber-300 px-2 py-1 text-xs text-amber-700 hover:bg-amber-100" title={`Go to ${h.sourceReference}`}>Go to passage</button>
+                        <button type="button" onClick={() => onNavigateToReference?.(h.sourceReference)} className="shrink-0 rounded px-2 py-1 text-xs text-amber-700 hover:bg-amber-100" title={`Go to ${h.sourceReference}`}>Go to passage</button>
                       </div>
                       <p className="mt-2 text-xs opacity-40">{h.sourceReference}</p>
                     </div>

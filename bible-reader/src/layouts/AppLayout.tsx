@@ -21,6 +21,7 @@ import { useStudySession } from '../lib/contexts/StudySessionContext';
 import GlobalSearchModal from '../features/search/components/GlobalSearchModal';
 import { ResearchProjectRepository } from '../lib/repositories/ResearchProjectRepository';
 import { createId } from '../lib/utils/id';
+import { parsePassageReference } from '../lib/utils/passageReference';
 import KeyboardShortcutsHelp from '../features/help/components/KeyboardShortcutsHelp';
 import LoadingIndicator from '../features/shared/components/LoadingIndicator';
 import ConfirmDialog from '../features/shared/components/ConfirmDialog';
@@ -375,16 +376,20 @@ export default function AppLayout() {
   };
 
   const handleNavigateToBookmark = (sourceReference: string) => {
-    const match = sourceReference.match(/^([^:]+):(\d+):(\d+)/);
-    if (!match) return;
-    const [, bookId, chapterStr, verseStr] = match;
-    const book = books.find((b) => b.id === bookId);
-    if (!book) return;
-    const target: VerseRef = { bookId, chapterNumber: Number.parseInt(chapterStr, 10), verseNumber: Number.parseInt(verseStr, 10) };
+    const parsed = parsePassageReference(sourceReference, books);
+    if (!parsed) {
+      showToast('Could not find that passage reference.');
+      return;
+    }
+    const { book, chapterNumber, verseNumber } = parsed;
+    const target: VerseRef | null = verseNumber !== undefined
+      ? { bookId: book.id, chapterNumber, verseNumber }
+      : null;
     pushNavSnapshot();
-    navigateInTab('bible', book.name, { bookId, chapterNumber: target.chapterNumber });
+    navigateInTab('bible', book.name, { bookId: book.id, chapterNumber });
+    setActiveView('bible');
     setSelectedBook(book);
-    setSelectedChapter(target.chapterNumber);
+    setSelectedChapter(chapterNumber);
     setSelectedVerse(target);
     setPendingNavigation(target);
   };
