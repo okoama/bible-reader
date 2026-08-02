@@ -34,19 +34,30 @@ export default function NoteViewer({ note, onClose, onCrossLinkNavigate }: NoteV
       aria-label={note.title || 'Note'}
     >
       <div ref={panelRef} className="mx-4 flex w-full max-w-2xl max-h-[85vh] flex-col gap-4 rounded-lg bg-card border border-theme p-6 shadow-xl animate-slide-up overflow-y-auto">
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h2 className="text-xl font-semibold">{note.title || 'Untitled'}</h2>
             <p className="mt-0.5 text-xs opacity-40">{note.sourceReference}</p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-            className="shrink-0 rounded px-2 py-1 text-sm text-gray-500 hover-bg"
-          >
-            &times;
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            {note.sourceReference && (
+              <button
+                type="button"
+                onClick={() => onCrossLinkNavigate?.('bible-passage', note.sourceReference)}
+                className="rounded border border-theme bg-card px-3 py-1 text-sm text-accent transition-colors hover:bg-accent-light hover:text-accent-hover"
+              >
+                Go to passage
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="shrink-0 rounded px-2 py-1 text-sm text-gray-500 hover-bg"
+            >
+              &times;
+            </button>
+          </div>
         </div>
 
         <div className="rounded-md border bg-gray-50 p-4 text-sm leading-relaxed">

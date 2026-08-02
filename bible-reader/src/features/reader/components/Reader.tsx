@@ -97,6 +97,7 @@ type ReaderProps = {
   prayerFilter: PrayerFilter;
   onCrossLinkNavigate?: (type: string, id: string) => void;
   onNavigateToPassage?: (bookId: string, chapter: number, verse?: number) => void;
+  onOpenCollection?: (collectionId: string) => void;
 };
 
 export default function Reader({
@@ -120,6 +121,7 @@ export default function Reader({
   prayerFilter,
   onCrossLinkNavigate,
   onNavigateToPassage,
+  onOpenCollection,
 }: ReaderProps) {
   const [chapterNumbers, setChapterNumbers] = useState<number[]>([]);
   const [chaptersLoading, setChaptersLoading] = useState(false);
@@ -288,6 +290,7 @@ export default function Reader({
 
   const handleSelectCollection = (id: string) => {
     setSelectedCollectionId(id);
+    onOpenCollection?.(id);
   };
 
   const handleBackToCollections = () => {
@@ -606,6 +609,7 @@ export default function Reader({
           onDelete={handleDeleteProject}
           onStatusChange={handleProjectStatusChange}
           onNavigateToReference={(ref) => onCrossLinkNavigate?.('bible-passage', ref)}
+          onSelectCollection={handleSelectCollection}
         />
       ) : activeView === 'projects' ? (
         <ProjectsPage

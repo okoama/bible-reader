@@ -27,6 +27,7 @@ type ProjectViewerProps = {
   onDelete: (id: string) => void | Promise<void>;
   onStatusChange: (id: string, status: ProjectStatus) => void;
   onNavigateToReference?: (sourceReference: string) => void;
+  onSelectCollection: (collectionId: string) => void;
 };
 
 function SectionCard({ title, children, className = '' }: { title: string; children: React.ReactNode; className?: string }) {
@@ -52,7 +53,7 @@ function ItemList<T>({ items, render }: { items: T[]; render: (item: T) => React
   return <ul className="space-y-1">{items.map((item, i) => <li key={i}>{render(item)}</li>)}</ul>;
 }
 
-export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, onDelete, onStatusChange, onNavigateToReference }: ProjectViewerProps) {
+export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, onDelete, onStatusChange, onNavigateToReference, onSelectCollection }: ProjectViewerProps) {
   const { showToast } = useToast();
   const [project, setProject] = useState<ResearchProject | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
@@ -292,7 +293,13 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
             <ul className="space-y-1">
               {collections.map((c) => (
                 <li key={c.id} className="flex items-center gap-2 text-sm">
-                  <span className="flex-1 truncate">{c.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => onSelectCollection(c.id)}
+                    className="flex-1 truncate text-left text-accent hover:text-accent-hover focus-visible:ring-2 focus-visible:ring-accent rounded"
+                  >
+                    {c.name}
+                  </button>
                   <span className="text-xs opacity-40">{c.items.length} items</span>
                 </li>
               ))}

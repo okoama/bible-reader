@@ -648,6 +648,9 @@ export default function AppLayout() {
                       void savePosition(bookId, chapter);
                     }
                   }}
+                  onOpenCollection={() => {
+                    handleSelectView('collections');
+                  }}
                 />
               )}
               </div>
