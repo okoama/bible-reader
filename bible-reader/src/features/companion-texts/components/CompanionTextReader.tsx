@@ -152,7 +152,7 @@ export default function CompanionTextReader({ workId, sectionId, onSectionChange
 
   const sections = work?.sections.map((s) => ({ id: s.id, label: s.label })) ?? [];
 
-  const handleHighlight = async (text: string, selectedVerses: SelectedVerse[], color: string) => {
+  const handleHighlight = async (text: string, selectedVerses: SelectedVerse[], color: string, projectId?: string) => {
     const first = selectedVerses[0];
     const last = selectedVerses[selectedVerses.length - 1];
     const sourceReference = `${first.bookId}:${selectedSection}:${first.verseNumber}-${last.verseNumber}`;
@@ -164,6 +164,7 @@ export default function CompanionTextReader({ workId, sectionId, onSectionChange
         sourceReference,
         color,
         selectedText: text,
+        projectId,
         createdAt: new Date().toISOString(),
       });
       showToast('Highlight added');

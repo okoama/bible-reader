@@ -19,6 +19,10 @@ export class HighlightRepository {
       .toArray();
   }
 
+  async findByProjectId(projectId: string): Promise<Highlight[]> {
+    return this.database.highlights.where('projectId').equals(projectId).toArray();
+  }
+
   async create(highlight: Highlight): Promise<string> {
     await this.database.highlights.put(highlight);
     return highlight.id;

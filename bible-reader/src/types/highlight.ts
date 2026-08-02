@@ -3,5 +3,6 @@ export interface Highlight {
   sourceReference: string;
   color: string;
   selectedText: string;
+  projectId?: string;
   createdAt: string;
 }

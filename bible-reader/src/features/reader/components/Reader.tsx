@@ -185,7 +185,7 @@ export default function Reader({
     }
   }
 
-  const handleHighlight = async (text: string, selectedVerses: SelectedVerse[], color: string) => {
+  const handleHighlight = async (text: string, selectedVerses: SelectedVerse[], color: string, projectId?: string) => {
     const first = selectedVerses[0];
     const last = selectedVerses[selectedVerses.length - 1];
     const sourceReference = `${first.bookId}:${first.chapterNumber}:${first.verseNumber}-${last.verseNumber}`;
@@ -197,6 +197,7 @@ export default function Reader({
         sourceReference,
         color,
         selectedText: text,
+        projectId,
         createdAt: new Date().toISOString(),
       });
       showToast('Highlight added');
@@ -609,6 +610,7 @@ export default function Reader({
           onDelete={handleDeleteProject}
           onStatusChange={handleProjectStatusChange}
           onNavigateToReference={(ref) => onCrossLinkNavigate?.('bible-passage', ref)}
+          onCrossLinkNavigate={onCrossLinkNavigate}
           onSelectCollection={handleSelectCollection}
         />
       ) : activeView === 'projects' ? (

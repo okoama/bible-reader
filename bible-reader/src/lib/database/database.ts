@@ -126,6 +126,18 @@ export class BibleReaderDatabase extends Dexie {
       projects: 'id, title, status, createdAt, updatedAt',
       verseFavorites: 'id, sourceReference, bookId, createdAt',
     });
+
+    this.version(12).stores({
+      notes: 'id, sourceReference, title, projectId, createdAt, updatedAt',
+      highlights: 'id, sourceReference, color, projectId, createdAt',
+      bookmarks: 'id, sourceReference, projectId, createdAt',
+      prayers: 'id, title, category, *tags, projectId, createdAt, updatedAt, lastPrayed',
+      readingProgress: 'id, sourceReference, updatedAt',
+      collections: 'id, name, projectId, createdAt, updatedAt',
+      sessions: 'id, startTime, endTime',
+      projects: 'id, title, status, createdAt, updatedAt',
+      verseFavorites: 'id, sourceReference, bookId, createdAt',
+    });
   }
 }
 
