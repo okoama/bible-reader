@@ -1,1 +1,1 @@
-export type CrossLinkType = 'note' | 'prayer' | 'collection' | 'passage' | 'article';
+export type CrossLinkType = 'note' | 'prayer' | 'collection' | 'passage' | 'article' | 'bible-passage';
