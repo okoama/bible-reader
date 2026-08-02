@@ -207,6 +207,7 @@ export default function Reader({
     }
 
     setRefreshKey((k) => k + 1);
+    setProjectsRefreshKey((k) => k + 1);
     clearSelection();
   };
 
@@ -224,6 +225,7 @@ export default function Reader({
     setEditingNote(null);
     setModalSourceRef(null);
     setRefreshKey((k) => k + 1);
+    setProjectsRefreshKey((k) => k + 1);
     onNoteSaved?.();
     if (savedNote && session && !session.endTime) logNote(savedNote.id, savedNote.title, savedNote.sourceReference);
   };
