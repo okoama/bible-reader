@@ -150,6 +150,7 @@ export default function Reader({
   const { selection, clearSelection } = useTextSelection(containerElement);
   const highlights = useHighlights(selectedBook?.id ?? null, selectedChapter, refreshKey);
   const chapterNotes = useRefNotes(selectedBook?.id ?? null, selectedChapter, refreshKey);
+  const activeProjectId = activeView === 'projects' && selectedProjectId ? selectedProjectId : undefined;
   const { session, logNote, logBookmark, logCollectionEvent } = useStudySession();
   const { showToast } = useToast();
 
@@ -197,6 +198,7 @@ export default function Reader({
         sourceReference,
         color,
         selectedText: text,
+        projectId: activeProjectId,
         createdAt: new Date().toISOString(),
       });
       showToast('Highlight added');
@@ -719,6 +721,7 @@ export default function Reader({
           key={editingNote?.id ?? 'new'}
           note={editingNote ?? undefined}
           sourceReference={modalSourceRef}
+          initialProjectId={activeProjectId}
           onSave={handleNoteSave}
           onCancel={handleNoteCancel}
         />
