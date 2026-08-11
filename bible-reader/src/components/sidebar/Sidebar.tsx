@@ -148,10 +148,6 @@ export default function Sidebar({
     });
   };
 
-  const isTestamentExpanded = (label: string) => {
-    return expandedTestaments.has(label) || selectedBook?.testament === label;
-  };
-
   useEffect(() => {
     if (activeView === 'companion-text' && selectedWorkId) {
       if (selectedWorkId === 'catechism') setCatechismExpanded(true);
@@ -273,25 +269,16 @@ export default function Sidebar({
           >
             <BibleTestamentGroup
               label="Old Testament"
-              expanded={isTestamentExpanded('Old Testament')}
+              expanded={expandedTestaments.has('Old Testament')}
               onToggle={() => toggleTestament('Old Testament')}
-              books={books.filter((b) => b.testament === 'Old Testament')}
-              selectedBook={selectedBook}
-              onSelectBook={onSelectBook}
-              activeView={activeView}
-            />
-            <BibleTestamentGroup
-              label="Deuterocanonical"
-              expanded={isTestamentExpanded('Deuterocanonical')}
-              onToggle={() => toggleTestament('Deuterocanonical')}
-              books={books.filter((b) => b.testament === 'Deuterocanonical')}
+              books={books.filter((b) => b.testament === 'Old Testament' || b.testament === 'Deuterocanonical')}
               selectedBook={selectedBook}
               onSelectBook={onSelectBook}
               activeView={activeView}
             />
             <BibleTestamentGroup
               label="New Testament"
-              expanded={isTestamentExpanded('New Testament')}
+              expanded={expandedTestaments.has('New Testament')}
               onToggle={() => toggleTestament('New Testament')}
               books={books.filter((b) => b.testament === 'New Testament')}
               selectedBook={selectedBook}
