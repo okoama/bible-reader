@@ -9,6 +9,7 @@ import { HighlightRepository } from '../../../lib/repositories/HighlightReposito
 import { PROJECT_STATUSES } from '../../../types';
 import { createId } from '../../../lib/utils/id';
 import { formatDate } from '../../../lib/utils/date';
+import { useModalFocus } from '../../../lib/hooks/useModalFocus';
 import LoadingIndicator from '../../shared/components/LoadingIndicator';
 import ErrorRetry from '../../shared/components/ErrorRetry';
 import ConfirmDialog from '../../shared/components/ConfirmDialog';
@@ -256,46 +257,40 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
         </SectionCard>
 
         <SectionCard title="Notes & Highlights">
-          {showNewNote ? (
-            <NewNoteForm onSubmit={handleCreateNote} onCancel={() => setShowNewNote(false)} />
+          {notes.length === 0 && highlights.length === 0 ? (
+            <EmptyState hint="No linked notes or highlights." action={<button type="button" onClick={() => setShowNewNote(true)} className="text-xs text-accent hover:underline">+ Add Note</button>} />
           ) : (
-            <>
-              {notes.length === 0 && highlights.length === 0 ? (
-                <EmptyState hint="No linked notes or highlights." action={<button type="button" onClick={() => setShowNewNote(true)} className="text-xs text-accent hover:underline">+ Add Note</button>} />
-              ) : (
-                <div className="space-y-3">
-                  {notes.map((n) => (
-                    <div key={n.id} className="p-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium">{n.title || 'Untitled note'}</p>
-                          <p className="mt-1 text-sm leading-relaxed opacity-70 whitespace-pre-wrap">{n.content || 'No note text added.'}</p>
-                        </div>
-                        <div className="flex shrink-0 items-center gap-2">
-                          <button type="button" onClick={() => onNavigateToReference?.(n.sourceReference)} className="rounded px-2 py-1 text-xs text-accent hover:bg-accent/5" title={`Go to ${n.sourceReference}`}>Go to passage</button>
-                          <button type="button" onClick={() => setConfirmingLinkDelete({ type: 'note', itemId: n.id, label: n.title || 'Untitled' })} className="text-xs text-red-400 hover:text-red-600" aria-label={`Remove note ${n.title || 'Untitled'}`}>&times;</button>
-                        </div>
-                      </div>
-                      <p className="mt-2 text-xs opacity-40">{n.sourceReference}</p>
+            <div className="space-y-3">
+              {notes.map((n) => (
+                <div key={n.id} className="p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium">{n.title || 'Untitled note'}</p>
+                      <p className="mt-1 text-sm leading-relaxed opacity-70 whitespace-pre-wrap">{n.content || 'No note text added.'}</p>
                     </div>
-                  ))}
-                  {highlights.map((h) => (
-                    <div key={h.id} className="rounded border border-amber-200 bg-amber-50/50 p-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium">Highlight</p>
-                          <p className="mt-1 text-sm leading-relaxed italic opacity-80">“{h.selectedText}”</p>
-                        </div>
-                        <button type="button" onClick={() => onNavigateToReference?.(h.sourceReference)} className="shrink-0 rounded px-2 py-1 text-xs text-amber-700 hover:bg-amber-100" title={`Go to ${h.sourceReference}`}>Go to passage</button>
-                      </div>
-                      <p className="mt-2 text-xs opacity-40">{h.sourceReference}</p>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <button type="button" onClick={() => onNavigateToReference?.(n.sourceReference)} className="rounded px-2 py-1 text-xs text-accent hover:bg-accent/5" title={`Go to ${n.sourceReference}`}>Go to passage</button>
+                      <button type="button" onClick={() => setConfirmingLinkDelete({ type: 'note', itemId: n.id, label: n.title || 'Untitled' })} className="text-xs text-red-400 hover:text-red-600" aria-label={`Remove note ${n.title || 'Untitled'}`}>&times;</button>
                     </div>
-                  ))}
+                  </div>
+                  <p className="mt-2 text-xs opacity-40">{n.sourceReference}</p>
                 </div>
-              )}
-              <button type="button" onClick={() => setShowNewNote(true)} className="mt-3 text-xs text-accent hover:underline">+ Add Note</button>
-            </>
+              ))}
+              {highlights.map((h) => (
+                <div key={h.id} className="rounded border border-amber-200 bg-amber-50/50 p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium">Highlight</p>
+                      <p className="mt-1 text-sm leading-relaxed italic opacity-80">“{h.selectedText}”</p>
+                    </div>
+                    <button type="button" onClick={() => onNavigateToReference?.(h.sourceReference)} className="shrink-0 rounded px-2 py-1 text-xs text-amber-700 hover:bg-amber-100" title={`Go to ${h.sourceReference}`}>Go to passage</button>
+                  </div>
+                  <p className="mt-2 text-xs opacity-40">{h.sourceReference}</p>
+                </div>
+              ))}
+            </div>
           )}
+          <button type="button" onClick={() => setShowNewNote(true)} className="mt-3 text-xs text-accent hover:underline">+ Add Note</button>
         </SectionCard>
 
         <SectionCard title="Reading Progress">
@@ -417,6 +412,31 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
           onCancel={() => setConfirmingLinkDelete(null)}
         />
       )}
+
+      {showNewNote && (
+        <NewNoteModal
+          onSubmit={handleCreateNote}
+          onCancel={() => setShowNewNote(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+function NewNoteModal({ onSubmit, onCancel }: { onSubmit: (title: string, content: string, sourceReference: string) => void | Promise<void>; onCancel: () => void }) {
+  const panelRef = useModalFocus<HTMLDivElement>();
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-fade-in"
+      onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}
+      role="dialog"
+      aria-modal="true"
+      aria-label="New note"
+    >
+      <div ref={panelRef} className="mx-4 w-full max-w-md rounded-lg border border-theme bg-card p-6 shadow-xl animate-slide-up">
+        <h2 className="mb-3 text-lg font-semibold">New Note</h2>
+        <NewNoteForm onSubmit={onSubmit} onCancel={onCancel} />
+      </div>
     </div>
   );
 }

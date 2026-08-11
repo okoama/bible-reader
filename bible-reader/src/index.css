@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  color-scheme: dark;
   --accent: #3F72AF;
   --accent-hover: #2E5B96;
   --accent-light: #eaf1f9;
@@ -53,6 +54,21 @@ body {
 
 .reading-width { max-width: var(--reading-width); }
 .reading-text { font-size: var(--font-size); font-family: var(--reader-font); line-height: var(--line-height); }
+
+select {
+  background-color: var(--card-bg);
+  color: var(--text);
+  border-color: var(--border);
+  cursor: pointer;
+}
+select option {
+  background-color: var(--card-bg);
+  color: var(--text);
+}
+input[type="date"],
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+}
 
 .bg-sidebar {
   background-color: var(--sidebar-bg);

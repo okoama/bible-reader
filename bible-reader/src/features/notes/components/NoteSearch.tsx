@@ -14,6 +14,7 @@ type NoteSearchProps = {
   onToggleFavorite?: (note: Note) => void | Promise<void>;
   onAddToCollection?: (type: 'note', label: string, sourceReference: string, itemId: string) => void;
   selectedNoteId?: string | null;
+  maxVisible?: number;
 };
 
 function extractBookId(sourceReference: string): string {
@@ -53,12 +54,13 @@ function matchesDateFilter(note: Note, filter: DateFilter): boolean {
   }
 }
 
-export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onToggleFavorite, onAddToCollection, selectedNoteId }: NoteSearchProps) {
+export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onToggleFavorite, onAddToCollection, selectedNoteId, maxVisible = 8 }: NoteSearchProps) {
   const [query, setQuery] = useState('');
   const [filterBook, setFilterBook] = useState('');
   const [filterTag, setFilterTag] = useState('');
   const [filterDate, setFilterDate] = useState<DateFilter>('all');
   const [showFilters, setShowFilters] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [favoriteBusyId, setFavoriteBusyId] = useState<string | null>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
@@ -259,7 +261,7 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onT
       )}
 
       <div ref={resultsRef} onKeyDown={handleResultsKeyDown} className="space-y-2">
-        {filtered.map((note) => (
+        {filtered.slice(0, expanded ? filtered.length : maxVisible).map((note) => (
           <div
             key={note.id}
             className={`relative rounded-md border px-3 py-2 text-left text-sm transition-colors duration-150 hover-bg ${
@@ -330,6 +332,16 @@ export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onT
 
         {notes.length > 0 && filtered.length === 0 && (
           <p className="py-2 text-xs opacity-50 italic">No matching notes.</p>
+        )}
+
+        {filtered.length > maxVisible && (
+          <button
+            type="button"
+            onClick={() => setExpanded((prev) => !prev)}
+            className="w-full rounded-md border border-theme px-3 py-1.5 text-xs opacity-60 transition-colors duration-150 hover:opacity-100 hover-bg"
+          >
+            {expanded ? 'Show fewer' : `Show all ${filtered.length} notes`}
+          </button>
         )}
       </div>
     </div>

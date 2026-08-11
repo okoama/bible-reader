@@ -33,6 +33,37 @@ type CollapsibleGroupProps = {
   children: React.ReactNode;
 };
 
+function BibleTestamentGroup({ label, expanded, onToggle, books, selectedBook, onSelectBook, activeView }: {
+  label: string;
+  expanded: boolean;
+  onToggle: () => void;
+  books: BibleBook[];
+  selectedBook: BibleBook | null;
+  onSelectBook: (book: BibleBook) => void;
+  activeView: ActiveView;
+}) {
+  return (
+    <CollapsibleGroup label={label} expanded={expanded} onToggle={onToggle}>
+      {books.map((book) => {
+        const isSelected = activeView === 'bible' && selectedBook?.id === book.id;
+        return (
+          <button
+            key={book.id}
+            type="button"
+            onClick={() => onSelectBook(book)}
+            aria-current={isSelected ? 'true' : undefined}
+            className={`w-full rounded px-3 py-1 text-left text-sm transition-colors duration-150 ${
+              isSelected ? 'nav-active' : 'hover-bg'
+            }`}
+          >
+            {book.name}
+          </button>
+        );
+      })}
+    </CollapsibleGroup>
+  );
+}
+
 function CollapsibleGroup({ label, expanded, onToggle, children }: CollapsibleGroupProps) {
   return (
     <div>
@@ -67,6 +98,7 @@ export default function Sidebar({
 }: SidebarProps) {
   const { settings, updateSettings } = useWorkspaceSettings();
   const [bibleExpanded, setBibleExpanded] = useState(false);
+  const [expandedTestaments, setExpandedTestaments] = useState<Set<string>>(new Set());
   const [catechismExpanded, setCatechismExpanded] = useState(false);
   const [summaExpanded, setSummaExpanded] = useState(false);
   const [confessionsExpanded, setConfessionsExpanded] = useState(false);
@@ -106,6 +138,19 @@ export default function Sidebar({
   useEffect(() => {
     setSidebarWidth(settings.sidebarWidth);
   }, [settings.sidebarWidth]);
+
+  const toggleTestament = (label: string) => {
+    setExpandedTestaments((prev) => {
+      const next = new Set(prev);
+      if (next.has(label)) next.delete(label);
+      else next.add(label);
+      return next;
+    });
+  };
+
+  const isTestamentExpanded = (label: string) => {
+    return expandedTestaments.has(label) || selectedBook?.testament === label;
+  };
 
   useEffect(() => {
     if (activeView === 'companion-text' && selectedWorkId) {
@@ -226,22 +271,33 @@ export default function Sidebar({
             expanded={bibleExpanded}
             onToggle={() => setBibleExpanded((prev) => !prev)}
           >
-            {books.map((book) => {
-              const isSelected = activeView === 'bible' && selectedBook?.id === book.id;
-              return (
-                <button
-                  key={book.id}
-                  type="button"
-                  onClick={() => onSelectBook(book)}
-                  aria-current={isSelected ? 'true' : undefined}
-                  className={`w-full rounded px-3 py-1 text-left text-sm transition-colors duration-150 ${
-                    isSelected ? 'nav-active' : 'hover-bg'
-                  }`}
-                >
-                  {book.name}
-                </button>
-              );
-            })}
+            <BibleTestamentGroup
+              label="Old Testament"
+              expanded={isTestamentExpanded('Old Testament')}
+              onToggle={() => toggleTestament('Old Testament')}
+              books={books.filter((b) => b.testament === 'Old Testament')}
+              selectedBook={selectedBook}
+              onSelectBook={onSelectBook}
+              activeView={activeView}
+            />
+            <BibleTestamentGroup
+              label="Deuterocanonical"
+              expanded={isTestamentExpanded('Deuterocanonical')}
+              onToggle={() => toggleTestament('Deuterocanonical')}
+              books={books.filter((b) => b.testament === 'Deuterocanonical')}
+              selectedBook={selectedBook}
+              onSelectBook={onSelectBook}
+              activeView={activeView}
+            />
+            <BibleTestamentGroup
+              label="New Testament"
+              expanded={isTestamentExpanded('New Testament')}
+              onToggle={() => toggleTestament('New Testament')}
+              books={books.filter((b) => b.testament === 'New Testament')}
+              selectedBook={selectedBook}
+              onSelectBook={onSelectBook}
+              activeView={activeView}
+            />
           </CollapsibleGroup>
 {/* Catechism */}
           {catechismEntry && (
