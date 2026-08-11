@@ -54,7 +54,7 @@ function matchesDateFilter(note: Note, filter: DateFilter): boolean {
   }
 }
 
-export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onToggleFavorite, onAddToCollection, selectedNoteId, maxVisible = 8 }: NoteSearchProps) {
+export default function NoteSearch({ notes, books, onNavigate, onSelectNote, onToggleFavorite, onAddToCollection, selectedNoteId, maxVisible = 4 }: NoteSearchProps) {
   const [query, setQuery] = useState('');
   const [filterBook, setFilterBook] = useState('');
   const [filterTag, setFilterTag] = useState('');

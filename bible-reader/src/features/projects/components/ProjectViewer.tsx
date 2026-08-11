@@ -69,6 +69,7 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
   const [saving, setSaving] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [showNewNote, setShowNewNote] = useState(false);
+  const [viewingNote, setViewingNote] = useState<Note | null>(null);
   const [showNewBookmark, setShowNewBookmark] = useState(false);
   const [showNewPrayer, setShowNewPrayer] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -264,10 +265,10 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
               {notes.map((n) => (
                 <div key={n.id} className="p-3">
                   <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
+                    <button type="button" onClick={() => setViewingNote(n)} className="min-w-0 flex-1 text-left" title="View note">
                       <p className="text-sm font-medium">{n.title || 'Untitled note'}</p>
                       <p className="mt-1 text-sm leading-relaxed opacity-70 whitespace-pre-wrap">{n.content || 'No note text added.'}</p>
-                    </div>
+                    </button>
                     <div className="flex shrink-0 items-center gap-2">
                       <button type="button" onClick={() => onNavigateToReference?.(n.sourceReference)} className="rounded px-2 py-1 text-xs text-accent hover:bg-accent/5" title={`Go to ${n.sourceReference}`}>Go to passage</button>
                       <button type="button" onClick={() => setConfirmingLinkDelete({ type: 'note', itemId: n.id, label: n.title || 'Untitled' })} className="text-xs text-red-400 hover:text-red-600" aria-label={`Remove note ${n.title || 'Untitled'}`}>&times;</button>
@@ -419,6 +420,10 @@ export default function ProjectViewer({ projectId, refreshKey, onBack, onEdit, o
           onCancel={() => setShowNewNote(false)}
         />
       )}
+
+      {viewingNote && (
+        <NoteViewModal note={viewingNote} onClose={() => setViewingNote(null)} />
+      )}
     </div>
   );
 }
@@ -436,6 +441,33 @@ function NewNoteModal({ onSubmit, onCancel }: { onSubmit: (title: string, conten
       <div ref={panelRef} className="mx-4 w-full max-w-md rounded-lg border border-theme bg-card p-6 shadow-xl animate-slide-up">
         <h2 className="mb-3 text-lg font-semibold">New Note</h2>
         <NewNoteForm onSubmit={onSubmit} onCancel={onCancel} />
+      </div>
+    </div>
+  );
+}
+
+function NoteViewModal({ note, onClose }: { note: Note; onClose: () => void }) {
+  const panelRef = useModalFocus<HTMLDivElement>();
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-fade-in"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Note: ${note.title || 'Untitled'}`}
+    >
+      <div ref={panelRef} className="mx-4 w-full max-w-lg rounded-lg border border-theme bg-card p-6 shadow-xl animate-slide-up">
+        <FormKeyHandler onCancel={onClose} />
+        <div className="mb-3 flex items-start justify-between gap-3">
+          <h2 className="text-lg font-semibold">{note.title || 'Untitled note'}</h2>
+          <button type="button" onClick={onClose} aria-label="Close note" className="text-sm opacity-40 hover:opacity-80">&times;</button>
+        </div>
+        {note.sourceReference && <p className="mb-3 text-xs opacity-50">{note.sourceReference}</p>}
+        <p className="whitespace-pre-wrap text-sm leading-relaxed">{note.content || 'No note text added.'}</p>
+        <p className="mt-4 text-xs opacity-40">Created {formatDate(note.createdAt)}</p>
+        <div className="mt-4 flex gap-2">
+          <button type="button" onClick={onClose} className="rounded border px-3 py-1 text-xs">Close</button>
+        </div>
       </div>
     </div>
   );
